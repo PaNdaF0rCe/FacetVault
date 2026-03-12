@@ -13,7 +13,17 @@ function Login() {
 
   useEffect(() => {
     if (!loading && user) {
+      sessionStorage.removeItem('fv_google_redirect_pending');
       navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    if (!loading && !user) {
+      const pendingRedirect = sessionStorage.getItem('fv_google_redirect_pending');
+      if (pendingRedirect) {
+        setSubmitting(false);
+        sessionStorage.removeItem('fv_google_redirect_pending');
+      }
     }
   }, [user, loading, navigate]);
 
@@ -27,7 +37,6 @@ function Login() {
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'Failed to sign in.');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -105,7 +114,7 @@ function Login() {
           disabled={submitting}
           className="lux-button-secondary w-full"
         >
-          Continue with Google
+          {submitting ? 'Continuing...' : 'Continue with Google'}
         </button>
 
         <p className="mt-6 text-center text-sm text-slate-400">

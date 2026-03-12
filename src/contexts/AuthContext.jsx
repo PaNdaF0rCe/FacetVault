@@ -9,7 +9,8 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  getRedirectResult
 } from 'firebase/auth';
 import { auth } from '../lib/firebase/config';
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let unsubscribe = () => {};
+    let mounted = true;
 
     const init = async () => {
       try {
@@ -30,13 +32,27 @@ export function AuthProvider({ children }) {
       }
 
       unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (!mounted) return;
         setUser(firebaseUser ?? null);
       });
+
+      try {
+        await getRedirectResult(auth);
+      } catch (error) {
+        console.error('Google redirect result error:', error);
+      } finally {
+        if (mounted && auth.currentUser === null) {
+          setUser(null);
+        }
+      }
     };
 
     init();
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const login = (email, password) => {
@@ -60,7 +76,10 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = async () => {
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+    await setPersistence(auth, browserLocalPersistence);
+
     if (isMobile) {
+      sessionStorage.setItem('fv_google_redirect_pending', '1');
       await signInWithRedirect(auth, provider);
       return null;
     }
