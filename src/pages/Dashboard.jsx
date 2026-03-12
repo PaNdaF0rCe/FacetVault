@@ -1,20 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import FilterBar from '../components/FilterBar';
-import InventoryItemCard from '../components/InventoryItemCard';
-import InventoryUploadModal from '../components/InventoryUploadModal';
-import { getFilteredInventory, deleteInventoryItem } from '../lib/firebase/inventory-operations';
-import { updateUserStats } from '../lib/firebase/users';
+import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import FilterBar from "../components/FilterBar";
+import InventoryItemCard from "../components/InventoryItemCard";
+import InventoryUploadModal from "../components/InventoryUploadModal";
+import {
+  getFilteredInventory,
+  deleteInventoryItem,
+} from "../lib/firebase/inventory-operations";
+import { updateUserStats } from "../lib/firebase/users";
 
 function Dashboard() {
   const { user } = useAuth();
   const [gems, setGems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedGem, setSelectedGem] = useState(null);
+
   const [filters, setFilters] = useState({
-    category: '',
-    search: '',
-    sortBy: 'updatedAt'
+    category: "",
+    search: "",
+    sortBy: "updatedAt",
   });
 
   useEffect(() => {
@@ -28,22 +33,17 @@ function Dashboard() {
       const items = await getFilteredInventory(user.uid, filters);
       setGems(items);
     } catch (error) {
-      console.error('Error fetching gems:', error);
-      alert('Failed to fetch gem records');
+      console.error("Error fetching gems:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGemDelete = async (itemId) => {
-    try {
-      await deleteInventoryItem(itemId, user.uid);
-      await updateUserStats(user.uid);
-      fetchGems();
-    } catch (error) {
-      console.error('Error deleting gem:', error);
-      alert('Failed to delete gem record');
-    }
+    await deleteInventoryItem(itemId, user.uid);
+    setSelectedGem(null);
+    await updateUserStats(user.uid);
+    fetchGems();
   };
 
   const handleUploadSuccess = async () => {
@@ -52,78 +52,155 @@ function Dashboard() {
     fetchGems();
   };
 
-  const handleGemUpdate = (updatedItem) => {
-    setGems((current) =>
-      current.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    );
-  };
-
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <section className="flex flex-col gap-4 sm:gap-5 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-            My Gem Collection
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 max-w-2xl">
-            Organize, track, and review your gemstone records in one place.
-          </p>
-        </div>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold text-amber-300">
+          My Gem Collection
+        </h1>
 
         <button
           onClick={() => setShowUploadModal(true)}
-          className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          className="bg-amber-400 text-black px-4 py-2 rounded-lg font-medium hover:bg-amber-300 transition"
         >
           Add New Gem
         </button>
-      </section>
+      </div>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
-        <FilterBar filters={filters} onFilterChange={setFilters} />
-      </section>
+      {/* Filter Bar */}
+      <FilterBar filters={filters} onFilterChange={setFilters} />
 
-      <section className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">
-          {isLoading ? 'Loading collection...' : `${gems.length} gem${gems.length === 1 ? '' : 's'} in your collection`}
-        </div>
-      </section>
-
+      {/* Loading */}
       {isLoading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900"></div>
-        </div>
+        <div className="text-gray-400">Loading collection...</div>
       ) : gems.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-14 sm:py-20 px-4 text-center shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900">No gems yet</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Add your first gem to start building your collection.
-          </p>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="mt-6 inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-          >
-            Add Your First Gem
-          </button>
-        </div>
+        <div className="text-gray-400">No gems in collection yet.</div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {gems.map((item) => (
             <InventoryItemCard
               key={item.id}
               item={item}
-              onEdit={handleGemUpdate}
-              onDelete={() => handleGemDelete(item.id)}
+              onClick={setSelectedGem}
             />
           ))}
         </div>
       )}
 
+      {/* Upload Modal */}
       {showUploadModal && (
         <InventoryUploadModal
           onClose={() => setShowUploadModal(false)}
           onSuccess={handleUploadSuccess}
           userId={user.uid}
         />
+      )}
+
+      {/* Gem Detail Modal */}
+      {selectedGem && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+          <div className="bg-[#020617] border border-[#1e293b] text-gray-200 rounded-2xl shadow-xl max-w-3xl w-full p-6">
+
+            {/* Title */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-amber-300">
+                {selectedGem.name}
+              </h2>
+
+              <button
+                onClick={() => setSelectedGem(null)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+
+              {/* Image */}
+              <img
+                src={selectedGem.imageUrl}
+                alt={selectedGem.name}
+                className="rounded-xl border border-[#1e293b]"
+              />
+
+              {/* Details */}
+              <div className="space-y-3 text-sm">
+
+                <div>
+                  <p className="text-gray-400 text-xs">Stone Type</p>
+                  <p>{selectedGem.stoneType}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Category</p>
+                  <p>{selectedGem.category}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Carat</p>
+                  <p>{selectedGem.carat} ct</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Color</p>
+                  <p>{selectedGem.color}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Cut</p>
+                  <p>{selectedGem.cut}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Origin</p>
+                  <p>{selectedGem.origin}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Price Paid</p>
+                  <p>{selectedGem.pricePaid}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Quantity</p>
+                  <p>{selectedGem.quantity}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs">Notes</p>
+                  <div className="bg-[#020617] border border-[#1e293b] rounded-lg p-3 text-sm">
+                    {selectedGem.notes || "No notes"}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-between mt-6">
+
+              <button
+                onClick={() => handleGemDelete(selectedGem.id)}
+                className="bg-red-500 px-4 py-2 rounded-md text-white hover:bg-red-400"
+              >
+                Delete Gem
+              </button>
+
+              <button
+                onClick={() => setSelectedGem(null)}
+                className="border border-gray-600 px-4 py-2 rounded-md hover:border-gray-400"
+              >
+                Close
+              </button>
+
+            </div>
+
+          </div>
+        </div>
       )}
     </div>
   );
