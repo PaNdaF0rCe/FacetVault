@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { uploadInventoryItem } from "../lib/firebase/inventory-operations";
 
-function InventoryUploadModal({ onClose, onSubmit }) {
+function InventoryUploadModal({ onClose, onSuccess, userId }) {
   const [formData, setFormData] = useState({
     name: "",
     stoneType: "",
@@ -15,6 +16,7 @@ function InventoryUploadModal({ onClose, onSubmit }) {
   });
 
   const [imageFile, setImageFile] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -29,13 +31,32 @@ function InventoryUploadModal({ onClose, onSubmit }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    onSubmit({
-      ...formData,
-      image: imageFile
-    });
+    if (!imageFile) {
+      alert("Please upload or take a photo of the gem.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const metadata = {
+        ...formData,
+        carat: formData.carat ? Number(formData.carat) : null,
+        pricePaid: formData.pricePaid ? Number(formData.pricePaid) : null,
+        quantity: formData.quantity ? Number(formData.quantity) : 1
+      };
+
+      await uploadInventoryItem(imageFile, metadata, userId);
+      onSuccess();
+    } catch (error) {
+      console.error("Error saving gem:", error);
+      alert("Failed to save gem.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -240,9 +261,10 @@ function InventoryUploadModal({ onClose, onSubmit }) {
           <div className="md:col-span-2 flex justify-between mt-4">
             <button
               type="submit"
-              className="bg-amber-400 text-black px-5 py-2 rounded-lg font-semibold hover:bg-amber-300 transition"
+              disabled={saving}
+              className="bg-amber-400 text-black px-5 py-2 rounded-lg font-semibold hover:bg-amber-300 transition disabled:opacity-60"
             >
-              Save Gem
+              {saving ? "Saving..." : "Save Gem"}
             </button>
 
             <button

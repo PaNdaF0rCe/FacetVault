@@ -93,7 +93,7 @@ function Dashboard() {
       {showUploadModal && (
         <InventoryUploadModal
           onClose={() => setShowUploadModal(false)}
-          onSuccess={handleUploadSuccess}
+          onSubmit={handleUploadSuccess}
           userId={user.uid}
         />
       )}
