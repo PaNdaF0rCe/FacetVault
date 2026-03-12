@@ -50,7 +50,12 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
       };
 
       await uploadInventoryItem(imageFile, metadata, userId);
-      onSuccess();
+
+      try {
+        await onSuccess();
+      } catch (postSaveError) {
+        console.error("Post-save refresh error:", postSaveError);
+      }
     } catch (error) {
       console.error("Error saving gem:", error);
       alert("Failed to save gem.");
