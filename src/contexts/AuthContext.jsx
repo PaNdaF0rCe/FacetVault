@@ -17,37 +17,47 @@ const AuthContext = createContext(null);
 const provider = new GoogleAuthProvider();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(undefined);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser || null);
-      setLoading(false);
-    });
+    let unsubscribe = () => {};
+
+    const init = async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (error) {
+        console.error('Failed to set auth persistence:', error);
+      }
+
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setUser(firebaseUser ?? null);
+      });
+    };
+
+    init();
 
     return () => unsubscribe();
   }, []);
 
-  const login = (email, password) =>
-    signInWithEmailAndPassword(auth, email, password);
+  const login = (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
 
   const signup = async (email, password, displayName) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
+
     if (displayName) {
       await updateProfile(cred.user, { displayName });
     }
+
     return cred;
   };
 
   const logout = async () => {
     await signOut(auth);
-    setUser(null);
   };
 
   const loginWithGoogle = async () => {
-    await setPersistence(auth, browserLocalPersistence);
-
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
@@ -58,20 +68,16 @@ export function AuthProvider({ children }) {
     return signInWithPopup(auth, provider);
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        signup,
-        logout,
-        loginWithGoogle
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    loading: user === undefined,
+    login,
+    signup,
+    logout,
+    loginWithGoogle
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

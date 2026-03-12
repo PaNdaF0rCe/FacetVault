@@ -49,7 +49,7 @@ function Login() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-2rem)] items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#13203f_0%,#0b1224_35%,#060b16_100%)] px-4 py-8">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950/70 p-8 shadow-2xl backdrop-blur">
         <div className="mb-8 text-center">
           <p className="text-sm uppercase tracking-[0.25em] text-amber-300">FacetVault</p>
@@ -84,7 +84,11 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button type="submit" disabled={submitting} className="lux-button-primary w-full">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="lux-button-primary w-full"
+          >
             {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
