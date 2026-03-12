@@ -1,129 +1,131 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult
-} from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { getRedirectResult } from 'firebase/auth';
 import { auth } from '../lib/firebase/config';
-import ErrorAlert from '../components/ErrorAlert';
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const { login, loginWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleRedirectLogin = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error('Redirect sign-in error:', error);
-        setError('Google sign-in failed: ' + error.message);
-      }
-    };
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-    handleRedirectLogin();
-  }, [navigate]);
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/dashboard');
-    } catch (error) {
-      setError('Failed to log in: ' + error.message);
+      await login(email, password);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Failed to sign in.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const loginWithGoogle = async () => {
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (err) {
+        console.error('Redirect login error:', err);
+      }
+    };
+
+    handleRedirect();
+  }, [navigate]);
+
+  const handleGoogle = async () => {
     setError('');
+    setSubmitting(true);
 
     try {
-      const provider = new GoogleAuthProvider();
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        await signInWithRedirect(auth, provider);
-      } else {
-        await signInWithPopup(auth, provider);
-        navigate('/dashboard');
+      const result = await loginWithGoogle();
+      if (result?.user) {
+        navigate('/dashboard', { replace: true });
       }
-    } catch (error) {
-      console.error('Error signing in:', error);
-      setError('Google sign-in failed: ' + error.message);
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed.');
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
+    <div className="flex min-h-[calc(100vh-2rem)] items-center justify-center">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950/70 p-8 shadow-2xl backdrop-blur">
+        <div className="mb-8 text-center">
+          <p className="text-sm uppercase tracking-[0.25em] text-amber-300">FacetVault</p>
+          <h1 className="mt-3 text-3xl font-semibold text-white">Welcome back</h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Sign in to access your gem collection.
+          </p>
         </div>
 
-        {error && <ErrorAlert message={error} />}
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <input
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
           </div>
+        )}
 
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Sign in
-            </button>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            required
+            placeholder="Email address"
+            className="lux-input w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            required
+            placeholder="Password"
+            className="lux-input w-full"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <button type="submit" disabled={submitting} className="lux-button-primary w-full">
+            {submitting ? 'Signing in...' : 'Sign in'}
+          </button>
         </form>
 
-        <div className="flex flex-col items-center">
-          <p className="mt-4 flex text-center">
-            Don't have an account?
-            <Link to="/signup" className="text-blue-500 hover:underline ml-1">
-              Sign Up
-            </Link>
-          </p>
-
-          <button
-            onClick={loginWithGoogle}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Login with Google
-          </button>
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs uppercase tracking-widest text-slate-500">or</span>
+          <div className="h-px flex-1 bg-white/10" />
         </div>
+
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={submitting}
+          className="lux-button-secondary w-full"
+        >
+          Continue with Google
+        </button>
+
+        <p className="mt-6 text-center text-sm text-slate-400">
+          Don&apos;t have an account?{' '}
+          <Link to="/signup" className="font-medium text-amber-300 hover:text-amber-200">
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -1,72 +1,48 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 function Home() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
-
-      <div className="max-w-4xl text-center space-y-8">
-
-        {/* Title */}
-        <h1 className="text-5xl font-bold text-amber-300">
-          FacetVault
+    <div className="flex min-h-[80vh] items-center justify-center">
+      <div className="mx-auto max-w-5xl text-center">
+        <p className="text-sm uppercase tracking-[0.35em] text-amber-300">FacetVault</p>
+        <h1 className="mt-6 text-5xl font-semibold tracking-tight text-white sm:text-6xl">
+          A private vault for your gemstone collection
         </h1>
-
-        {/* Subtitle */}
-        <p className="text-gray-400 text-lg">
-          Organize and manage your gemstone collection with precision and elegance.
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
+          Organize photos, stone details, origin, pricing, and notes in one elegant place.
         </p>
 
-        {/* Buttons */}
-        <div className="flex justify-center gap-4">
-
-          <Link
-            to="/login"
-            className="bg-amber-400 text-black px-6 py-3 rounded-lg font-semibold hover:bg-amber-300 transition"
-          >
-            Login
+        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <Link to="/signup" className="lux-button-primary min-w-[180px]">
+            Create account
           </Link>
-
-          <Link
-            to="/signup"
-            className="border border-amber-400 text-amber-300 px-6 py-3 rounded-lg font-semibold hover:bg-amber-400 hover:text-black transition"
-          >
-            Create Account
+          <Link to="/login" className="lux-button-secondary min-w-[180px]">
+            Sign in
           </Link>
-
         </div>
 
-        {/* Feature cards */}
-        <div className="grid md:grid-cols-3 gap-6 pt-10">
-
-          <div className="bg-[#020617] border border-[#1e293b] rounded-xl p-6">
-            <h3 className="text-amber-300 font-semibold mb-2">
-              Gem Collection
-            </h3>
-            <p className="text-gray-400 text-sm">
-              Store and organize all your gemstones with images and details.
+        <div className="mt-16 grid gap-5 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-6 text-left">
+            <h3 className="text-lg font-semibold text-amber-300">Store every stone</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Save photos, type, cut, color, origin, carat, and price in one clean record.
             </p>
           </div>
 
-          <div className="bg-[#020617] border border-[#1e293b] rounded-xl p-6">
-            <h3 className="text-amber-300 font-semibold mb-2">
-              Stone Records
-            </h3>
-            <p className="text-gray-400 text-sm">
-              Track origin, cut, color, carat weight, and pricing.
+          <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-6 text-left">
+            <h3 className="text-lg font-semibold text-amber-300">Browse quickly</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Search, filter, and open your gem records in a compact collection view.
             </p>
           </div>
 
-          <div className="bg-[#020617] border border-[#1e293b] rounded-xl p-6">
-            <h3 className="text-amber-300 font-semibold mb-2">
-              Collection Insights
-            </h3>
-            <p className="text-gray-400 text-sm">
-              Quickly search, filter, and review your entire collection.
+          <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-6 text-left">
+            <h3 className="text-lg font-semibold text-amber-300">Use it anywhere</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Access your vault from desktop or phone with secure sign-in.
             </p>
           </div>
-
         </div>
-
       </div>
     </div>
   );

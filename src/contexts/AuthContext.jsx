@@ -1,101 +1,93 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut,
+import {
   onAuthStateChanged,
+  signOut,
+  signInWithPopup,
+  signInWithRedirect,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  updateProfile,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { auth } from '../lib/firebase/config';
-import { createUserDocument } from '../lib/firebase/users';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+const provider = new GoogleAuthProvider();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          await createUserDocument(user);
-        } catch (error) {
-          console.error("Error creating user document:", error);
-          setError(error.message);
-        }
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        await getRedirectResult(auth).catch(() => null);
+      } catch {
+        // ignore here; auth observer below is source of truth
       }
-      setUser(user);
-      setLoading(false);
+
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (!mounted) return;
+        setUser(firebaseUser || null);
+        setLoading(false);
+      });
+
+      return unsubscribe;
+    };
+
+    let unsubscribe;
+    initAuth().then((fn) => {
+      unsubscribe = fn;
     });
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  async function loginWithGoogle() {
-    try {
-      setError(null);
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      return result.user;
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    }
-  }
+  const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
 
-  async function loginWithEmail(email, password) {
-    try {
-      setError(null);
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      return result.user;
-    } catch (error) {
-      setError(error.message);
-      throw error;
+  const signup = async (email, password, displayName) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    if (displayName) {
+      await updateProfile(cred.user, { displayName });
     }
-  }
+    return cred;
+  };
 
-  async function signup(email, password) {
-    try {
-      setError(null);
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      await createUserDocument(result.user); // Create user document in Firestore
-      return result.user;
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    }
-  }
+  const logout = () => signOut(auth);
 
-  async function logout() {
-    try {
-      setError(null);
-      await signOut(auth);
-    } catch (error) {
-      setError(error.message);
-      throw error;
+  const loginWithGoogle = async () => {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      await signInWithRedirect(auth, provider);
+      return;
     }
-  }
+
+    return signInWithPopup(auth, provider);
+  };
 
   const value = {
     user,
-    error,
     loading,
-    loginWithGoogle,
-    loginWithEmail,
+    login,
     signup,
-    logout
+    logout,
+    loginWithGoogle
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
 }

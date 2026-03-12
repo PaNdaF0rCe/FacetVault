@@ -1,72 +1,138 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { signup } = useAuth();
+function Signup() {
+  const { signup, loginWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  const handleSignup = async (e) => {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  const handleChange = (e) =>
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSubmitting(true);
+
     try {
-      await signup(email, password);
-      navigate('/dashboard'); // Redirect to dashboard after successful signup
-    } catch (error) {
-      setError('Failed to sign up: ' + error.message);
+      await signup(form.email, form.password, form.name);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Failed to create account.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setSubmitting(true);
+
+    try {
+      const result = await loginWithGoogle();
+      if (result?.user) {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch (err) {
+      setError(err.message || 'Google sign-up failed.');
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create an account
-          </h2>
+    <div className="flex min-h-[calc(100vh-2rem)] items-center justify-center">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950/70 p-8 shadow-2xl backdrop-blur">
+        <div className="mb-8 text-center">
+          <p className="text-sm uppercase tracking-[0.25em] text-amber-300">FacetVault</p>
+          <h1 className="mt-3 text-3xl font-semibold text-white">Create account</h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Start building your personal gem vault.
+          </p>
         </div>
+
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {error}
           </div>
         )}
-        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
-          <input type="hidden" name="remember" value="true" />
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Sign Up
-            </button>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="name"
+            type="text"
+            required
+            placeholder="Full name"
+            className="lux-input w-full"
+            value={form.name}
+            onChange={handleChange}
+          />
+
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="Email address"
+            className="lux-input w-full"
+            value={form.email}
+            onChange={handleChange}
+          />
+
+          <input
+            name="password"
+            type="password"
+            required
+            placeholder="Password"
+            className="lux-input w-full"
+            value={form.password}
+            onChange={handleChange}
+          />
+
+          <button type="submit" disabled={submitting} className="lux-button-primary w-full">
+            {submitting ? 'Creating account...' : 'Create account'}
+          </button>
         </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-xs uppercase tracking-widest text-slate-500">or</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={submitting}
+          className="lux-button-secondary w-full"
+        >
+          Continue with Google
+        </button>
+
+        <p className="mt-6 text-center text-sm text-slate-400">
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium text-amber-300 hover:text-amber-200">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );
-} 
+}
+
+export default Signup;
