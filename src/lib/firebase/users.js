@@ -3,25 +3,25 @@ import { db } from './config';
 import { getDocument, updateDocument } from './db-operations';
 import { validateUserData, validateProfileUpdates } from './validation';
 
-
 export async function createUserDocument(user) {
   validateUserData(user);
+
   try {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (!userSnap.exists()) {
       const userData = {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL || '/public/default-avatar.png',
+        displayName: user.displayName || '',
+        email: user.email || '',
+        photoURL: user.photoURL || '',
         createdAt: new Date(),
         updatedAt: new Date(),
         totalItems: 0,
         itemsByCategory: {},
         lastScan: null
       };
-      
+
       await setDoc(userRef, userData);
     }
   } catch (error) {
@@ -33,16 +33,34 @@ export async function createUserDocument(user) {
 export async function updateUserStats(userId) {
   try {
     const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    // Create the user document first if it does not exist
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        displayName: '',
+        email: '',
+        photoURL: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalItems: 0,
+        itemsByCategory: {},
+        lastScan: null
+      });
+    }
+
     const inventoryRef = collection(db, 'inventory');
     const q = query(inventoryRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
-    
+
     const totalItems = querySnapshot.size;
-    let itemsByCategory = {};
-    
-    querySnapshot.forEach(doc => {
-      const item = doc.data();
-      itemsByCategory[item.category] = (itemsByCategory[item.category] || 0) + item.quantity;
+    const itemsByCategory = {};
+
+    querySnapshot.forEach((docSnap) => {
+      const item = docSnap.data();
+      const qty = Number(item.quantity) || 1;
+      const category = item.category || 'Other';
+      itemsByCategory[category] = (itemsByCategory[category] || 0) + qty;
     });
 
     await updateDoc(userRef, {

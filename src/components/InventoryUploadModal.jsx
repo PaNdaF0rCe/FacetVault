@@ -19,10 +19,10 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
   const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
+    }));
   };
 
   const handleFileChange = (e) => {
@@ -34,6 +34,11 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!userId) {
+      alert("User session lost. Please log in again.");
+      return;
+    }
+
     if (!imageFile) {
       alert("Please upload or take a photo of the gem.");
       return;
@@ -44,30 +49,28 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
     try {
       const metadata = {
         ...formData,
-        carat: formData.carat ? Number(formData.carat) : null,
-        pricePaid: formData.pricePaid ? Number(formData.pricePaid) : null,
-        quantity: formData.quantity ? Number(formData.quantity) : 1
+        carat: formData.carat?.trim() ? Number(formData.carat) : null,
+        pricePaid: formData.pricePaid?.trim() ? Number(formData.pricePaid) : null,
+        quantity: formData.quantity?.trim() ? Number(formData.quantity) : 1
       };
 
       await uploadInventoryItem(imageFile, metadata, userId);
 
-      try {
+      if (onSuccess) {
         await onSuccess();
-      } catch (postSaveError) {
-        console.error("Post-save refresh error:", postSaveError);
       }
     } catch (error) {
       console.error("Error saving gem:", error);
-      alert("Failed to save gem.");
+      alert(error?.message || "Failed to save gem.");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#020617] border border-[#1e293b] rounded-2xl w-full max-w-3xl p-6 text-gray-200 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#1e293b] bg-[#020617] p-6 text-gray-200">
+        <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-amber-300">
             Add New Gem
           </h2>
@@ -81,10 +84,11 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <input
             name="name"
             placeholder="Gem Name"
+            value={formData.name}
             onChange={handleChange}
             required
             className="input-dark"
@@ -95,6 +99,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
               name="stoneType"
               list="stoneTypes"
               placeholder="Stone Type"
+              value={formData.stoneType}
               onChange={handleChange}
               className="input-dark w-full"
             />
@@ -174,6 +179,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <input
             name="carat"
             placeholder="Carat"
+            value={formData.carat}
             onChange={handleChange}
             className="input-dark"
           />
@@ -181,6 +187,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <input
             name="color"
             placeholder="Color"
+            value={formData.color}
             onChange={handleChange}
             className="input-dark"
           />
@@ -188,6 +195,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <input
             name="cut"
             placeholder="Cut"
+            value={formData.cut}
             onChange={handleChange}
             className="input-dark"
           />
@@ -195,6 +203,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <input
             name="origin"
             placeholder="Origin"
+            value={formData.origin}
             onChange={handleChange}
             className="input-dark"
           />
@@ -202,6 +211,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <input
             name="pricePaid"
             placeholder="Price Paid"
+            value={formData.pricePaid}
             onChange={handleChange}
             className="input-dark"
           />
@@ -209,25 +219,25 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <input
             name="quantity"
             placeholder="Quantity"
+            value={formData.quantity}
             onChange={handleChange}
             className="input-dark"
           />
 
           <div className="md:col-span-2">
-            <label className="text-sm text-gray-400 block mb-2">
+            <label className="mb-2 block text-sm text-gray-400">
               Gem Photo
             </label>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
                 className="block w-full text-sm text-gray-300
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:text-sm file:font-semibold
-                file:bg-amber-400 file:text-black
+                file:mr-4 file:rounded-lg file:border-0
+                file:bg-amber-400 file:px-4 file:py-2
+                file:text-sm file:font-semibold file:text-black
                 hover:file:bg-amber-300"
               />
 
@@ -237,20 +247,19 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
                 capture="environment"
                 onChange={handleFileChange}
                 className="block w-full text-sm text-gray-300
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:text-sm file:font-semibold
-                file:bg-slate-700 file:text-white
+                file:mr-4 file:rounded-lg file:border-0
+                file:bg-slate-700 file:px-4 file:py-2
+                file:text-sm file:font-semibold file:text-white
                 hover:file:bg-slate-600"
               />
             </div>
 
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="mt-2 text-xs text-gray-500">
               Use the first button to upload an image, or the second to take a photo with your camera.
             </p>
 
             {imageFile && (
-              <p className="text-xs text-amber-300 mt-2">
+              <p className="mt-2 text-xs text-amber-300">
                 Selected: {imageFile.name}
               </p>
             )}
@@ -259,15 +268,16 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
           <textarea
             name="notes"
             placeholder="Notes"
+            value={formData.notes}
             onChange={handleChange}
-            className="input-dark md:col-span-2 min-h-[100px]"
+            className="input-dark min-h-[100px] md:col-span-2"
           />
 
-          <div className="md:col-span-2 flex justify-between mt-4">
+          <div className="mt-4 flex justify-between md:col-span-2">
             <button
               type="submit"
               disabled={saving}
-              className="bg-amber-400 text-black px-5 py-2 rounded-lg font-semibold hover:bg-amber-300 transition disabled:opacity-60"
+              className="rounded-lg bg-amber-400 px-5 py-2 font-semibold text-black transition hover:bg-amber-300 disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save Gem"}
             </button>
@@ -275,7 +285,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
             <button
               type="button"
               onClick={onClose}
-              className="border border-gray-600 px-5 py-2 rounded-lg hover:border-gray-400"
+              className="rounded-lg border border-gray-600 px-5 py-2 hover:border-gray-400"
             >
               Cancel
             </button>

@@ -60,29 +60,27 @@ export async function uploadInventoryItem(file, metadata, userId) {
 
     const itemData = {
       userId,
-
       name: metadata.name || '',
       category: metadata.category || '',
       stoneType: metadata.stoneType || '',
-      carat: metadata.carat ? Number(metadata.carat) : 0,
+      carat: metadata.carat !== null && metadata.carat !== undefined && metadata.carat !== ''
+        ? Number(metadata.carat)
+        : null,
       color: metadata.color || '',
       cut: metadata.cut || '',
       origin: metadata.origin || '',
-      pricePaid: metadata.pricePaid ? Number(metadata.pricePaid) : 0,
+      pricePaid: metadata.pricePaid !== null && metadata.pricePaid !== undefined && metadata.pricePaid !== ''
+        ? Number(metadata.pricePaid)
+        : null,
       notes: metadata.notes || '',
       quantity: metadata.quantity ? Number(metadata.quantity) : 1,
-
       fileName: uploadedFile.filename,
       imageUrl: uploadedFile.downloadURL,
-      imagePath: uploadedFile.path,
-
-      createdAt: new Date(),
-      updatedAt: new Date()
+      imagePath: uploadedFile.path
     };
 
     const result = await createDocument('inventory', itemData);
     await updateUserStats(userId);
-
     return result;
   } catch (error) {
     console.error('Error uploading inventory item:', error);
