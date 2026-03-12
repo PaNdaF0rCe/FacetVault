@@ -105,4 +105,43 @@ textarea:focus{
 
 ::-webkit-scrollbar-thumb:hover{
   background:#bfc6e0;
-}
+}@tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+
+ body {
+   background: linear-gradient(180deg,#f3f5fb,#e9edf7);
+   font-family: Inter, system-ui, sans-serif;
+   color:#1f2937;
+ }
+
+ input,
+ select,
+ textarea {
+   @apply border border-gray-200 rounded-lg px-3 py-2 text-sm transition;
+ }
+
+ input:focus,
+ select:focus,
+ textarea:focus {
+   @apply outline-none border-blue-500 ring-2 ring-blue-100;
+ }
+
+ button {
+   @apply transition duration-150;
+ }
+
+ .card-surface {
+   @apply bg-white rounded-2xl shadow-sm border border-gray-100;
+ }
+
+ .panel-surface {
+   @apply bg-white rounded-xl shadow-sm border border-gray-100;
+ }
+
+ .line-clamp-2 {
+   display: -webkit-box;
+   -webkit-line-clamp: 2;
+   -webkit-box-orient: vertical;
+   overflow: hidden;
+ }

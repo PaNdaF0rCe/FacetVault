@@ -34,7 +34,7 @@ function InventoryItemCard({ item, onEdit, onDelete }) {
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+      <div className="relative aspect-square overflow-hidden bg-gray-100">
         <img
           src={item.imageUrl || '/placeholder.png'}
           alt={item.name || 'Gem image'}
@@ -43,7 +43,7 @@ function InventoryItemCard({ item, onEdit, onDelete }) {
 
         <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
           <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-gray-800 backdrop-blur-sm">
-            {item.category || 'Gem'}
+            {item.category?.toUpperCase() || 'GEM'}
           </span>
 
           {item.carat ? (
@@ -54,9 +54,9 @@ function InventoryItemCard({ item, onEdit, onDelete }) {
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <div className="mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
             {item.name || 'Unnamed Gem'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
@@ -67,22 +67,22 @@ function InventoryItemCard({ item, onEdit, onDelete }) {
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div>
             <p className="text-gray-400">Color</p>
-            <p className="font-medium text-gray-800">{item.color || '—'}</p>
+            <p className="font-medium text-gray-800 break-words">{item.color || '—'}</p>
           </div>
 
           <div>
             <p className="text-gray-400">Cut</p>
-            <p className="font-medium text-gray-800">{item.cut || '—'}</p>
+            <p className="font-medium text-gray-800 break-words">{item.cut || '—'}</p>
           </div>
 
           <div>
             <p className="text-gray-400">Origin</p>
-            <p className="font-medium text-gray-800">{item.origin || '—'}</p>
+            <p className="font-medium text-gray-800 break-words">{item.origin || '—'}</p>
           </div>
 
           <div>
             <p className="text-gray-400">Price Paid</p>
-            <p className="font-medium text-gray-800">{formatPrice(item.pricePaid)}</p>
+            <p className="font-medium text-gray-800 break-words">{formatPrice(item.pricePaid)}</p>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ function InventoryItemCard({ item, onEdit, onDelete }) {
               <button
                 onClick={() => handleQuantityChange(quantity - 1)}
                 disabled={isUpdating || quantity <= 1}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:opacity-50"
               >
                 −
               </button>
@@ -112,7 +112,7 @@ function InventoryItemCard({ item, onEdit, onDelete }) {
               <button
                 onClick={() => handleQuantityChange(quantity + 1)}
                 disabled={isUpdating}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-green-200 bg-green-50 text-green-600 transition hover:bg-green-100 disabled:opacity-50"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-green-200 bg-green-50 text-green-600 transition hover:bg-green-100 disabled:opacity-50"
               >
                 +
               </button>
