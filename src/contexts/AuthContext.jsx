@@ -15,7 +15,6 @@ import {
 import { auth } from '../lib/firebase/config';
 
 const AuthContext = createContext(null);
-
 const provider = new GoogleAuthProvider();
 
 export function AuthProvider({ children }) {
@@ -23,34 +22,25 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    let unsubscribe = () => {};
 
     const initAuth = async () => {
       try {
         await setPersistence(auth, browserLocalPersistence);
         await getRedirectResult(auth).catch(() => null);
-      } catch {
-        // ignore here; auth observer below is source of truth
+      } catch (error) {
+        console.error('Auth init error:', error);
       }
 
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        if (!mounted) return;
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         setUser(firebaseUser || null);
         setLoading(false);
       });
-
-      return unsubscribe;
     };
 
-    let unsubscribe;
-    initAuth().then((fn) => {
-      unsubscribe = fn;
-    });
+    initAuth();
 
-    return () => {
-      mounted = false;
-      if (unsubscribe) unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
@@ -63,29 +53,36 @@ export function AuthProvider({ children }) {
     return cred;
   };
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
+  };
 
   const loginWithGoogle = async () => {
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
       await signInWithRedirect(auth, provider);
-      return;
+      return null;
     }
 
     return signInWithPopup(auth, provider);
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    signup,
-    logout,
-    loginWithGoogle
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        signup,
+        logout,
+        loginWithGoogle
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

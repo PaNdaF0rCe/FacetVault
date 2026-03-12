@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getRedirectResult } from 'firebase/auth';
-import { auth } from '../lib/firebase/config';
 
 function Login() {
   const { login, loginWithGoogle, user, loading } = useAuth();
@@ -34,27 +32,13 @@ function Login() {
     }
   };
 
-  useEffect(() => {
-    const handleRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          navigate('/dashboard', { replace: true });
-        }
-      } catch (err) {
-        console.error('Redirect login error:', err);
-      }
-    };
-
-    handleRedirect();
-  }, [navigate]);
-
   const handleGoogle = async () => {
     setError('');
     setSubmitting(true);
 
     try {
       const result = await loginWithGoogle();
+
       if (result?.user) {
         navigate('/dashboard', { replace: true });
       }
