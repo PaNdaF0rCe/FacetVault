@@ -3,21 +3,23 @@ import { storage } from './config';
 
 export async function uploadFileToStorage(file, userId) {
   try {
-    // Generate a unique filename using timestamp
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
     const timestamp = Date.now();
-    const filename = `${file.name}`;
-    const path = `inventory/${userId}/${filename}`;
-    // console.log('Uploading file to storage:', path);
-    
+    const extension = file.name?.split('.').pop() || 'jpg';
+    const safeName = `gem_${timestamp}.${extension}`;
+    const path = `inventory/${userId}/${safeName}`;
+
     const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    // console.log('File uploaded successfully:', downloadURL);
-    
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+
     return {
       downloadURL,
       path,
-      filename
+      filename: safeName
     };
   } catch (error) {
     console.error('Error uploading file to storage:', error);
@@ -31,7 +33,6 @@ export async function deleteFileFromStorage(path) {
     await deleteObject(storageRef);
     return true;
   } catch (error) {
-    // If file doesn't exist, don't throw an error
     if (error.code === 'storage/object-not-found') {
       return true;
     }

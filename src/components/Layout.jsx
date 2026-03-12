@@ -1,11 +1,12 @@
-import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
+import React from "react";
+import { Outlet } from "react-router-dom";
+import Navbar from "./Navbar";
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-[#f8f9fd] to-[#eef1f7]">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      <main className="max-w-[1400px] mx-auto px-6 py-10">
         <Outlet />
       </main>
     </div>

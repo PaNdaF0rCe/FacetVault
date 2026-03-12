@@ -2,94 +2,117 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import FilterBar from '../components/FilterBar';
 import InventoryItemCard from '../components/InventoryItemCard';
-import LowStockAlert from '../components/LowStockAlert';
 import InventoryUploadModal from '../components/InventoryUploadModal';
 import { getFilteredInventory, deleteInventoryItem } from '../lib/firebase/inventory-operations';
 import { updateUserStats } from '../lib/firebase/users';
 
 function Dashboard() {
   const { user } = useAuth();
-  const [inventory, setInventory] = useState([]);
+  const [gems, setGems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [filters, setFilters] = useState({
     category: '',
     search: '',
-    expiryDate: null,
     sortBy: 'updatedAt'
   });
 
   useEffect(() => {
     if (!user?.uid) return;
-    fetchInventory();
+    fetchGems();
   }, [user, filters]);
 
-  const fetchInventory = async () => {
+  const fetchGems = async () => {
     setIsLoading(true);
     try {
       const items = await getFilteredInventory(user.uid, filters);
-      setInventory(items);
+      setGems(items);
     } catch (error) {
-      console.error('Error fetching inventory:', error);
-      alert('Failed to fetch inventory items');
+      console.error('Error fetching gems:', error);
+      alert('Failed to fetch gem records');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleItemDelete = async (itemId) => {
+  const handleGemDelete = async (itemId) => {
     try {
       await deleteInventoryItem(itemId, user.uid);
       await updateUserStats(user.uid);
-      fetchInventory();
+      fetchGems();
     } catch (error) {
-      console.error('Error deleting item:', error);
-      alert('Failed to delete item');
+      console.error('Error deleting gem:', error);
+      alert('Failed to delete gem record');
     }
   };
 
   const handleUploadSuccess = async () => {
     setShowUploadModal(false);
     await updateUserStats(user.uid);
-    fetchInventory();
+    fetchGems();
   };
 
-  const handleItemUpdate = (updatedItem) => {
-    setInventory(current =>
-      current.map(item =>
-        item.id === updatedItem.id ? updatedItem : item
-      )
+  const handleGemUpdate = (updatedItem) => {
+    setGems((current) =>
+      current.map((item) => (item.id === updatedItem.id ? updatedItem : item))
     );
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">My Inventory</h1>
+    <div className="space-y-8">
+      <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+            My Gem Collection
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Organize, track, and review your gemstone records in one place.
+          </p>
+        </div>
+
         <button
           onClick={() => setShowUploadModal(true)}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
         >
-          Add New Item
+          Add New Gem
         </button>
-      </div>
+      </section>
 
-      <LowStockAlert userId={user.uid} />
+      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <FilterBar filters={filters} onFilterChange={setFilters} />
+      </section>
 
-      <FilterBar filters={filters} onFilterChange={setFilters} />
+      <section className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          {isLoading ? 'Loading collection...' : `${gems.length} gem${gems.length === 1 ? '' : 's'} in your collection`}
+        </div>
+      </section>
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="flex justify-center py-16">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900"></div>
+        </div>
+      ) : gems.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-20 text-center shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-900">No gems yet</h2>
+          <p className="mt-2 text-sm text-gray-500">
+            Add your first gem to start building your collection.
+          </p>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="mt-6 inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          >
+            Add Your First Gem
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {inventory.map(item => (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {gems.map((item) => (
             <InventoryItemCard
               key={item.id}
               item={item}
-              onEdit={handleItemUpdate}
-              onDelete={() => handleItemDelete(item.id)}
+              onEdit={handleGemUpdate}
+              onDelete={() => handleGemDelete(item.id)}
             />
           ))}
         </div>

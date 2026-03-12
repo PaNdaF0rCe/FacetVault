@@ -7,7 +7,7 @@ import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Home from './pages/Home'
-import RecipeGenerator from './pages/RecipeGenerator'
+
 
 function App() {
   return (
@@ -29,14 +29,6 @@ function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/recipe-generator"
-              element={
-                <PrivateRoute>
-                  <RecipeGenerator />
                 </PrivateRoute>
               }
             />

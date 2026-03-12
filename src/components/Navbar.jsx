@@ -1,88 +1,29 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { auth } from '../lib/firebase/config';
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import React from "react";
 
-
-function Navbar() {
-  const [user, setUser] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const login = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in:", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/');
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
+export default function Navbar() {
   return (
-    <nav className="bg-white shadow-lg">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          <Link to="/" className="text-xl font-bold">StockSmart AI</Link>
-          <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              to="/dashboard" 
-              className="text-gray-900 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Dashboard
-              </Link>
-            <Link
-                to="/recipe-generator"
-                className="text-gray-900 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                Recipe Generator
-                </Link>
+    <header className="bg-white border-b border-gray-200">
+      <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold text-gray-900">
+            FacetVault
+          </h1>
 
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <span>{user.displayName}</span>
-                {user.photoURL && (
-                  <img 
-                    src={user.photoURL} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full"
-                  />
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={login}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Login
-              </button>
-            )}
-          </div>
+          <span className="text-sm text-blue-600 font-medium">
+            Collection
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-500">
+            andrew fernando
+          </span>
+
+          <button className="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg">
+            Logout
+          </button>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }
-
-export default Navbar;

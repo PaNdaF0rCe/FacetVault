@@ -1,3 +1,108 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== GLOBAL APP STYLE ===== */
+
+body {
+  background: linear-gradient(180deg,#f3f5fb,#e9edf7);
+  font-family: Inter, system-ui, sans-serif;
+  color:#1f2937;
+}
+
+/* ===== PANELS ===== */
+
+.card-surface{
+  background:white;
+  border-radius:18px;
+  border:1px solid #e6e9f2;
+  box-shadow:0 8px 24px rgba(20,30,70,0.05);
+}
+
+.panel-surface{
+  background:white;
+  border-radius:14px;
+  border:1px solid #e6e9f2;
+  box-shadow:0 4px 16px rgba(20,30,70,0.04);
+}
+
+/* ===== INPUTS ===== */
+
+input,
+select,
+textarea{
+  border:1px solid #dfe3ef;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:14px;
+  background:white;
+  transition:all .2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  outline:none;
+  border-color:#4f6ef7;
+  box-shadow:0 0 0 3px rgba(79,110,247,0.15);
+}
+
+/* ===== BUTTONS ===== */
+
+.btn-primary{
+  background:linear-gradient(135deg,#4f6ef7,#3451d1);
+  color:white;
+  border-radius:10px;
+  padding:10px 18px;
+  font-weight:600;
+  box-shadow:0 6px 14px rgba(52,81,209,.25);
+}
+
+.btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(52,81,209,.35);
+}
+
+.btn-danger{
+  background:#ef4444;
+  color:white;
+  border-radius:10px;
+  padding:8px 14px;
+}
+
+/* ===== CATEGORY BADGES ===== */
+
+.badge-gem{
+  background:#e7ecff;
+  color:#3451d1;
+}
+
+.badge-diamond{
+  background:#e8fbff;
+  color:#0ea5e9;
+}
+
+.badge-rough{
+  background:#e9f9ef;
+  color:#16a34a;
+}
+
+.badge-other{
+  background:#f3f4f6;
+  color:#6b7280;
+}
+
+/* ===== SCROLLBAR ===== */
+
+::-webkit-scrollbar{
+  width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+  background:#d4d9ea;
+  border-radius:10px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background:#bfc6e0;
+}
