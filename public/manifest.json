@@ -1,0 +1,20 @@
+{
+  "name": "FacetVault",
+  "short_name": "FacetVault",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060b16",
+  "theme_color": "#060b16",
+  "icons": [
+    {
+      "src": "/StockSmart-AI.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/StockSmart-AI.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
