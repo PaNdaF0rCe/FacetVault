@@ -65,28 +65,44 @@ function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-amber-300">
-          My Gem Collection
-        </h1>
+    <div className="space-y-5 sm:space-y-6">
+      <section className="rounded-3xl border border-white/10 bg-[#071224]/70 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
+              Personal inventory
+            </p>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-amber-300 sm:text-4xl">
+                My Gem Collection
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-gray-400 sm:text-base">
+                Manage your stones, review details fast, and keep your collection organized in one place.
+              </p>
+            </div>
+          </div>
 
-        <button
-          onClick={() => setShowUploadModal(true)}
-          className="shrink-0 rounded-lg bg-amber-400 px-4 py-2 font-medium text-black transition hover:bg-amber-300"
-        >
-          Add New Gem
-        </button>
-      </div>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:px-6"
+          >
+            Add New Gem
+          </button>
+        </div>
+      </section>
 
-      <FilterBar filters={filters} onFilterChange={setFilters} />
+      <FilterBar filters={filters} onFilterChange={setFilters} totalCount={gems.length} />
 
       {isLoading ? (
-        <div className="text-gray-400">Loading collection...</div>
+        <div className="rounded-2xl border border-white/10 bg-[#020617]/70 p-6 text-gray-400">
+          Loading collection...
+        </div>
       ) : gems.length === 0 ? (
-        <div className="text-gray-400">No gems in collection yet.</div>
+        <div className="rounded-2xl border border-white/10 bg-[#020617]/70 p-6 text-gray-400">
+          No gems in collection yet.
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
           {gems.map((item) => (
             <InventoryItemCard
               key={item.id}

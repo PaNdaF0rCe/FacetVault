@@ -4,31 +4,26 @@ import { useAuth } from "../contexts/AuthContext";
 function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
-
   const isDashboard = location.pathname === "/dashboard";
 
   return (
-    <header className="w-full border-b border-white/10 bg-[#050a16]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-
-        {/* Logo */}
+    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#050a16]/90 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <Link
           to={user ? "/dashboard" : "/"}
-          className="text-lg font-semibold tracking-wide text-amber-400"
+          className="text-xl font-semibold tracking-[0.02em] text-amber-400 sm:text-2xl"
         >
           FacetVault
         </Link>
 
-        {/* Right side */}
         {user && isDashboard && (
           <button
             onClick={logout}
-            className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-medium text-black transition hover:bg-amber-300"
+            className="rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:px-5"
           >
             Logout
           </button>
         )}
-
       </div>
     </header>
   );
