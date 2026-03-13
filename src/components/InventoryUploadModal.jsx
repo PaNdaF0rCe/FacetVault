@@ -134,11 +134,13 @@ function InventoryUploadModal({
   };
 
   const handleFileChange = (e) => {
-    if (isEditMode) return;
-
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
     }
+  };
+
+  const handleRemoveNewImage = () => {
+    setImageFile(null);
   };
 
   const handleSubmit = async (e) => {
@@ -183,7 +185,12 @@ function InventoryUploadModal({
       };
 
       if (isEditMode) {
-        await updateInventoryItem(initialData.id, metadata);
+        await updateInventoryItem(
+          initialData.id,
+          metadata,
+          userId,
+          imageFile || null
+        );
       } else {
         await uploadInventoryItem(imageFile, metadata, userId);
       }
@@ -218,7 +225,7 @@ function InventoryUploadModal({
                 </h2>
                 <p className="mt-1 text-sm text-gray-400">
                   {isEditMode
-                    ? "Update the gem details while keeping the current image."
+                    ? "Update the gem details and optionally replace the current image."
                     : "Save the stone details and attach a clear photo for your inventory."}
                 </p>
               </div>
@@ -445,46 +452,48 @@ function InventoryUploadModal({
                     </h3>
                     <p className="mt-1 text-xs text-gray-400">
                       {isEditMode
-                        ? "Current image is shown below. Image replacement can be added later without affecting the current edit flow."
+                        ? "Keep the current image or choose a new one to replace it."
                         : "Upload an image from your device or capture a fresh photo."}
                     </p>
                   </div>
 
-                  {!isEditMode && (
-                    <div className="space-y-3">
-                      <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                        Upload from device
-                      </label>
+                  <div className="space-y-3">
+                    <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      {isEditMode ? "Replace from device" : "Upload from device"}
+                    </label>
 
-                      <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                        Take photo with camera
-                      </label>
+                    <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      {isEditMode ? "Replace with camera" : "Take photo with camera"}
+                    </label>
 
-                      <p className="text-xs leading-5 text-gray-500">
-                        A clear close-up on a plain background works best for
-                        reviewing your collection later.
-                      </p>
-                    </div>
-                  )}
+                    {isEditMode && imageFile && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveNewImage}
+                        className="w-full rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
+                      >
+                        Keep current image instead
+                      </button>
+                    )}
 
-                  {isEditMode && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
-                      Editing details only. Current image will stay unchanged.
-                    </div>
-                  )}
+                    <p className="text-xs leading-5 text-gray-500">
+                      A clear close-up on a plain background works best for
+                      reviewing your collection later.
+                    </p>
+                  </div>
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#020617]">
                     {previewUrl ? (
@@ -496,12 +505,18 @@ function InventoryUploadModal({
                         />
                         <div className="border-t border-white/10 px-4 py-3">
                           <p className="truncate text-sm font-medium text-white">
-                            {isEditMode
-                              ? initialData?.name || "Current gem image"
-                              : imageFile?.name}
+                            {imageFile
+                              ? imageFile.name
+                              : initialData?.name || "Current gem image"}
                           </p>
                           <p className="mt-1 text-xs text-gray-400">
-                            {isEditMode ? "Current saved image" : "Ready to upload"}
+                            {imageFile
+                              ? isEditMode
+                                ? "New image selected"
+                                : "Ready to upload"
+                              : isEditMode
+                              ? "Current saved image"
+                              : "Ready to upload"}
                           </p>
                         </div>
                       </div>
