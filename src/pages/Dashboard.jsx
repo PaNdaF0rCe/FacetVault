@@ -66,14 +66,14 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-amber-300">
           My Gem Collection
         </h1>
 
         <button
           onClick={() => setShowUploadModal(true)}
-          className="rounded-lg bg-amber-400 px-4 py-2 font-medium text-black transition hover:bg-amber-300"
+          className="shrink-0 rounded-lg bg-amber-400 px-4 py-2 font-medium text-black transition hover:bg-amber-300"
         >
           Add New Gem
         </button>
@@ -106,92 +106,98 @@ function Dashboard() {
       )}
 
       {selectedGem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-3xl rounded-2xl border border-[#1e293b] bg-[#020617] p-6 text-gray-200 shadow-xl">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-amber-300">
-                {selectedGem.name}
-              </h2>
+        <div className="fixed inset-0 z-50 bg-black/60">
+          <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
+            <div className="my-3 flex w-full max-w-3xl flex-col rounded-2xl border border-[#1e293b] bg-[#020617] text-gray-200 shadow-xl max-h-[calc(100vh-1.5rem)] sm:max-h-[90vh]">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-4 rounded-t-2xl border-b border-[#1e293b] bg-[#020617] px-4 py-4 sm:px-6">
+                <h2 className="min-w-0 truncate pr-2 text-lg font-semibold text-amber-300 sm:text-xl">
+                  {selectedGem.name}
+                </h2>
 
-              <button
-                onClick={() => setSelectedGem(null)}
-                className="text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGem(null)}
+                  className="shrink-0 rounded-md p-2 text-gray-400 transition hover:bg-white/5 hover:text-white"
+                  aria-label="Close gem details"
+                >
+                  ✕
+                </button>
+              </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <img
-                src={selectedGem.imageUrl}
-                alt={selectedGem.name}
-                className="rounded-xl border border-[#1e293b]"
-              />
+              <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <img
+                    src={selectedGem.imageUrl}
+                    alt={selectedGem.name}
+                    className="max-h-[360px] w-full rounded-xl border border-[#1e293b] object-cover sm:max-h-[420px]"
+                  />
 
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-xs text-gray-400">Stone Type</p>
-                  <p>{selectedGem.stoneType}</p>
-                </div>
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-400">Stone Type</p>
+                      <p>{selectedGem.stoneType}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Category</p>
-                  <p>{selectedGem.category}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Category</p>
+                      <p>{selectedGem.category}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Carat</p>
-                  <p>{selectedGem.carat ? `${selectedGem.carat} ct` : "—"}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Carat</p>
+                      <p>{selectedGem.carat ? `${selectedGem.carat} ct` : "—"}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Color</p>
-                  <p>{selectedGem.color || "—"}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Color</p>
+                      <p>{selectedGem.color || "—"}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Cut</p>
-                  <p>{selectedGem.cut || "—"}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Cut</p>
+                      <p>{selectedGem.cut || "—"}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Origin</p>
-                  <p>{selectedGem.origin || "—"}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Origin</p>
+                      <p>{selectedGem.origin || "—"}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Price Paid</p>
-                  <p>{selectedGem.pricePaid ?? "—"}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Price Paid</p>
+                      <p>{selectedGem.pricePaid ?? "—"}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Quantity</p>
-                  <p>{selectedGem.quantity}</p>
-                </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Quantity</p>
+                      <p>{selectedGem.quantity}</p>
+                    </div>
 
-                <div>
-                  <p className="text-xs text-gray-400">Notes</p>
-                  <div className="rounded-lg border border-[#1e293b] bg-[#020617] p-3 text-sm">
-                    {selectedGem.notes || "No notes"}
+                    <div>
+                      <p className="text-xs text-gray-400">Notes</p>
+                      <div className="rounded-lg border border-[#1e293b] bg-[#020617] p-3 text-sm break-words">
+                        {selectedGem.notes || "No notes"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-6 flex justify-between">
-              <button
-                onClick={() => handleGemDelete(selectedGem.id)}
-                className="rounded-md bg-red-500 px-4 py-2 text-white hover:bg-red-400"
-              >
-                Delete Gem
-              </button>
+              <div className="sticky bottom-0 flex flex-col-reverse gap-3 rounded-b-2xl border-t border-[#1e293b] bg-[#020617] px-4 py-4 sm:flex-row sm:justify-between sm:px-6">
+                <button
+                  onClick={() => handleGemDelete(selectedGem.id)}
+                  className="rounded-md bg-red-500 px-4 py-2 text-white transition hover:bg-red-400"
+                >
+                  Delete Gem
+                </button>
 
-              <button
-                onClick={() => setSelectedGem(null)}
-                className="rounded-md border border-gray-600 px-4 py-2 hover:border-gray-400"
-              >
-                Close
-              </button>
+                <button
+                  onClick={() => setSelectedGem(null)}
+                  className="rounded-md border border-gray-600 px-4 py-2 transition hover:border-gray-400"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
