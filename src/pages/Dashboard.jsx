@@ -194,6 +194,41 @@ function StatCard({ label, value, hint }) {
   );
 }
 
+function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#04101f]/75 px-3 py-3 sm:hidden">
+      <div className="grid grid-cols-3 divide-x divide-white/10 text-center">
+        <div className="px-2">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+            Gems
+          </p>
+          <p className="mt-1 text-sm font-semibold text-white">
+            {totalEntries.toLocaleString()}
+          </p>
+        </div>
+
+        <div className="px-2">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+            Carats
+          </p>
+          <p className="mt-1 text-sm font-semibold text-white">
+            {formatCarat(totalCarats)}
+          </p>
+        </div>
+
+        <div className="px-2">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+            Value
+          </p>
+          <p className="mt-1 truncate text-sm font-semibold text-white">
+            {formatPrice(totalValue)}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function LoadingSkeletons() {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
@@ -268,7 +303,7 @@ function Dashboard() {
     }
   };
 
-  const totalGems = gems.reduce((sum, item) => {
+  const totalEntries = gems.reduce((sum, item) => {
     const qty = Number(item.quantity);
     return sum + (Number.isNaN(qty) ? 1 : qty || 1);
   }, 0);
@@ -390,29 +425,29 @@ function Dashboard() {
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      <section className="rounded-3xl border border-white/10 bg-[#071224]/70 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
+      <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-5 lg:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber-400/80 sm:text-xs">
               Personal inventory
             </p>
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-amber-300 sm:text-4xl">
-                My Gem Collection
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm text-gray-400 sm:text-base">
-                Manage your stones, review details fast, and keep your
-                collection organized in one place.
-              </p>
-            </div>
+
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-amber-300 sm:text-4xl">
+              My Gem Collection
+            </h1>
+
+            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-400 sm:text-base">
+              Manage your stones, review details quickly, and keep your
+              collection organized in one place.
+            </p>
           </div>
 
           <button
             onClick={() => setShowUploadModal(true)}
-            className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:px-6"
+            className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:self-start lg:self-auto"
           >
             Add New Gem
           </button>
@@ -420,23 +455,31 @@ function Dashboard() {
       </section>
 
       {!isLoading && gems.length > 0 && (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard
-            label="Total Entries"
-            value={totalGems.toLocaleString()}
-            hint="Across your current filtered view"
+        <>
+          <MobileSummaryBar
+            totalEntries={totalEntries}
+            totalCarats={totalCarats}
+            totalValue={totalValue}
           />
-          <StatCard
-            label="Total Carats"
-            value={formatCarat(totalCarats)}
-            hint="Combined carat weight"
-          />
-          <StatCard
-            label="Total Value"
-            value={formatPrice(totalValue)}
-            hint="Based on recorded price paid"
-          />
-        </section>
+
+          <section className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
+            <StatCard
+              label="Total Entries"
+              value={totalEntries.toLocaleString()}
+              hint="Across your current filtered view"
+            />
+            <StatCard
+              label="Total Carats"
+              value={formatCarat(totalCarats)}
+              hint="Combined carat weight"
+            />
+            <StatCard
+              label="Total Value"
+              value={formatPrice(totalValue)}
+              hint="Based on recorded price paid"
+            />
+          </section>
+        </>
       )}
 
       <FilterBar
@@ -521,8 +564,9 @@ function Dashboard() {
                         isRefreshingSelectedGem ||
                         showDeleteConfirm ||
                         isDeletingGem
-                      )
+                      ) {
                         return;
+                      }
                       setSelectedGem(null);
                     }}
                     className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
