@@ -1,15 +1,30 @@
-import { useMemo, useState } from "react";
-import { uploadInventoryItem } from "../lib/firebase/inventory-operations";
+import { useEffect, useMemo, useState } from "react";
+import {
+  uploadInventoryItem,
+  updateInventoryItem,
+} from "../lib/firebase/inventory-operations";
 
 function FieldLabel({ children, optional = false }) {
   return (
     <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.16em] text-gray-400">
-      {children} {optional && <span className="normal-case tracking-normal text-gray-500">(optional)</span>}
+      {children}{" "}
+      {optional && (
+        <span className="normal-case tracking-normal text-gray-500">
+          (optional)
+        </span>
+      )}
     </label>
   );
 }
 
-function TextInput({ name, value, onChange, placeholder, type = "text", required = false }) {
+function TextInput({
+  name,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false,
+}) {
   return (
     <input
       type={type}
@@ -23,8 +38,38 @@ function TextInput({ name, value, onChange, placeholder, type = "text", required
   );
 }
 
-function InventoryUploadModal({ onClose, onSuccess, userId }) {
-  const [formData, setFormData] = useState({
+function getInitialFormData(initialData, mode) {
+  if (mode === "edit" && initialData) {
+    return {
+      name: initialData.name || "",
+      stoneType: initialData.stoneType || "",
+      category: initialData.category || "Gem",
+      carat:
+        initialData.carat !== null &&
+        initialData.carat !== undefined &&
+        initialData.carat !== ""
+          ? String(initialData.carat)
+          : "",
+      color: initialData.color || "",
+      cut: initialData.cut || "",
+      origin: initialData.origin || "",
+      pricePaid:
+        initialData.pricePaid !== null &&
+        initialData.pricePaid !== undefined &&
+        initialData.pricePaid !== ""
+          ? String(initialData.pricePaid)
+          : "",
+      quantity:
+        initialData.quantity !== null &&
+        initialData.quantity !== undefined &&
+        initialData.quantity !== ""
+          ? String(initialData.quantity)
+          : "1",
+      notes: initialData.notes || "",
+    };
+  }
+
+  return {
     name: "",
     stoneType: "",
     category: "Gem",
@@ -35,15 +80,51 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
     pricePaid: "",
     quantity: "1",
     notes: "",
-  });
+  };
+}
 
+function InventoryUploadModal({
+  onClose,
+  onSuccess,
+  userId,
+  mode = "create",
+  initialData = null,
+  onNotify,
+}) {
+  const isEditMode = mode === "edit";
+
+  const [formData, setFormData] = useState(
+    getInitialFormData(initialData, mode)
+  );
   const [imageFile, setImageFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const previewUrl = useMemo(() => {
+  useEffect(() => {
+    setFormData(getInitialFormData(initialData, mode));
+    setImageFile(null);
+  }, [initialData, mode]);
+
+  const selectedPreviewUrl = useMemo(() => {
     if (!imageFile) return null;
     return URL.createObjectURL(imageFile);
   }, [imageFile]);
+
+  useEffect(() => {
+    return () => {
+      if (selectedPreviewUrl) {
+        URL.revokeObjectURL(selectedPreviewUrl);
+      }
+    };
+  }, [selectedPreviewUrl]);
+
+  const previewUrl =
+    selectedPreviewUrl || (isEditMode ? initialData?.imageUrl || null : null);
+
+  const notify = (type, message, title) => {
+    if (onNotify) {
+      onNotify({ type, message, title });
+    }
+  };
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -53,6 +134,8 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
   };
 
   const handleFileChange = (e) => {
+    if (isEditMode) return;
+
     if (e.target.files && e.target.files[0]) {
       setImageFile(e.target.files[0]);
     }
@@ -62,12 +145,22 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
     e.preventDefault();
 
     if (!userId) {
-      alert("User session lost. Please log in again.");
+      notify("error", "User session lost. Please log in again.", "Session issue");
       return;
     }
 
-    if (!imageFile) {
-      alert("Please upload or take a photo of the gem.");
+    if (!formData.name.trim()) {
+      notify("error", "Please enter a gem name.", "Missing name");
+      return;
+    }
+
+    if (isEditMode && !initialData?.id) {
+      notify("error", "Missing gem data for editing.", "Edit error");
+      return;
+    }
+
+    if (!isEditMode && !imageFile) {
+      notify("error", "Please upload or take a photo of the gem.", "Image required");
       return;
     }
 
@@ -75,20 +168,36 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
 
     try {
       const metadata = {
-        ...formData,
+        name: formData.name.trim(),
+        stoneType: formData.stoneType.trim(),
+        category: formData.category,
         carat: formData.carat?.trim() ? Number(formData.carat) : null,
-        pricePaid: formData.pricePaid?.trim() ? Number(formData.pricePaid) : null,
+        color: formData.color.trim(),
+        cut: formData.cut.trim(),
+        origin: formData.origin.trim(),
+        pricePaid: formData.pricePaid?.trim()
+          ? Number(formData.pricePaid)
+          : null,
         quantity: formData.quantity?.trim() ? Number(formData.quantity) : 1,
+        notes: formData.notes.trim(),
       };
 
-      await uploadInventoryItem(imageFile, metadata, userId);
+      if (isEditMode) {
+        await updateInventoryItem(initialData.id, metadata);
+      } else {
+        await uploadInventoryItem(imageFile, metadata, userId);
+      }
 
       if (onSuccess) {
         await onSuccess();
       }
     } catch (error) {
-      console.error("Error saving gem:", error);
-      alert(error?.message || "Failed to save gem.");
+      console.error(`Error ${isEditMode ? "updating" : "saving"} gem:`, error);
+      notify(
+        "error",
+        error?.message || `Failed to ${isEditMode ? "update" : "save"} gem.`,
+        isEditMode ? "Update failed" : "Save failed"
+      );
     } finally {
       setSaving(false);
     }
@@ -97,18 +206,20 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70">
       <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
-        <div className="my-3 flex w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] max-h-[calc(100vh-1.5rem)] sm:max-h-[92vh]">
+        <div className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:max-h-[92vh]">
           <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
-                  Collection entry
+                  {isEditMode ? "Collection update" : "Collection entry"}
                 </p>
                 <h2 className="mt-1 text-xl font-semibold text-amber-300 sm:text-2xl">
-                  Add New Gem
+                  {isEditMode ? "Edit Gem" : "Add New Gem"}
                 </h2>
                 <p className="mt-1 text-sm text-gray-400">
-                  Save the stone details and attach a clear photo for your inventory.
+                  {isEditMode
+                    ? "Update the gem details while keeping the current image."
+                    : "Save the stone details and attach a clear photo for your inventory."}
                 </p>
               </div>
 
@@ -116,19 +227,25 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
                 type="button"
                 onClick={onClose}
                 className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white"
-                aria-label="Close add gem modal"
+                aria-label="Close gem modal"
               >
                 ✕
               </button>
             </div>
           </div>
 
-          <form id="add-gem-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+          <form
+            id="gem-form"
+            onSubmit={handleSubmit}
+            className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6"
+          >
             <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
               <div className="space-y-5">
                 <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-white">Gem details</h3>
+                    <h3 className="text-sm font-semibold text-white">
+                      Gem details
+                    </h3>
                     <p className="mt-1 text-xs text-gray-400">
                       Basic identification and collection information.
                     </p>
@@ -234,7 +351,7 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
                     </div>
 
                     <div>
-                      <FieldLabel>Carat</FieldLabel>
+                      <FieldLabel optional>Carat</FieldLabel>
                       <TextInput
                         name="carat"
                         placeholder="1.15"
@@ -302,7 +419,8 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-white">Notes</h3>
                     <p className="mt-1 text-xs text-gray-400">
-                      Add anything useful like purchase source, treatment, or identification notes.
+                      Add anything useful like purchase source, treatment, or
+                      identification notes.
                     </p>
                   </div>
 
@@ -322,66 +440,85 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
               <div className="space-y-5">
                 <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-white">Gem Photo</h3>
+                    <h3 className="text-sm font-semibold text-white">
+                      Gem Photo
+                    </h3>
                     <p className="mt-1 text-xs text-gray-400">
-                      Upload an image from your device or capture a fresh photo.
+                      {isEditMode
+                        ? "Current image is shown below. Image replacement can be added later without affecting the current edit flow."
+                        : "Upload an image from your device or capture a fresh photo."}
                     </p>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      Upload from device
-                    </label>
+                  {!isEditMode && (
+                    <div className="space-y-3">
+                      <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        Upload from device
+                      </label>
 
-                    <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      Take photo with camera
-                    </label>
+                      <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        Take photo with camera
+                      </label>
 
-                    <p className="text-xs leading-5 text-gray-500">
-                      A clear close-up on a plain background works best for reviewing your collection later.
-                    </p>
-                  </div>
+                      <p className="text-xs leading-5 text-gray-500">
+                        A clear close-up on a plain background works best for
+                        reviewing your collection later.
+                      </p>
+                    </div>
+                  )}
+
+                  {isEditMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-300">
+                      Editing details only. Current image will stay unchanged.
+                    </div>
+                  )}
 
                   <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#020617]">
                     {previewUrl ? (
                       <div>
                         <img
                           src={previewUrl}
-                          alt="Selected gem preview"
+                          alt="Gem preview"
                           className="h-56 w-full object-cover"
                         />
                         <div className="border-t border-white/10 px-4 py-3">
                           <p className="truncate text-sm font-medium text-white">
-                            {imageFile?.name}
+                            {isEditMode
+                              ? initialData?.name || "Current gem image"
+                              : imageFile?.name}
                           </p>
                           <p className="mt-1 text-xs text-gray-400">
-                            Ready to upload
+                            {isEditMode ? "Current saved image" : "Ready to upload"}
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div className="flex h-56 items-center justify-center px-6 text-center text-sm text-gray-500">
-                        No image selected yet
+                        {isEditMode
+                          ? "No saved image found"
+                          : "No image selected yet"}
                       </div>
                     )}
                   </div>
                 </section>
 
                 <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-white">Quick check</h3>
+                  <h3 className="text-sm font-semibold text-white">
+                    Quick check
+                  </h3>
                   <div className="mt-3 space-y-2 text-sm text-gray-400">
                     <p>• Name and photo are the most important fields.</p>
                     <p>• Carat and price can be added later if needed.</p>
@@ -404,11 +541,17 @@ function InventoryUploadModal({ onClose, onSuccess, userId }) {
 
               <button
                 type="submit"
-                form="add-gem-form"
+                form="gem-form"
                 disabled={saving}
                 className="rounded-xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save Gem"}
+                {saving
+                  ? isEditMode
+                    ? "Saving Changes..."
+                    : "Saving..."
+                  : isEditMode
+                  ? "Save Changes"
+                  : "Save Gem"}
               </button>
             </div>
           </div>
