@@ -15,9 +15,30 @@ import { uploadFileToStorage } from './storage-utils';
 import { updateUserStats } from './users';
 import { UnauthorizedError } from './errors';
 
+function normalizeDateValue(value) {
+  if (!value) return 0;
+
+  if (typeof value?.toDate === 'function') {
+    return value.toDate().getTime();
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function normalizeNumberValue(value) {
+  if (value === null || value === undefined || value === '') return -1;
+  const num = Number(value);
+  return Number.isNaN(num) ? -1 : num;
+}
+
 export async function getFilteredInventory(userId, filters = {}) {
   try {
-    let q = query(
+    const q = query(
       collection(db, 'inventory'),
       where('userId', '==', userId),
       orderBy('updatedAt', 'desc')
@@ -45,6 +66,37 @@ export async function getFilteredInventory(userId, filters = {}) {
         (item.origin || '').toLowerCase().includes(searchTerm) ||
         (item.notes || '').toLowerCase().includes(searchTerm)
       );
+    }
+
+    switch (filters.sortBy) {
+      case 'createdAt':
+        items.sort(
+          (a, b) =>
+            normalizeDateValue(b.createdAt) - normalizeDateValue(a.createdAt)
+        );
+        break;
+
+      case 'carat':
+        items.sort(
+          (a, b) =>
+            normalizeNumberValue(b.carat) - normalizeNumberValue(a.carat)
+        );
+        break;
+
+      case 'pricePaid':
+        items.sort(
+          (a, b) =>
+            normalizeNumberValue(b.pricePaid) - normalizeNumberValue(a.pricePaid)
+        );
+        break;
+
+      case 'updatedAt':
+      default:
+        items.sort(
+          (a, b) =>
+            normalizeDateValue(b.updatedAt) - normalizeDateValue(a.updatedAt)
+        );
+        break;
     }
 
     return items;
