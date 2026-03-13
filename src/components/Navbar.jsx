@@ -10,6 +10,14 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
+  const displaySource =
+    user?.displayName ||
+    user?.email ||
+    user?.username ||
+    "User";
+
+  const userInitial = displaySource.trim().charAt(0).toUpperCase();
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -17,8 +25,19 @@ function Navbar() {
       }
     };
 
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   return (
@@ -36,14 +55,30 @@ function Navbar() {
             <button
               type="button"
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg text-white transition hover:border-white/20 hover:bg-white/10"
-              aria-label="Open menu"
+              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-2.5 py-2 text-white transition hover:border-amber-400/40 hover:bg-white/10"
+              aria-label="Open account menu"
             >
-              ☰
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/30 bg-amber-400/10 text-sm font-semibold text-amber-300">
+                {userInitial}
+              </div>
+
+              <div className="hidden text-left sm:block">
+                <p className="max-w-[160px] truncate text-sm font-medium text-white">
+                  {displaySource}
+                </p>
+                <p className="text-xs text-gray-400">Account</p>
+              </div>
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-2xl border border-white/10 bg-[#091427] shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+              <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-[#091427] shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+                <div className="border-b border-white/10 px-4 py-3">
+                  <p className="truncate text-sm font-medium text-white">
+                    {displaySource}
+                  </p>
+                  <p className="text-xs text-gray-400">Signed in</p>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
