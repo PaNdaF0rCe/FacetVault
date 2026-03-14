@@ -41,7 +41,7 @@ export async function getFilteredInventory(userId, filters = {}) {
     const q = query(
       collection(db, "inventory"),
       where("userId", "==", userId),
-      orderBy("updatedAt", "desc")
+      orderBy("createdAt", "desc")
     );
 
     const querySnapshot = await getDocs(q);

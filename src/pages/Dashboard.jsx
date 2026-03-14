@@ -271,7 +271,7 @@ function Dashboard() {
   const [filters, setFilters] = useState({
     category: "",
     search: "",
-    sortBy: "updatedAt",
+    sortBy: "createdAt",
   });
 
   const showToast = useCallback((nextToast) => {
