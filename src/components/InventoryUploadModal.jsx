@@ -24,6 +24,8 @@ function TextInput({
   placeholder,
   type = "text",
   required = false,
+  min,
+  step,
 }) {
   return (
     <input
@@ -33,6 +35,8 @@ function TextInput({
       value={value}
       onChange={onChange}
       required={required}
+      min={min}
+      step={step}
       className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400"
     />
   );
@@ -66,6 +70,13 @@ function getInitialFormData(initialData, mode) {
           ? String(initialData.quantity)
           : "1",
       notes: initialData.notes || "",
+      isForSale: !!initialData.isForSale,
+      salePrice:
+        initialData.salePrice !== null &&
+        initialData.salePrice !== undefined &&
+        initialData.salePrice !== ""
+          ? String(initialData.salePrice)
+          : "",
     };
   }
 
@@ -80,6 +91,8 @@ function getInitialFormData(initialData, mode) {
     pricePaid: "",
     quantity: "1",
     notes: "",
+    isForSale: false,
+    salePrice: "",
   };
 }
 
@@ -117,6 +130,24 @@ function InventoryUploadModal({
     };
   }, [selectedPreviewUrl]);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape" && !saving) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [saving, onClose]);
+
   const previewUrl =
     selectedPreviewUrl || (isEditMode ? initialData?.imageUrl || null : null);
 
@@ -127,10 +158,20 @@ function InventoryUploadModal({
   };
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value, type, checked } = e.target;
+
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+
+      if (name === "isForSale" && !checked) {
+        next.salePrice = "";
+      }
+
+      return next;
+    });
   };
 
   const handleFileChange = (e) => {
@@ -166,6 +207,11 @@ function InventoryUploadModal({
       return;
     }
 
+    if (formData.isForSale && !formData.salePrice.trim()) {
+      notify("error", "Please enter a sale price for items listed for sale.", "Sale price required");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -182,6 +228,12 @@ function InventoryUploadModal({
           : null,
         quantity: formData.quantity?.trim() ? Number(formData.quantity) : 1,
         notes: formData.notes.trim(),
+        isForSale: !!formData.isForSale,
+        salePrice:
+          formData.isForSale && formData.salePrice?.trim()
+            ? Number(formData.salePrice)
+            : null,
+        saleUpdatedAt: formData.isForSale ? new Date() : null,
       };
 
       if (isEditMode) {
@@ -211,9 +263,17 @@ function InventoryUploadModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70">
+    <div
+      className="fixed inset-0 z-[90] bg-black/70 backdrop-blur-[1px]"
+      onClick={() => {
+        if (!saving) onClose();
+      }}
+    >
       <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
-        <div className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:max-h-[92vh]">
+        <div
+          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:max-h-[92vh]"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -225,15 +285,16 @@ function InventoryUploadModal({
                 </h2>
                 <p className="mt-1 text-sm text-gray-400">
                   {isEditMode
-                    ? "Update the gem details and optionally replace the current image."
-                    : "Save the stone details and attach a clear photo for your inventory."}
+                    ? "Update the gem details, manage sale status, and optionally replace the current image."
+                    : "Save the stone details, attach a photo, and choose whether to list it publicly for sale."}
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white"
+                disabled={saving}
+                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Close gem modal"
               >
                 ✕
@@ -365,6 +426,8 @@ function InventoryUploadModal({
                         value={formData.carat}
                         onChange={handleChange}
                         type="number"
+                        min="0"
+                        step="0.01"
                       />
                     </div>
 
@@ -406,6 +469,8 @@ function InventoryUploadModal({
                         value={formData.pricePaid}
                         onChange={handleChange}
                         type="number"
+                        min="0"
+                        step="0.01"
                       />
                     </div>
 
@@ -417,8 +482,57 @@ function InventoryUploadModal({
                         value={formData.quantity}
                         onChange={handleChange}
                         type="number"
+                        min="1"
+                        step="1"
                       />
                     </div>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">
+                      Sale settings
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Control whether this gem appears in the public collection.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#020617] px-4 py-3">
+                      <input
+                        type="checkbox"
+                        name="isForSale"
+                        checked={formData.isForSale}
+                        onChange={handleChange}
+                        className="h-4 w-4 accent-amber-400"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          List this gem for sale
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Public visitors will only see gems switched on here.
+                        </p>
+                      </div>
+                    </label>
+
+                    {formData.isForSale && (
+                      <div>
+                        <FieldLabel>Sale Price</FieldLabel>
+                        <TextInput
+                          name="salePrice"
+                          placeholder="45000"
+                          value={formData.salePrice}
+                          onChange={handleChange}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          required={formData.isForSale}
+                        />
+                      </div>
+                    )}
                   </div>
                 </section>
 
@@ -498,11 +612,13 @@ function InventoryUploadModal({
                   <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#020617]">
                     {previewUrl ? (
                       <div>
-                        <img
-                          src={previewUrl}
-                          alt="Gem preview"
-                          className="h-56 w-full object-cover"
-                        />
+                        <div className="aspect-square w-full bg-[#020617]">
+                          <img
+                            src={previewUrl}
+                            alt="Gem preview"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
                         <div className="border-t border-white/10 px-4 py-3">
                           <p className="truncate text-sm font-medium text-white">
                             {imageFile
@@ -521,7 +637,7 @@ function InventoryUploadModal({
                         </div>
                       </div>
                     ) : (
-                      <div className="flex h-56 items-center justify-center px-6 text-center text-sm text-gray-500">
+                      <div className="flex aspect-square items-center justify-center px-6 text-center text-sm text-gray-500">
                         {isEditMode
                           ? "No saved image found"
                           : "No image selected yet"}
@@ -536,8 +652,8 @@ function InventoryUploadModal({
                   </h3>
                   <div className="mt-3 space-y-2 text-sm text-gray-400">
                     <p>• Name and photo are the most important fields.</p>
-                    <p>• Carat and price can be added later if needed.</p>
-                    <p>• This entry will be saved to your personal collection.</p>
+                    <p>• Sale price is required only if the gem is listed publicly.</p>
+                    <p>• Public visitors will only see items marked for sale.</p>
                   </div>
                 </section>
               </div>
@@ -549,7 +665,8 @@ function InventoryUploadModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
+                disabled={saving}
+                className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>

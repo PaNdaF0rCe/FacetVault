@@ -23,6 +23,7 @@ function InventoryItemCard({ item, onClick }) {
 
   return (
     <button
+      type="button"
       onClick={() => onClick(item)}
       className="group flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-[#020617]/95 p-3.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.16)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-400/70 hover:shadow-[0_14px_34px_rgba(0,0,0,0.24)] sm:p-4"
     >

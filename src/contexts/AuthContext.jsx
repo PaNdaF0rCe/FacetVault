@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { ADMIN_UID } from "../config/appConfig";
 import {
   onAuthStateChanged,
   signOut,
@@ -87,14 +88,17 @@ export function AuthProvider({ children }) {
     return signInWithPopup(auth, provider);
   };
 
-  const value = {
-    user,
-    loading: user === undefined,
-    login,
-    signup,
-    logout,
-    loginWithGoogle
-  };
+const isAdmin = !!user && user.uid === ADMIN_UID;
+
+const value = {
+  user,
+  loading: user === undefined,
+  login,
+  signup,
+  logout,
+  loginWithGoogle,
+  isAdmin
+};
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

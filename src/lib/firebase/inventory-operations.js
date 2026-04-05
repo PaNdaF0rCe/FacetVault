@@ -134,9 +134,20 @@ export async function uploadInventoryItem(file, metadata, userId) {
           : null,
       notes: metadata.notes || "",
       quantity: metadata.quantity ? Number(metadata.quantity) : 1,
+      isForSale: !!metadata.isForSale,
+      salePrice:
+        metadata.isForSale &&
+        metadata.salePrice !== null &&
+        metadata.salePrice !== undefined &&
+        metadata.salePrice !== ""
+          ? Number(metadata.salePrice)
+          : null,
+      saleUpdatedAt: metadata.isForSale ? new Date() : null,
       fileName: uploadedFile.filename,
       imageUrl: uploadedFile.downloadURL,
       imagePath: uploadedFile.path,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     const result = await createDocument("inventory", itemData);
@@ -250,3 +261,53 @@ export const updateItemQuantity = async (itemId, newQuantity) => {
     throw error;
   }
 };
+
+export async function getPublicSaleInventory(filters = {}) {
+  try {
+    const q = query(
+      collection(db, "inventory"),
+      where("isForSale", "==", true)
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    let items = querySnapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+
+    if (filters.search?.trim()) {
+      const searchTerm = filters.search.trim().toLowerCase();
+
+      items = items.filter(
+        (item) =>
+          (item.name || "").toLowerCase().includes(searchTerm) ||
+          (item.stoneType || "").toLowerCase().includes(searchTerm) ||
+          (item.category || "").toLowerCase().includes(searchTerm) ||
+          (item.color || "").toLowerCase().includes(searchTerm) ||
+          (item.cut || "").toLowerCase().includes(searchTerm) ||
+          (item.origin || "").toLowerCase().includes(searchTerm) ||
+          (item.notes || "").toLowerCase().includes(searchTerm)
+      );
+    }
+
+    if (filters.category) {
+      items = items.filter((item) => item.category === filters.category);
+    }
+
+    items.sort((a, b) => {
+      const aTime = normalizeDateValue(
+        a.saleUpdatedAt || a.updatedAt || a.createdAt
+      );
+      const bTime = normalizeDateValue(
+        b.saleUpdatedAt || b.updatedAt || b.createdAt
+      );
+      return bTime - aTime;
+    });
+
+    return items;
+  } catch (error) {
+    console.error("Error getting public sale inventory:", error);
+    throw error;
+  }
+}

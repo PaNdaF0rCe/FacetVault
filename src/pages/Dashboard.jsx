@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import FilterBar from "../components/FilterBar";
 import InventoryItemCard from "../components/InventoryItemCard";
@@ -14,6 +14,7 @@ function formatCarat(value) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
   if (Number.isNaN(num)) return "—";
+
   return `${num
     .toFixed(2)
     .replace(/\.00$/, "")
@@ -68,9 +69,20 @@ function DeleteConfirmModal({
     if (!isDeleting) onCancel();
   };
 
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape" && !isDeleting) {
+        onCancel();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isDeleting, onCancel]);
+
   return (
     <div
-      className="fixed inset-0 z-[70] bg-black/70"
+      className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-[1px]"
       onClick={handleBackdropClick}
     >
       <div className="flex min-h-full items-center justify-center p-4">
@@ -256,6 +268,209 @@ function LoadingSkeletons() {
   );
 }
 
+function GemDetailModal({
+  gem,
+  isRefreshing,
+  isBusy,
+  onClose,
+  onEdit,
+  onDelete,
+}) {
+  useEffect(() => {
+    if (!gem) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape" && !isBusy) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [gem, isBusy, onClose]);
+
+  if (!gem) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-[1px]"
+      onClick={() => {
+        if (!isBusy) onClose();
+      }}
+    >
+      <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
+        <div
+          key={gem.id}
+          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-[#1e293b] bg-[#020617] text-gray-200 shadow-[0_24px_60px_rgba(0,0,0,0.4)] sm:max-h-[92vh]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="sticky top-0 z-10 border-b border-[#1e293b] bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
+                  Collection entry
+                </p>
+                <h2 className="mt-1 text-xl font-semibold text-amber-300 sm:text-2xl">
+                  {gem.name}
+                </h2>
+                <p className="mt-1 text-sm text-gray-400">
+                  Review the saved gem details and manage this entry.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Close gem details"
+                disabled={isBusy}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+            <div className="relative">
+              {isRefreshing && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[#020617]/70 backdrop-blur-[2px]">
+                  <div className="rounded-2xl border border-white/10 bg-[#091427]/95 px-5 py-4 text-sm text-white shadow-lg">
+                    Saving changes...
+                  </div>
+                </div>
+              )}
+
+              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+                <div className="space-y-5">
+                  <div className="overflow-hidden rounded-2xl border border-[#1e293b] bg-[#04101f]">
+                    <div className="aspect-square w-full bg-[#04101f]">
+                      <img
+                        src={gem.imageUrl}
+                        alt={gem.name}
+                        className="h-full w-full object-cover"
+                        loading="eager"
+                        decoding="async"
+                      />
+                    </div>
+                  </div>
+
+                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-white">
+                      Quick summary
+                    </h3>
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                      {gem.stoneType && (
+                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
+                          {gem.stoneType}
+                        </span>
+                      )}
+                      {gem.category && (
+                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
+                          {gem.category}
+                        </span>
+                      )}
+                      {gem.color && (
+                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
+                          {gem.color}
+                        </span>
+                      )}
+                      {gem.cut && (
+                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
+                          {gem.cut}
+                        </span>
+                      )}
+                      {gem.origin && (
+                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
+                          {gem.origin}
+                        </span>
+                      )}
+                    </div>
+                  </section>
+                </div>
+
+                <div className="space-y-5">
+                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-white">Details</h3>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <DetailField label="Stone Type" value={gem.stoneType} />
+                      <DetailField label="Category" value={gem.category} />
+                      <DetailField label="Carat" value={formatCarat(gem.carat)} />
+                      <DetailField label="Color" value={gem.color || "—"} />
+                      <DetailField label="Cut" value={gem.cut || "—"} />
+                      <DetailField label="Origin" value={gem.origin || "—"} />
+                      <DetailField
+                        label="Price Paid"
+                        value={formatPrice(gem.pricePaid)}
+                      />
+                      <DetailField
+                        label="Quantity"
+                        value={String(gem.quantity || "—")}
+                      />
+                      <DetailField
+                        label="Created"
+                        value={formatDate(gem.createdAt)}
+                      />
+                      <DetailField
+                        label="Last Updated"
+                        value={formatDate(gem.updatedAt)}
+                      />
+                    </div>
+                  </section>
+
+                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-white">Notes</h3>
+                    <div className="mt-3 break-words rounded-xl border border-[#1e293b] bg-[#020617] p-4 text-sm leading-6 text-gray-300">
+                      {gem.notes || "No notes"}
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 border-t border-[#1e293b] bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  onClick={onEdit}
+                  disabled={isBusy}
+                  className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-5 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Edit Gem
+                </button>
+
+                <button
+                  onClick={onDelete}
+                  disabled={isBusy}
+                  className="rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Delete Gem
+                </button>
+              </div>
+
+              <button
+                onClick={onClose}
+                disabled={isBusy}
+                className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { user } = useAuth();
   const [gems, setGems] = useState([]);
@@ -276,17 +491,14 @@ function Dashboard() {
 
   const showToast = useCallback((nextToast) => {
     setToast(null);
-    setTimeout(() => {
+    window.setTimeout(() => {
       setToast(nextToast);
     }, 10);
   }, []);
 
-  useEffect(() => {
+  const fetchGems = useCallback(async () => {
     if (!user?.uid) return;
-    fetchGems();
-  }, [user, filters]);
 
-  const fetchGems = async () => {
     setIsLoading(true);
     try {
       const items = await getFilteredInventory(user.uid, filters);
@@ -301,48 +513,83 @@ function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.uid, filters, showToast]);
 
-  const totalEntries = gems.reduce((sum, item) => {
-    const qty = Number(item.quantity);
-    return sum + (Number.isNaN(qty) ? 1 : qty || 1);
-  }, 0);
+  useEffect(() => {
+    fetchGems();
+  }, [fetchGems]);
 
-  const totalCarats = gems.reduce((sum, item) => {
-    const qty = Number(item.quantity);
-    const carat = Number(item.carat);
-    const safeQty = Number.isNaN(qty) ? 1 : qty || 1;
-    const safeCarat = Number.isNaN(carat) ? 0 : carat || 0;
-    return sum + safeCarat * safeQty;
-  }, 0);
+  useEffect(() => {
+    if (!showUploadModal && !editingGem && !selectedGem && !showDeleteConfirm) {
+      document.body.style.overflow = "";
+    }
+  }, [showUploadModal, editingGem, selectedGem, showDeleteConfirm]);
 
-  const totalValue = gems.reduce((sum, item) => {
-    const qty = Number(item.quantity);
-    const price = Number(item.pricePaid);
-    const safeQty = Number.isNaN(qty) ? 1 : qty || 1;
-    const safePrice = Number.isNaN(price) ? 0 : price || 0;
-    return sum + safePrice * safeQty;
-  }, 0);
+  const totalEntries = useMemo(() => {
+    return gems.reduce((sum, item) => {
+      const qty = Number(item.quantity);
+      return sum + (Number.isNaN(qty) ? 1 : qty || 1);
+    }, 0);
+  }, [gems]);
 
-  const handleRequestDelete = () => {
-    if (!selectedGem || editingGem || isRefreshingSelectedGem) return;
+  const totalCarats = useMemo(() => {
+    return gems.reduce((sum, item) => {
+      const qty = Number(item.quantity);
+      const carat = Number(item.carat);
+      const safeQty = Number.isNaN(qty) ? 1 : qty || 1;
+      const safeCarat = Number.isNaN(carat) ? 0 : carat || 0;
+      return sum + safeCarat * safeQty;
+    }, 0);
+  }, [gems]);
+
+  const totalValue = useMemo(() => {
+    return gems.reduce((sum, item) => {
+      const qty = Number(item.quantity);
+      const price = Number(item.pricePaid);
+      const safeQty = Number.isNaN(qty) ? 1 : qty || 1;
+      const safePrice = Number.isNaN(price) ? 0 : price || 0;
+      return sum + safePrice * safeQty;
+    }, 0);
+  }, [gems]);
+
+  const detailModalBusy =
+    !!editingGem ||
+    isRefreshingSelectedGem ||
+    showDeleteConfirm ||
+    isDeletingGem;
+
+  const handleOpenGem = useCallback((gem) => {
+    setEditingGem(null);
+    setShowDeleteConfirm(false);
+    setSelectedGem(gem);
+  }, []);
+
+  const handleCloseSelectedGem = useCallback(() => {
+    if (detailModalBusy) return;
+    setSelectedGem(null);
+  }, [detailModalBusy]);
+
+  const handleRequestDelete = useCallback(() => {
+    if (!selectedGem || detailModalBusy) return;
     setShowDeleteConfirm(true);
-  };
+  }, [selectedGem, detailModalBusy]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     if (isDeletingGem) return;
     setShowDeleteConfirm(false);
-  };
+  }, [isDeletingGem]);
 
-  const handleConfirmDelete = async () => {
-    if (!selectedGem?.id) return;
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedGem?.id || !user?.uid) return;
 
     try {
       setIsDeletingGem(true);
 
       await deleteInventoryItem(selectedGem.id, user.uid);
       await updateUserStats(user.uid);
-      await fetchGems();
+
+      const refreshedItems = await getFilteredInventory(user.uid, filters);
+      setGems(refreshedItems);
 
       setShowDeleteConfirm(false);
       setSelectedGem(null);
@@ -363,9 +610,9 @@ function Dashboard() {
     } finally {
       setIsDeletingGem(false);
     }
-  };
+  }, [selectedGem, user?.uid, filters, showToast]);
 
-  const handleUploadSuccess = async () => {
+  const handleUploadSuccess = useCallback(async () => {
     try {
       setShowUploadModal(false);
       await updateUserStats(user.uid);
@@ -381,14 +628,14 @@ function Dashboard() {
       setShowUploadModal(false);
       await fetchGems();
     }
-  };
+  }, [user?.uid, fetchGems, showToast]);
 
-  const handleStartEdit = () => {
-    if (!selectedGem) return;
+  const handleStartEdit = useCallback(() => {
+    if (!selectedGem || detailModalBusy) return;
     setEditingGem(selectedGem);
-  };
+  }, [selectedGem, detailModalBusy]);
 
-  const handleEditSuccess = async () => {
+  const handleEditSuccess = useCallback(async () => {
     try {
       const editedId = editingGem?.id || selectedGem?.id;
 
@@ -422,7 +669,7 @@ function Dashboard() {
     } finally {
       setIsRefreshingSelectedGem(false);
     }
-  };
+  }, [editingGem, selectedGem, user?.uid, filters, showToast, fetchGems]);
 
   return (
     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
@@ -446,6 +693,7 @@ function Dashboard() {
           </div>
 
           <button
+            type="button"
             onClick={() => setShowUploadModal(true)}
             className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:self-start lg:self-auto"
           >
@@ -499,272 +747,44 @@ function Dashboard() {
             <InventoryItemCard
               key={item.id}
               item={item}
-              onClick={setSelectedGem}
+              onClick={handleOpenGem}
             />
           ))}
         </div>
       )}
 
       {showUploadModal && (
-        <div
-          className="fixed inset-0 z-50"
-          onClick={() => setShowUploadModal(false)}
-        >
-          <div onClick={(e) => e.stopPropagation()}>
-            <InventoryUploadModal
-              onClose={() => setShowUploadModal(false)}
-              onSuccess={handleUploadSuccess}
-              userId={user.uid}
-              mode="create"
-              onNotify={showToast}
-            />
-          </div>
-        </div>
+        <InventoryUploadModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={handleUploadSuccess}
+          userId={user.uid}
+          mode="create"
+          onNotify={showToast}
+        />
       )}
 
       {selectedGem && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60"
-          onClick={() => {
-            if (
-              editingGem ||
-              isRefreshingSelectedGem ||
-              showDeleteConfirm ||
-              isDeletingGem
-            ) {
-              return;
-            }
-            setSelectedGem(null);
-          }}
-        >
-          <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
-            <div
-              className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col rounded-3xl border border-[#1e293b] bg-[#020617] text-gray-200 shadow-[0_24px_60px_rgba(0,0,0,0.4)] sm:max-h-[92vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="sticky top-0 z-10 border-b border-[#1e293b] bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
-                      Collection entry
-                    </p>
-                    <h2 className="mt-1 text-xl font-semibold text-amber-300 sm:text-2xl">
-                      {selectedGem.name}
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-400">
-                      Review the saved gem details and manage this entry.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (
-                        editingGem ||
-                        isRefreshingSelectedGem ||
-                        showDeleteConfirm ||
-                        isDeletingGem
-                      ) {
-                        return;
-                      }
-                      setSelectedGem(null);
-                    }}
-                    className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Close gem details"
-                    disabled={
-                      !!editingGem ||
-                      isRefreshingSelectedGem ||
-                      showDeleteConfirm ||
-                      isDeletingGem
-                    }
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-                <div className="relative">
-                  {isRefreshingSelectedGem && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[#020617]/70 backdrop-blur-[2px]">
-                      <div className="rounded-2xl border border-white/10 bg-[#091427]/95 px-5 py-4 text-sm text-white shadow-lg">
-                        Saving changes...
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-                    <div className="space-y-5">
-                      <div className="overflow-hidden rounded-2xl border border-[#1e293b] bg-[#04101f]">
-                        <img
-                          src={selectedGem.imageUrl}
-                          alt={selectedGem.name}
-                          className="max-h-[420px] w-full object-cover"
-                        />
-                      </div>
-
-                      <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                        <h3 className="text-sm font-semibold text-white">
-                          Quick summary
-                        </h3>
-                        <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                          {selectedGem.stoneType && (
-                            <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                              {selectedGem.stoneType}
-                            </span>
-                          )}
-                          {selectedGem.category && (
-                            <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                              {selectedGem.category}
-                            </span>
-                          )}
-                          {selectedGem.color && (
-                            <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                              {selectedGem.color}
-                            </span>
-                          )}
-                          {selectedGem.cut && (
-                            <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                              {selectedGem.cut}
-                            </span>
-                          )}
-                          {selectedGem.origin && (
-                            <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                              {selectedGem.origin}
-                            </span>
-                          )}
-                        </div>
-                      </section>
-                    </div>
-
-                    <div className="space-y-5">
-                      <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                        <h3 className="text-sm font-semibold text-white">
-                          Details
-                        </h3>
-
-                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <DetailField
-                            label="Stone Type"
-                            value={selectedGem.stoneType}
-                          />
-                          <DetailField
-                            label="Category"
-                            value={selectedGem.category}
-                          />
-                          <DetailField
-                            label="Carat"
-                            value={formatCarat(selectedGem.carat)}
-                          />
-                          <DetailField
-                            label="Color"
-                            value={selectedGem.color || "—"}
-                          />
-                          <DetailField
-                            label="Cut"
-                            value={selectedGem.cut || "—"}
-                          />
-                          <DetailField
-                            label="Origin"
-                            value={selectedGem.origin || "—"}
-                          />
-                          <DetailField
-                            label="Price Paid"
-                            value={formatPrice(selectedGem.pricePaid)}
-                          />
-                          <DetailField
-                            label="Quantity"
-                            value={String(selectedGem.quantity || "—")}
-                          />
-                          <DetailField
-                            label="Created"
-                            value={formatDate(selectedGem.createdAt)}
-                          />
-                          <DetailField
-                            label="Last Updated"
-                            value={formatDate(selectedGem.updatedAt)}
-                          />
-                        </div>
-                      </section>
-
-                      <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                        <h3 className="text-sm font-semibold text-white">
-                          Notes
-                        </h3>
-                        <div className="mt-3 rounded-xl border border-[#1e293b] bg-[#020617] p-4 text-sm leading-6 text-gray-300 break-words">
-                          {selectedGem.notes || "No notes"}
-                        </div>
-                      </section>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="sticky bottom-0 border-t border-[#1e293b] bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <button
-                      onClick={handleStartEdit}
-                      disabled={
-                        !!editingGem ||
-                        isRefreshingSelectedGem ||
-                        showDeleteConfirm ||
-                        isDeletingGem
-                      }
-                      className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-5 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Edit Gem
-                    </button>
-
-                    <button
-                      onClick={handleRequestDelete}
-                      disabled={
-                        !!editingGem ||
-                        isRefreshingSelectedGem ||
-                        showDeleteConfirm ||
-                        isDeletingGem
-                      }
-                      className="rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Delete Gem
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedGem(null)}
-                    disabled={
-                      !!editingGem ||
-                      isRefreshingSelectedGem ||
-                      showDeleteConfirm ||
-                      isDeletingGem
-                    }
-                    className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <GemDetailModal
+          key={selectedGem.id}
+          gem={selectedGem}
+          isRefreshing={isRefreshingSelectedGem}
+          isBusy={detailModalBusy}
+          onClose={handleCloseSelectedGem}
+          onEdit={handleStartEdit}
+          onDelete={handleRequestDelete}
+        />
       )}
 
       {editingGem && (
-        <div
-          className="fixed inset-0 z-[60]"
-          onClick={() => setEditingGem(null)}
-        >
-          <div onClick={(e) => e.stopPropagation()}>
-            <InventoryUploadModal
-              onClose={() => setEditingGem(null)}
-              onSuccess={handleEditSuccess}
-              userId={user.uid}
-              mode="edit"
-              initialData={editingGem}
-              onNotify={showToast}
-            />
-          </div>
-        </div>
+        <InventoryUploadModal
+          key={`edit-${editingGem.id}`}
+          onClose={() => setEditingGem(null)}
+          onSuccess={handleEditSuccess}
+          userId={user.uid}
+          mode="edit"
+          initialData={editingGem}
+          onNotify={showToast}
+        />
       )}
 
       {showDeleteConfirm && selectedGem && (
