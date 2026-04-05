@@ -13,10 +13,10 @@ function DropdownLink({
   const activeClass =
     accent === "admin"
       ? active
-        ? "text-amber-300 bg-white/5"
+        ? "bg-white/5 text-amber-300"
         : "text-amber-300/85 hover:bg-white/5 hover:text-amber-300"
       : active
-      ? "text-white bg-white/5"
+      ? "bg-white/5 text-white"
       : "text-white/85 hover:bg-white/5 hover:text-white";
 
   return (
@@ -90,6 +90,17 @@ function Navbar() {
             </Link>
 
             <Link
+              to="/about"
+              className={`hidden rounded-xl px-3 py-2 text-sm transition md:block ${
+                location.pathname === "/about"
+                  ? "bg-white/10 text-white"
+                  : "text-white/80 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              About
+            </Link>
+
+            <Link
               to="/login"
               className="hidden rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/5 hover:text-white sm:block"
             >
@@ -133,7 +144,7 @@ function Navbar() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-3 w-60 overflow-hidden rounded-2xl border border-white/10 bg-[#0b1120] shadow-xl">
+              <div className="absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#0b1120] shadow-xl">
                 <div className="border-b border-white/10 px-4 py-3">
                   <p className="truncate text-sm text-white">{displaySource}</p>
                   <p className="text-xs text-white/40">
@@ -149,15 +160,43 @@ function Navbar() {
                   Collection
                 </DropdownLink>
 
+                <DropdownLink
+                  to="/about"
+                  onClick={closeMenu}
+                  active={location.pathname === "/about"}
+                >
+                  About
+                </DropdownLink>
+
+                <DropdownLink
+                  to="/how-to-buy"
+                  onClick={closeMenu}
+                  active={location.pathname === "/how-to-buy"}
+                >
+                  How to Buy
+                </DropdownLink>
+
+                <DropdownLink
+                  to="/contact"
+                  onClick={closeMenu}
+                  active={location.pathname === "/contact"}
+                >
+                  Contact
+                </DropdownLink>
+
                 {isAdmin && (
-                  <DropdownLink
-                    to="/admin"
-                    onClick={closeMenu}
-                    active={location.pathname === "/admin"}
-                    accent="admin"
-                  >
-                    Admin
-                  </DropdownLink>
+                  <>
+                    <div className="border-t border-white/10" />
+
+                    <DropdownLink
+                      to="/admin"
+                      onClick={closeMenu}
+                      active={location.pathname === "/admin"}
+                      accent="admin"
+                    >
+                      Admin
+                    </DropdownLink>
+                  </>
                 )}
 
                 <div className="border-t border-white/10" />
