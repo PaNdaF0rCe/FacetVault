@@ -64,56 +64,66 @@ function DetailRow({ label, value }) {
   );
 }
 
-function ContactButton({
-  item,
-  phoneRevealed,
-  onRevealPhone,
-  fullWidth = true,
-}) {
+function ContactActions({ item, phoneRevealed, onRevealPhone }) {
   const hasWhatsApp = !!WHATSAPP_NUMBER;
   const hasPhone = !!CONTACT_PHONE;
   const whatsappLink = buildWhatsAppLink(item);
 
-  const baseClass = fullWidth
-    ? "block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold transition"
-    : "inline-flex rounded-2xl px-4 py-3 text-center text-sm font-semibold transition";
-
-  if (!phoneRevealed) {
-    return (
-      <button
-        type="button"
-        onClick={() => onRevealPhone(item.id)}
-        className={`${baseClass} bg-amber-400 text-black hover:bg-amber-300`}
-      >
-        Contact Me
-      </button>
-    );
-  }
-
-  if (!hasPhone) {
-    return (
-      <div className={`${baseClass} border border-white/10 text-gray-300`}>
-        Contact number not configured yet
-      </div>
-    );
-  }
-
-  if (hasWhatsApp) {
-    return (
-      <a
-        href={whatsappLink}
-        target="_blank"
-        rel="noreferrer"
-        className={`${baseClass} border border-white/10 text-white hover:border-white/20 hover:bg-white/5`}
-      >
-        {CONTACT_PHONE}
-      </a>
-    );
-  }
-
   return (
-    <div className={`${baseClass} border border-white/10 text-white`}>
-      {CONTACT_PHONE}
+    <div className="space-y-3">
+      {hasWhatsApp ? (
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noreferrer"
+          className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
+        >
+          Message on WhatsApp
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onRevealPhone(item.id)}
+          className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
+        >
+          Contact Me
+        </button>
+      )}
+
+      {!phoneRevealed ? (
+        <button
+          type="button"
+          onClick={() => onRevealPhone(item.id)}
+          className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
+        >
+          Show Phone Number
+        </button>
+      ) : hasPhone ? (
+        hasWhatsApp ? (
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noreferrer"
+            className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
+          >
+            {CONTACT_PHONE}
+          </a>
+        ) : (
+          <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white">
+            {CONTACT_PHONE}
+          </div>
+        )
+      ) : (
+        <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm text-gray-300">
+          Contact number not configured yet
+        </div>
+      )}
+
+      {phoneRevealed && hasWhatsApp && (
+        <p className="text-center text-xs text-gray-500">
+          Click the number to open WhatsApp
+        </p>
+      )}
     </div>
   );
 }
@@ -156,13 +166,13 @@ function MarketplaceDetailModal({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
-                  Public Collection
+                  Available Stone
                 </p>
                 <h2 className="mt-1 text-xl font-semibold text-amber-300 sm:text-2xl">
                   {item.name || "Untitled Gem"}
                 </h2>
                 <p className="mt-1 text-sm text-gray-400">
-                  Full gemstone details
+                  Full gemstone details and contact options
                 </p>
               </div>
 
@@ -197,7 +207,7 @@ function MarketplaceDetailModal({
 
                 <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <h3 className="text-sm font-semibold text-white">
-                    Quick summary
+                    Quick Summary
                   </h3>
 
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -252,20 +262,17 @@ function MarketplaceDetailModal({
                   <h3 className="text-sm font-semibold text-white">
                     Contact
                   </h3>
+                  <p className="mt-2 text-sm text-gray-400">
+                    Reach out directly for availability, payment, and delivery details.
+                  </p>
 
                   <div className="mt-4">
-                    <ContactButton
+                    <ContactActions
                       item={item}
                       phoneRevealed={phoneRevealed}
                       onRevealPhone={onRevealPhone}
                     />
                   </div>
-
-                  {phoneRevealed && !!WHATSAPP_NUMBER && (
-                    <p className="mt-3 text-center text-xs text-gray-500">
-                      Click the number to open WhatsApp
-                    </p>
-                  )}
                 </section>
               </div>
             </div>
@@ -350,17 +357,63 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
         </div>
       </button>
 
-      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-        <ContactButton
-          item={item}
-          phoneRevealed={phoneRevealed}
-          onRevealPhone={onRevealPhone}
-        />
+      <div className="space-y-3 px-4 pb-4 sm:px-5 sm:pb-5">
+        {WHATSAPP_NUMBER ? (
+          <a
+            href={buildWhatsAppLink(item)}
+            target="_blank"
+            rel="noreferrer"
+            className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
+          >
+            Message on WhatsApp
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onRevealPhone(item.id)}
+            className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
+          >
+            Contact Me
+          </button>
+        )}
 
-        {phoneRevealed && !!WHATSAPP_NUMBER && (
-          <p className="mt-3 text-center text-xs text-gray-500">
-            Click the number to open WhatsApp
-          </p>
+        {!phoneRevealed ? (
+          <button
+            type="button"
+            onClick={() => onRevealPhone(item.id)}
+            className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
+          >
+            Show Phone Number
+          </button>
+        ) : (
+          <>
+            {CONTACT_PHONE ? (
+              WHATSAPP_NUMBER ? (
+                <a
+                  href={buildWhatsAppLink(item)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
+                >
+                  {CONTACT_PHONE}
+                </a>
+              ) : (
+                <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white">
+                  {CONTACT_PHONE}
+                </div>
+              )
+            ) : (
+              <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm text-gray-300">
+                Contact number not configured yet
+              </div>
+            )}
+
+            {WHATSAPP_NUMBER && (
+              <p className="text-center text-xs text-gray-500">
+                Click the number to open WhatsApp
+              </p>
+            )}
+          </>
         )}
       </div>
     </article>
@@ -375,6 +428,7 @@ function LoadingCard() {
         <div className="h-6 w-1/2 rounded bg-white/5" />
         <div className="h-4 w-1/3 rounded bg-white/5" />
         <div className="h-20 rounded bg-white/5" />
+        <div className="h-12 rounded-2xl bg-white/5" />
         <div className="h-12 rounded-2xl bg-white/5" />
       </div>
     </div>
@@ -443,7 +497,7 @@ function Marketplace() {
     <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
       <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-6">
         <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber-400/80 sm:text-xs">
-          Public Collection
+          Curated Collection
         </p>
 
         <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-amber-300 sm:mt-2 sm:text-4xl">
@@ -451,18 +505,47 @@ function Marketplace() {
         </h1>
 
         <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-400 sm:mt-2 sm:text-base sm:leading-6">
-          Browse the stones currently listed for sale. Only publicly available
-          items appear here.
+          Browse available stones, review the details, and contact directly for
+          availability, payment, and delivery.
         </p>
 
-        <div className="mt-5 max-w-md">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, type, color, cut, or origin"
-            className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
-          />
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-md flex-1">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, type, color, cut, or origin"
+              className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
+            />
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#020617]/80 px-4 py-3 text-sm text-gray-300">
+            No account required
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+          <p className="text-sm font-semibold text-white">Browse instantly</p>
+          <p className="mt-2 text-sm leading-6 text-gray-400">
+            View available stones without creating an account.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+          <p className="text-sm font-semibold text-white">See key details</p>
+          <p className="mt-2 text-sm leading-6 text-gray-400">
+            Review size, color, origin, cut, and selling price clearly.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+          <p className="text-sm font-semibold text-white">Contact directly</p>
+          <p className="mt-2 text-sm leading-6 text-gray-400">
+            Reach out by WhatsApp or phone as soon as you find a stone you like.
+          </p>
         </div>
       </section>
 
