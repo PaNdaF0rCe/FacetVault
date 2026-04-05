@@ -43,7 +43,7 @@ function Navbar() {
         </Link>
 
         {/* Navigation */}
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-2 sm:gap-3">
 
           {/* Public collection */}
           <Link
@@ -76,16 +76,24 @@ function Navbar() {
             <>
               <Link
                 to="/login"
-                className="rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/5 hover:text-white"
+                className="hidden sm:block rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/5 hover:text-white"
               >
                 Login
               </Link>
 
               <Link
                 to="/signup"
-                className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
+                className="hidden sm:block rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
               >
                 Sign up
+              </Link>
+
+              {/* Mobile icon instead */}
+              <Link
+                to="/login"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white sm:hidden"
+              >
+                👤
               </Link>
             </>
           ) : (

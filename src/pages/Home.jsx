@@ -6,10 +6,11 @@ function Home() {
       <div className="mx-auto max-w-5xl text-center">
         <p className="text-sm uppercase tracking-[0.35em] text-amber-300">FacetVault</p>
         <h1 className="mt-6 text-5xl font-semibold tracking-tight text-white sm:text-6xl">
-          A private vault for your gemstone collection
+          Curated gemstones from a private collection
         </h1>
+
         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-          Organize photos, stone details, origin, pricing, and notes in one elegant place.
+          Browse carefully selected stones available for sale and contact directly for inquiries.
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">

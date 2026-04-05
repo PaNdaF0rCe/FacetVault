@@ -35,7 +35,7 @@ function buildWhatsAppLink(item) {
 
 function SaleBadge() {
   return (
-    <span className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-emerald-300">
+    <span className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-300 sm:text-[11px]">
       Available
     </span>
   );
@@ -64,7 +64,12 @@ function DetailRow({ label, value }) {
   );
 }
 
-function ContactButton({ item, phoneRevealed, onRevealPhone, fullWidth = true }) {
+function ContactButton({
+  item,
+  phoneRevealed,
+  onRevealPhone,
+  fullWidth = true,
+}) {
   const hasWhatsApp = !!WHATSAPP_NUMBER;
   const hasPhone = !!CONTACT_PHONE;
   const whatsappLink = buildWhatsAppLink(item);
@@ -87,9 +92,7 @@ function ContactButton({ item, phoneRevealed, onRevealPhone, fullWidth = true })
 
   if (!hasPhone) {
     return (
-      <div
-        className={`${baseClass} border border-white/10 text-gray-300`}
-      >
+      <div className={`${baseClass} border border-white/10 text-gray-300`}>
         Contact number not configured yet
       </div>
     );
@@ -275,7 +278,7 @@ function MarketplaceDetailModal({
 
 function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
   return (
-    <article className="overflow-hidden rounded-3xl border border-white/10 bg-[#020617]/95 shadow-[0_14px_34px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-amber-400/40">
+    <article className="overflow-hidden rounded-[28px] border border-white/10 bg-[#020617]/95 shadow-[0_14px_34px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-amber-400/40">
       <button
         type="button"
         onClick={() => onOpen(item)}
@@ -296,7 +299,7 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
           )}
         </div>
 
-        <div className="space-y-4 p-5">
+        <div className="space-y-4 p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="truncate text-xl font-semibold text-white">
@@ -311,7 +314,7 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
           </div>
 
           <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-[#04101f]/70 p-3 text-center">
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
                 Size
               </p>
@@ -320,7 +323,7 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
               </p>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
                 Colour
               </p>
@@ -329,7 +332,7 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
               </p>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
                 Price
               </p>
@@ -347,7 +350,7 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
         </div>
       </button>
 
-      <div className="px-5 pb-5">
+      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
         <ContactButton
           item={item}
           phoneRevealed={phoneRevealed}
@@ -361,6 +364,20 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
         )}
       </div>
     </article>
+  );
+}
+
+function LoadingCard() {
+  return (
+    <div className="animate-pulse overflow-hidden rounded-[28px] border border-white/10 bg-[#020617]/95">
+      <div className="aspect-square bg-white/5" />
+      <div className="space-y-3 p-4 sm:p-5">
+        <div className="h-6 w-1/2 rounded bg-white/5" />
+        <div className="h-4 w-1/3 rounded bg-white/5" />
+        <div className="h-20 rounded bg-white/5" />
+        <div className="h-12 rounded-2xl bg-white/5" />
+      </div>
+    </div>
   );
 }
 
@@ -423,17 +440,17 @@ function Marketplace() {
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-6">
+    <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
+      <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-6">
         <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber-400/80 sm:text-xs">
           Public Collection
         </p>
 
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-amber-300 sm:text-4xl">
+        <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-amber-300 sm:mt-2 sm:text-4xl">
           Gemstones Available for Sale
         </h1>
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400 sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-400 sm:mt-2 sm:text-base sm:leading-6">
           Browse the stones currently listed for sale. Only publicly available
           items appear here.
         </p>
@@ -450,24 +467,13 @@ function Marketplace() {
       </section>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="animate-pulse overflow-hidden rounded-3xl border border-white/10 bg-[#020617]/95"
-            >
-              <div className="aspect-square bg-white/5" />
-              <div className="space-y-3 p-5">
-                <div className="h-6 w-1/2 rounded bg-white/5" />
-                <div className="h-4 w-1/3 rounded bg-white/5" />
-                <div className="h-20 rounded bg-white/5" />
-                <div className="h-12 rounded-2xl bg-white/5" />
-              </div>
-            </div>
+            <LoadingCard key={index} />
           ))}
         </div>
       ) : filteredItems.length === 0 ? (
-        <section className="rounded-3xl border border-white/10 bg-[#020617]/90 p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+        <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
           <h2 className="text-xl font-semibold text-white">
             No gemstones found
           </h2>
@@ -484,7 +490,7 @@ function Marketplace() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((item) => (
               <MarketplaceCard
                 key={item.id}
