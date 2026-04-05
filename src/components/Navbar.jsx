@@ -43,8 +43,8 @@ function Navbar() {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
@@ -138,7 +138,9 @@ function Navbar() {
 
                         <Link
                           to="/admin"
-                          onClick={() => setMenuOpen(false)}
+                            onClick={() => {
+                              setMenuOpen(false);
+                            }}
                           className="block px-4 py-3 text-sm text-amber-300 hover:bg-white/5"
                         >
                           Admin Dashboard
