@@ -36,7 +36,7 @@ function Home() {
               to="/login"
               className="lux-button-secondary min-w-[200px]"
             >
-              Admin Access
+              Login / Sign up
             </Link>
           </div>
 
