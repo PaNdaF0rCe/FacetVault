@@ -24,6 +24,9 @@ function NavPill({ to, active, children, accent = "default", onClick }) {
 
 function Navbar() {
   const { user, logout, isAdmin } = useAuth();
+  console.log("Current UID:", user?.uid);
+  console.log("Admin UID:", import.meta.env.VITE_ADMIN_UID);
+  console.log("isAdmin:", isAdmin);
   const location = useLocation();
   const navigate = useNavigate();
 
