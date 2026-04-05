@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const DEFAULT_SORT = "createdAt";
+
 function ActiveChip({ label, onRemove }) {
   return (
     <button
@@ -23,7 +25,7 @@ function FilterBar({
 
   const hasSearch = !!filters.search?.trim();
   const hasCategory = !!filters.category;
-  const hasSort = !!filters.sortBy && filters.sortBy !== "updatedAt";
+  const hasSort = !!filters.sortBy && filters.sortBy !== DEFAULT_SORT;
 
   const hasActiveFilters = hasSearch || hasCategory || hasSort;
 
@@ -42,7 +44,7 @@ function FilterBar({
     onFilterChange({
       search: "",
       category: "",
-      sortBy: "updatedAt",
+      sortBy: DEFAULT_SORT,
     });
   };
 
@@ -55,7 +57,7 @@ function FilterBar({
   };
 
   const removeSort = () => {
-    onFilterChange({ ...filters, sortBy: "updatedAt" });
+    onFilterChange({ ...filters, sortBy: DEFAULT_SORT });
   };
 
   const getSortLabel = (sortBy) => {
@@ -67,8 +69,9 @@ function FilterBar({
       case "pricePaid":
         return "Price";
       case "updatedAt":
-      default:
         return "Recently Updated";
+      default:
+        return "Newest";
     }
   };
 
@@ -119,8 +122,8 @@ function FilterBar({
           }
           className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 outline-none transition focus:border-amber-400"
         >
-          <option value="updatedAt">Recently Updated</option>
           <option value="createdAt">Newest</option>
+          <option value="updatedAt">Recently Updated</option>
           <option value="carat">Carat</option>
           <option value="pricePaid">Price</option>
         </select>
@@ -175,8 +178,8 @@ function FilterBar({
           }
           className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 outline-none transition focus:border-amber-400"
         >
-          <option value="updatedAt">Recently Updated</option>
           <option value="createdAt">Newest</option>
+          <option value="updatedAt">Recently Updated</option>
           <option value="carat">Carat</option>
           <option value="pricePaid">Price</option>
         </select>
@@ -243,13 +246,22 @@ function FilterBar({
       {hasActiveFilters && (
         <div className="mt-4 flex flex-wrap gap-2">
           {hasSearch && (
-            <ActiveChip label={`Search: ${filters.search.trim()}`} onRemove={removeSearch} />
+            <ActiveChip
+              label={`Search: ${filters.search.trim()}`}
+              onRemove={removeSearch}
+            />
           )}
           {hasCategory && (
-            <ActiveChip label={`Category: ${filters.category}`} onRemove={removeCategory} />
+            <ActiveChip
+              label={`Category: ${filters.category}`}
+              onRemove={removeCategory}
+            />
           )}
           {hasSort && (
-            <ActiveChip label={`Sort: ${getSortLabel(filters.sortBy)}`} onRemove={removeSort} />
+            <ActiveChip
+              label={`Sort: ${getSortLabel(filters.sortBy)}`}
+              onRemove={removeSort}
+            />
           )}
         </div>
       )}
