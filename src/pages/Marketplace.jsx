@@ -25,10 +25,16 @@ function formatCarat(value) {
 }
 
 function buildWhatsAppLink(item) {
-  const baseMessage =
-    WHATSAPP_MESSAGE || "Hello, I'm interested in this gemstone.";
-  const gemName = item?.name ? ` Gem: ${item.name}.` : "";
-  const message = `${baseMessage}${gemName}`.trim();
+  const name = item?.name || "this gemstone";
+  const carat = item?.carat ? `${item.carat}ct` : "";
+  const color = item?.color || "";
+  const price = item?.salePrice
+    ? ` (LKR ${Number(item.salePrice).toLocaleString()})`
+    : "";
+
+  const message = `Hi, I’d like to check availability for ${name}${
+    carat ? ` (${carat})` : ""
+  }${color ? ` - ${color}` : ""}${price}.`;
 
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
@@ -36,7 +42,7 @@ function buildWhatsAppLink(item) {
 function SaleBadge() {
   return (
     <span className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-300 sm:text-[11px]">
-      Available
+      Only 1 available
     </span>
   );
 }
@@ -78,7 +84,7 @@ function ContactActions({ item, phoneRevealed, onRevealPhone }) {
           rel="noreferrer"
           className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
         >
-          Message on WhatsApp
+          Ask About This Stone
         </a>
       ) : (
         <button
@@ -309,7 +315,10 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
         <div className="space-y-4 p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="truncate text-xl font-semibold text-white">
+              <h2 className="truncate text-xl font-semibold text-white tracking-wide">
+                  <p className="text-xs text-amber-200 mt-1">
+                    Tap to view details →
+                  </p>
                 {item.name || "Untitled Gem"}
               </h2>
               <p className="mt-1 text-sm text-gray-400">
@@ -343,8 +352,8 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
               <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
                 Price
               </p>
-              <p className="mt-1 truncate text-sm font-semibold text-amber-300">
-                {formatMoney(item.salePrice)}
+              <p className="mt-1 truncate text-sm font-medium text-gray-400">
+                View details
               </p>
             </div>
           </div>
@@ -408,11 +417,7 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
               </div>
             )}
 
-            {WHATSAPP_NUMBER && (
-              <p className="text-center text-xs text-gray-500">
-                Click the number to open WhatsApp
-              </p>
-            )}
+
           </>
         )}
       </div>
@@ -501,51 +506,21 @@ function Marketplace() {
         </p>
 
         <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-amber-300 sm:mt-2 sm:text-4xl">
-          Gemstones Available for Sale
+          Curated Gemstones
         </h1>
 
         <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-400 sm:mt-2 sm:text-base sm:leading-6">
-          Browse available stones, review the details, and contact directly for
-          availability, payment, and delivery.
+          Individually selected stones. Direct purchase. No middlemen.
         </p>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-md flex-1">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, type, color, cut, or origin"
-              className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
-            />
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-[#020617]/80 px-4 py-3 text-sm text-gray-300">
-            No account required
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
-          <p className="text-sm font-semibold text-white">Browse instantly</p>
-          <p className="mt-2 text-sm leading-6 text-gray-400">
-            View available stones without creating an account.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
-          <p className="text-sm font-semibold text-white">See key details</p>
-          <p className="mt-2 text-sm leading-6 text-gray-400">
-            Review size, color, origin, cut, and selling price clearly.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
-          <p className="text-sm font-semibold text-white">Contact directly</p>
-          <p className="mt-2 text-sm leading-6 text-gray-400">
-            Reach out by WhatsApp or phone as soon as you find a stone you like.
-          </p>
+        <div className="mt-5 max-w-md">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, type, color, cut, or origin"
+            className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
+          />
         </div>
       </section>
 
