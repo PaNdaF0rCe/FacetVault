@@ -44,8 +44,18 @@ function Signup() {
 
       navigate(nextRoute, { replace: true });
     } catch (err) {
-      setError(err.message || "Failed to create account.");
-    } finally {
+        let message = "Failed to create account.";
+
+        if (err.code === "auth/email-already-in-use") {
+          message = "An account already exists with this email.";
+        } else if (err.code === "auth/invalid-email") {
+          message = "Please enter a valid email address.";
+        } else if (err.code === "auth/weak-password") {
+          message = "Password should be at least 6 characters.";
+        }
+
+        setError(message);
+      } finally {
       setSubmitting(false);
     }
   };
