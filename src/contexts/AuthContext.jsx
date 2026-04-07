@@ -4,14 +4,12 @@ import {
   onAuthStateChanged,
   signOut,
   signInWithPopup,
-  signInWithRedirect,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   setPersistence,
   browserLocalPersistence,
-  getRedirectResult,
 } from "firebase/auth";
 import { auth } from "../lib/firebase/config";
 
@@ -22,41 +20,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined);
 
   useEffect(() => {
-    let mounted = true;
-    let unsubscribe = () => {};
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser ?? null);
+    });
 
-    const initAuth = async () => {
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-      } catch (error) {
-        console.error("Failed to set auth persistence:", error);
-      }
-
-      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        if (!mounted) return;
-        setUser(firebaseUser ?? null);
-      });
-
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          console.log("Google redirect login success:", result.user.email);
-        }
-      } catch (error) {
-        console.error("Google redirect result error:", error);
-      } finally {
-        if (mounted && auth.currentUser === null) {
-          setUser(null);
-        }
-      }
-    };
-
-    initAuth();
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   const login = (email, password) => {
@@ -78,20 +46,7 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithGoogle = async () => {
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(
-      navigator.userAgent
-    );
-    const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-
     await setPersistence(auth, browserLocalPersistence);
-
-    if (isMobile && !isLocalhost) {
-      await signInWithRedirect(auth, provider);
-      return null;
-    }
-
     return signInWithPopup(auth, provider);
   };
 
