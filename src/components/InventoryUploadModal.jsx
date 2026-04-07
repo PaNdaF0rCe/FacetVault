@@ -96,6 +96,43 @@ function getInitialFormData(initialData, mode) {
   };
 }
 
+async function createThumbnail(file, maxWidth = 600) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+
+      const scale = maxWidth / img.width;
+      canvas.width = maxWidth;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        (blob) => {
+          const thumbnailFile = new File(
+            [blob],
+            `thumb_${file.name}`,
+            { type: "image/webp" }
+          );
+          resolve(thumbnailFile);
+        },
+        "image/webp",
+        0.8
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 function InventoryUploadModal({
   onClose,
   onSuccess,
@@ -237,14 +274,33 @@ function InventoryUploadModal({
       };
 
       if (isEditMode) {
+        let imagePayload = null;
+
+        if (imageFile) {
+          const thumbnailFile = await createThumbnail(imageFile);
+          imagePayload = {
+            original: imageFile,
+            thumbnail: thumbnailFile,
+          };
+        }
+
         await updateInventoryItem(
           initialData.id,
           metadata,
           userId,
-          imageFile || null
-        );
+          imagePayload
+        );y
       } else {
-        await uploadInventoryItem(imageFile, metadata, userId);
+        const thumbnailFile = await createThumbnail(imageFile);
+
+        await uploadInventoryItem(
+          {
+            original: imageFile,
+            thumbnail: thumbnailFile,
+          },
+          metadata,
+          userId
+        );
       }
 
       if (onSuccess) {

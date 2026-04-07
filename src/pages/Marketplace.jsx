@@ -293,7 +293,7 @@ function MarketplaceCard({ item, onOpen }) {
           <div className="aspect-square w-full overflow-hidden bg-[#04101f]">
             {item.imageUrl ? (
               <img
-                src={item.imageUrl}
+                src={item.thumbnailUrl || item.imageUrl}
                 alt={item.name || "Gemstone"}
                 className="h-full w-full object-cover"
                 loading="lazy"

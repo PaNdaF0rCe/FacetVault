@@ -108,56 +108,80 @@ export async function getFilteredInventory(userId, filters = {}) {
   }
 }
 
-export async function uploadInventoryItem(file, metadata, userId) {
-  try {
-    const uploadedFile = await uploadFileToStorage(file, userId);
+export async function uploadInventoryItem(filePayload, metadata, userId) {
+    try {
+      let uploadedOriginal = null;
+      let uploadedThumbnail = null;
 
-    const itemData = {
-      userId,
-      name: metadata.name || "",
-      category: metadata.category || "",
-      stoneType: metadata.stoneType || "",
-      carat:
-        metadata.carat !== null &&
-        metadata.carat !== undefined &&
-        metadata.carat !== ""
-          ? Number(metadata.carat)
-          : null,
-      color: metadata.color || "",
-      cut: metadata.cut || "",
-      origin: metadata.origin || "",
-      pricePaid:
-        metadata.pricePaid !== null &&
-        metadata.pricePaid !== undefined &&
-        metadata.pricePaid !== ""
-          ? Number(metadata.pricePaid)
-          : null,
-      notes: metadata.notes || "",
-      quantity: metadata.quantity ? Number(metadata.quantity) : 1,
-      isForSale: !!metadata.isForSale,
-      salePrice:
-        metadata.isForSale &&
-        metadata.salePrice !== null &&
-        metadata.salePrice !== undefined &&
-        metadata.salePrice !== ""
-          ? Number(metadata.salePrice)
-          : null,
-      saleUpdatedAt: metadata.isForSale ? new Date() : null,
-      fileName: uploadedFile.filename,
-      imageUrl: uploadedFile.downloadURL,
-      imagePath: uploadedFile.path,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      // 🔥 Handle BOTH formats (backward compatible)
+      if (filePayload?.original && filePayload?.thumbnail) {
+        uploadedOriginal = await uploadFileToStorage(
+          filePayload.original,
+          userId
+        );
 
-    const result = await createDocument("inventory", itemData);
-    await updateUserStats(userId);
-    return result;
-  } catch (error) {
-    console.error("Error uploading inventory item:", error);
-    throw error;
-  }
-}
+        uploadedThumbnail = await uploadFileToStorage(
+          filePayload.thumbnail,
+          userId
+        );
+      } else {
+        // fallback for old usage
+        uploadedOriginal = await uploadFileToStorage(filePayload, userId);
+      }
+
+      const itemData = {
+        userId,
+        name: metadata.name || "",
+        category: metadata.category || "",
+        stoneType: metadata.stoneType || "",
+        carat:
+          metadata.carat !== null &&
+          metadata.carat !== undefined &&
+          metadata.carat !== ""
+            ? Number(metadata.carat)
+            : null,
+        color: metadata.color || "",
+        cut: metadata.cut || "",
+        origin: metadata.origin || "",
+        pricePaid:
+          metadata.pricePaid !== null &&
+          metadata.pricePaid !== undefined &&
+          metadata.pricePaid !== ""
+            ? Number(metadata.pricePaid)
+            : null,
+        notes: metadata.notes || "",
+        quantity: metadata.quantity ? Number(metadata.quantity) : 1,
+        isForSale: !!metadata.isForSale,
+        salePrice:
+          metadata.isForSale &&
+          metadata.salePrice !== null &&
+          metadata.salePrice !== undefined &&
+          metadata.salePrice !== ""
+            ? Number(metadata.salePrice)
+            : null,
+        saleUpdatedAt: metadata.isForSale ? new Date() : null,
+
+        // 🔥 MAIN IMAGE
+        fileName: uploadedOriginal.filename,
+        imageUrl: uploadedOriginal.downloadURL,
+        imagePath: uploadedOriginal.path,
+
+        // 🔥 NEW: THUMBNAIL
+        thumbnailUrl: uploadedThumbnail?.downloadURL || null,
+        thumbnailPath: uploadedThumbnail?.path || null,
+
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await createDocument("inventory", itemData);
+      await updateUserStats(userId);
+      return result;
+    } catch (error) {
+      console.error("Error uploading inventory item:", error);
+      throw error;
+    }
+ }
 
 export const updateInventoryItem = async (
   itemId,
@@ -182,12 +206,30 @@ export const updateInventoryItem = async (
     let oldImagePathToDelete = null;
 
     if (newImageFile) {
-      const uploadedFile = await uploadFileToStorage(newImageFile, userId);
+      let uploadedOriginal = null;
+      let uploadedThumbnail = null;
+
+      if (newImageFile?.original && newImageFile?.thumbnail) {
+        uploadedOriginal = await uploadFileToStorage(
+          newImageFile.original,
+          userId
+        );
+
+        uploadedThumbnail = await uploadFileToStorage(
+          newImageFile.thumbnail,
+          userId
+        );
+      } else {
+        uploadedOriginal = await uploadFileToStorage(newImageFile, userId);
+      }
 
       nextImageData = {
-        fileName: uploadedFile.filename,
-        imageUrl: uploadedFile.downloadURL,
-        imagePath: uploadedFile.path,
+        fileName: uploadedOriginal.filename,
+        imageUrl: uploadedOriginal.downloadURL,
+        imagePath: uploadedOriginal.path,
+
+        thumbnailUrl: uploadedThumbnail?.downloadURL || null,
+        thumbnailPath: uploadedThumbnail?.path || null,
       };
 
       oldImagePathToDelete = existingItem.imagePath || null;
