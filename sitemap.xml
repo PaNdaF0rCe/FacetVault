@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <!-- Home -->
+    <url>
+        <loc>https://facet-vault.vercel.app/</loc>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- Collection / Marketplace -->
+    <url>
+        <loc>https://facet-vault.vercel.app/collection</loc>
+        <priority>0.9</priority>
+    </url>
+
+    <!-- About -->
+    <url>
+        <loc>https://facet-vault.vercel.app/about</loc>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- How to Buy -->
+    <url>
+        <loc>https://facet-vault.vercel.app/how-to-buy</loc>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- Contact -->
+    <url>
+        <loc>https://facet-vault.vercel.app/contact</loc>
+        <priority>0.6</priority>
+    </url>
+
+</urlset>
