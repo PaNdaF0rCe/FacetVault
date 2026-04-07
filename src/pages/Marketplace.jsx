@@ -354,14 +354,12 @@ function MarketplaceCard({ item, onOpen }) {
       </Link>
 
       <div className="px-3 pb-3">
-        <a
-          href={buildWhatsAppLink(item)}
-          target="_blank"
-          rel="noreferrer"
-          className="block w-full rounded-xl bg-amber-400 py-2 text-center text-xs font-semibold text-black transition hover:bg-amber-300"
+        <Link
+          to={`/stone/${item.id}`}
+          className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white transition hover:border-amber-400 hover:text-amber-300"
         >
-          Ask
-        </a>
+          View Details
+        </Link>
       </div>
     </article>
   );

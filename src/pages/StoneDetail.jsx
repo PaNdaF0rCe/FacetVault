@@ -318,7 +318,7 @@ function StoneDetail() {
                     rel="noreferrer"
                     className="block w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
                   >
-                    Enquire on WhatsApp
+                    Secure this stone
                   </a>
                 ) : (
                   <div className="block w-full rounded-2xl border border-white/10 px-4 py-3.5 text-center text-sm text-gray-400">
