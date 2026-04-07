@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import {
   CONTACT_PHONE,
-  WHATSAPP_MESSAGE,
   WHATSAPP_NUMBER,
 } from "../config/appConfig";
 
@@ -39,19 +38,11 @@ function buildWhatsAppLink(item) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
-function SaleBadge() {
-  return (
-    <span className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-300 sm:text-[11px]">
-      Only 1 available
-    </span>
-  );
-}
-
 function DetailChip({ children }) {
   if (!children) return null;
 
   return (
-    <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-gray-300">
+    <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-gray-300">
       {children}
     </span>
   );
@@ -289,9 +280,9 @@ function MarketplaceDetailModal({
   );
 }
 
-function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
+function MarketplaceCard({ item, onOpen }) {
   return (
-    <article className="overflow-hidden rounded-[28px] border border-white/10 bg-[#020617]/95 shadow-[0_14px_34px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:border-amber-400/40">
+    <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#020617]/95 transition hover:border-amber-400/40">
       <button
         type="button"
         onClick={() => onOpen(item)}
@@ -306,59 +297,49 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">
-              No image available
+            <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+              No image
             </div>
           )}
         </div>
 
-        <div className="space-y-4 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2 p-3">
+          <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h2 className="truncate text-xl font-semibold text-white tracking-wide">
-                  <p className="text-xs text-amber-200 mt-1">
-                    Tap to view details →
-                  </p>
-                {item.name || "Untitled Gem"}
+              <p className="text-[10px] text-amber-300">Tap to view →</p>
+
+              <h2 className="truncate text-sm font-semibold text-white">
+                {item.name || "Untitled"}
               </h2>
-              <p className="mt-1 text-sm text-gray-400">
-                {item.stoneType || item.category || "Gemstone"}
+
+              <p className="text-xs text-gray-400">
+                {item.stoneType || item.category || "Gem"}
               </p>
             </div>
 
-            <SaleBadge />
+            <span className="text-[9px] text-emerald-300">1 left</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-[#04101f]/70 p-3 text-center">
+          <div className="grid grid-cols-3 gap-1 text-center text-[11px]">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
-                Size
-              </p>
-              <p className="mt-1 text-sm font-semibold text-white">
-                {formatCarat(item.carat) || "—"}
+              <p className="text-[9px] text-gray-500">Size</p>
+              <p className="truncate text-white">
+                {item.carat ? `${item.carat}ct` : "—"}
               </p>
             </div>
 
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
-                Colour
-              </p>
-              <p className="mt-1 truncate text-sm font-semibold text-white">
-                {item.color || "—"}
-              </p>
+              <p className="text-[9px] text-gray-500">Colour</p>
+              <p className="truncate text-white">{item.color || "—"}</p>
             </div>
 
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
-                Price
-              </p>
-              <p className="mt-1 truncate text-sm font-medium text-gray-400">
-                View details
-              </p>
+              <p className="text-[9px] text-gray-500">Price</p>
+              <p className="truncate text-gray-400">View</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <DetailChip>{item.category}</DetailChip>
             <DetailChip>{item.cut}</DetailChip>
             <DetailChip>{item.origin}</DetailChip>
@@ -366,60 +347,15 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
         </div>
       </button>
 
-      <div className="space-y-3 px-4 pb-4 sm:px-5 sm:pb-5">
-        {WHATSAPP_NUMBER ? (
-          <a
-            href={buildWhatsAppLink(item)}
-            target="_blank"
-            rel="noreferrer"
-            className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
-          >
-            Message on WhatsApp
-          </a>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onRevealPhone(item.id)}
-            className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
-          >
-            Contact Me
-          </button>
-        )}
-
-        {!phoneRevealed ? (
-          <button
-            type="button"
-            onClick={() => onRevealPhone(item.id)}
-            className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
-          >
-            Show Phone Number
-          </button>
-        ) : (
-          <>
-            {CONTACT_PHONE ? (
-              WHATSAPP_NUMBER ? (
-                <a
-                  href={buildWhatsAppLink(item)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
-                >
-                  {CONTACT_PHONE}
-                </a>
-              ) : (
-                <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white">
-                  {CONTACT_PHONE}
-                </div>
-              )
-            ) : (
-              <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm text-gray-300">
-                Contact number not configured yet
-              </div>
-            )}
-
-
-          </>
-        )}
+      <div className="px-3 pb-3">
+        <a
+          href={buildWhatsAppLink(item)}
+          target="_blank"
+          rel="noreferrer"
+          className="block w-full rounded-xl bg-amber-400 py-2 text-center text-xs font-semibold text-black transition hover:bg-amber-300"
+        >
+          Ask
+        </a>
       </div>
     </article>
   );
@@ -427,14 +363,13 @@ function MarketplaceCard({ item, phoneRevealed, onRevealPhone, onOpen }) {
 
 function LoadingCard() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-[28px] border border-white/10 bg-[#020617]/95">
+    <div className="animate-pulse overflow-hidden rounded-2xl border border-white/10 bg-[#020617]/95">
       <div className="aspect-square bg-white/5" />
-      <div className="space-y-3 p-4 sm:p-5">
-        <div className="h-6 w-1/2 rounded bg-white/5" />
-        <div className="h-4 w-1/3 rounded bg-white/5" />
-        <div className="h-20 rounded bg-white/5" />
-        <div className="h-12 rounded-2xl bg-white/5" />
-        <div className="h-12 rounded-2xl bg-white/5" />
+      <div className="space-y-3 p-3">
+        <div className="h-4 w-2/3 rounded bg-white/5" />
+        <div className="h-3 w-1/2 rounded bg-white/5" />
+        <div className="h-12 rounded bg-white/5" />
+        <div className="h-9 rounded-xl bg-white/5" />
       </div>
     </div>
   );
@@ -525,7 +460,7 @@ function Marketplace() {
       </section>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <LoadingCard key={index} />
           ))}
@@ -548,7 +483,7 @@ function Marketplace() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((item) => (
               <MarketplaceCard
                 key={item.id}
