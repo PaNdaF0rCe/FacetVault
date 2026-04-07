@@ -52,9 +52,21 @@ function Login() {
 
       navigate(nextRoute, { replace: true });
     } catch (err) {
-      setError(err.message || "Failed to sign in.");
-      setSubmitting(false);
-    }
+        let message = "Something went wrong. Please try again.";
+
+        if (err.code === "auth/user-not-found") {
+          message = "No account found with this email.";
+        } else if (err.code === "auth/wrong-password") {
+          message = "Incorrect password. Please try again.";
+        } else if (err.code === "auth/invalid-email") {
+          message = "Please enter a valid email address.";
+        } else if (err.code === "auth/invalid-credential") {
+          message = "Invalid email or password.";
+        }
+
+        setError(message);
+        setSubmitting(false);
+      }
   };
 
   const handleGoogle = async () => {
