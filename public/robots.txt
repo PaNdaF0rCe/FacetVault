@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://facet-vault.vercel.app/sitemap.xml
+Sitemap: https://facetvault.store/sitemap.xml

@@ -132,9 +132,9 @@ function StoneDetail() {
     return buildMetaDescription(item);
   }, [item, loading]);
 
-  const canonicalUrl = `https://facet-vault.vercel.app/stone/${id}`;
+  const canonicalUrl = `https://facetvault.store/stone/${id}`;
   const ogImage =
-    item?.imageUrl || "https://facet-vault.vercel.app/StockSmart-AI.png";
+    item?.imageUrl || "https://facetvault.store/StockSmart-AI.png";
 
   if (loading) {
     return (
