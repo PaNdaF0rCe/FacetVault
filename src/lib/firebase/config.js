@@ -5,7 +5,7 @@ import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCQ54DpeGwyRPzP3q7t4MFyfU66_533yrQ",
-  authDomain: "gfacetvault.firebaseapp.com",
+  authDomain: "facetvault.store",
   projectId: "gfacetvault",
   storageBucket: "gfacetvault.firebasestorage.app",
   messagingSenderId: "617653283556",
