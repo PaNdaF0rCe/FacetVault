@@ -320,18 +320,18 @@ function MarketplaceCard({ item }) {
         </div>
       </Link>
 
-      <div className="flex min-h-[168px] flex-col p-3">
-        <div className="min-h-[52px]">
-          <h2 className="truncate text-[15px] font-semibold leading-snug text-white">
+      <div className="flex min-h-[150px] flex-col p-2.5">
+        <div className="min-h-[44px]">
+          <h2 className="truncate text-[14px] font-semibold leading-tight text-white">
             {item.name || "Untitled"}
           </h2>
 
-          <p className="mt-1 truncate text-xs text-gray-400">
+          <p className="mt-[2px] truncate text-[11px] text-gray-400">
             {item.stoneType || item.category || "Gem"}
           </p>
         </div>
 
-        <p className="mt-2 truncate text-xs text-gray-300">
+        <p className="mt-1 truncate text-[11px] text-gray-300">
           {item.carat ? `${item.carat} ct` : "—"}
           {item.color ? ` • ${item.color}` : ""}
         </p>
