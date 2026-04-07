@@ -311,14 +311,20 @@ function StoneDetail() {
               </p>
 
               <div className="mt-5 space-y-3">
-                <a
-                  href={buildWhatsAppLink(item)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
-                >
-                  Enquire on WhatsApp
-                </a>
+                {WHATSAPP_NUMBER ? (
+                  <a
+                    href={buildWhatsAppLink(item)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
+                  >
+                    Enquire on WhatsApp
+                  </a>
+                ) : (
+                  <div className="block w-full rounded-2xl border border-white/10 px-4 py-3.5 text-center text-sm text-gray-400">
+                    WhatsApp number not configured yet
+                  </div>
+                )}
 
                 {CONTACT_PHONE ? (
                   <div className="rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white">
