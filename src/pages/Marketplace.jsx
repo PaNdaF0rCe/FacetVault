@@ -310,7 +310,6 @@ function MarketplaceCard({ item }) {
           <div className="space-y-2 p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] text-amber-300">View details →</p>
 
                 <h2 className="truncate text-sm font-semibold text-white">
                   {item.name || "Untitled"}
@@ -357,7 +356,7 @@ function MarketplaceCard({ item }) {
           to={`/stone/${item.id}`}
           className="relative mt-4 block w-full overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-amber-300/10 px-4 py-3 text-center text-sm font-semibold text-amber-300 transition-all duration-200 hover:from-amber-400 hover:to-amber-300 hover:text-black hover:shadow-lg hover:shadow-amber-400/10 active:scale-95"
         >
-          <span className="relative z-10">View Details →</span>
+          <span className="relative z-10">View Stone</span>
           <span className="absolute inset-0 bg-amber-400/20 opacity-0 transition-opacity duration-200 active:opacity-100"></span>
         </Link>
       </div>
