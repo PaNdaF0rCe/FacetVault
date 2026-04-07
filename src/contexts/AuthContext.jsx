@@ -81,10 +81,13 @@ export function AuthProvider({ children }) {
     const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(
       navigator.userAgent
     );
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
 
     await setPersistence(auth, browserLocalPersistence);
 
-    if (isMobile) {
+    if (isMobile && !isLocalhost) {
       await signInWithRedirect(auth, provider);
       return null;
     }
