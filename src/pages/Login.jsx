@@ -28,6 +28,11 @@ function Login() {
         setSubmitting(false);
         sessionStorage.removeItem("fv_google_redirect_pending");
       }
+      if (!loading && user) {
+        setSubmitting(false); // 🔥 add this
+        sessionStorage.removeItem("fv_google_redirect_pending");
+        navigate(getPostLoginRoute(), { replace: true });
+      }
     }
   }, [user, loading, isAdmin, navigate]);
 
@@ -57,18 +62,9 @@ function Login() {
     setSubmitting(true);
 
     try {
-      const result = await loginWithGoogle();
-
-      if (result?.user) {
-        const nextRoute =
-          result.user.uid &&
-          import.meta.env.VITE_ADMIN_UID &&
-          result.user.uid === import.meta.env.VITE_ADMIN_UID
-            ? "/admin"
-            : "/collection";
-
-        navigate(nextRoute, { replace: true });
-      }
+      await loginWithGoogle();
+      // ❌ DO NOT navigate here
+      // Let useEffect handle it when user updates
     } catch (err) {
       setError(err.message || "Google sign-in failed.");
       setSubmitting(false);
@@ -138,7 +134,7 @@ function Login() {
           disabled={submitting}
           className="lux-button-secondary w-full"
         >
-          {submitting ? "Continuing..." : "Continue with Google"}
+          {submitting ? "Opening Google..." : "Continue with Google"}
         </button>
 
         <p className="mt-6 text-center text-sm text-slate-400">
