@@ -43,7 +43,7 @@ function DetailChip({ children }) {
   if (!children) return null;
 
   return (
-    <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-gray-300">
+    <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] text-gray-300">
       {children}
     </span>
   );
@@ -286,78 +286,62 @@ function MarketplaceDetailModal({
 }
 
 function MarketplaceCard({ item }) {
+  const quantity =
+    item.quantity !== null &&
+    item.quantity !== undefined &&
+    item.quantity !== ""
+      ? Number(item.quantity)
+      : 1;
+
   return (
-    <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#020617]/95 transition hover:border-amber-400/40">
-      <Link to={`/stone/${item.id}`} className="block w-full text-left">
-        <div>
-          <div className="aspect-square w-full overflow-hidden bg-[#04101f]">
-            {item.imageUrl ? (
-              <img
-                src={item.thumbnailUrl || item.imageUrl}
-                alt={item.name || "Gemstone"}
-                className="h-full w-full object-cover"
-                loading="lazy"
-                decoding="async"
-                sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
-                No image
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2 p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-
-                <h2 className="truncate text-sm font-semibold text-white">
-                  {item.name || "Untitled"}
-                </h2>
-
-                <p className="text-xs text-gray-400">
-                  {item.stoneType || item.category || "Gem"}
-                </p>
-              </div>
-
-              <span className="text-[9px] text-emerald-300">1 left</span>
+    <article className="group overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
+      <Link to={`/stone/${item.id}`} className="block">
+        <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
+          {item.imageUrl ? (
+            <img
+              src={item.thumbnailUrl || item.imageUrl}
+              alt={item.name || "Gemstone"}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+              loading="lazy"
+              decoding="async"
+              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+              No image
             </div>
+          )}
 
-            <div className="grid grid-cols-3 gap-1 text-center text-[11px]">
-              <div className="min-w-0">
-                <p className="text-[9px] text-gray-500">Size</p>
-                <p className="truncate text-white">
-                  {item.carat ? `${item.carat}ct` : "—"}
-                </p>
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[9px] text-gray-500">Colour</p>
-                <p className="truncate text-white">{item.color || "—"}</p>
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[9px] text-gray-500">Price</p>
-                <p className="truncate text-gray-400">View</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              <DetailChip>{item.category}</DetailChip>
-              <DetailChip>{item.cut}</DetailChip>
-              <DetailChip>{item.origin}</DetailChip>
-            </div>
+          <div className="absolute right-2.5 top-2.5">
+            <span className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300 backdrop-blur">
+              {quantity} left
+            </span>
           </div>
         </div>
       </Link>
 
-      <div className="px-3 pb-3">
+      <div className="flex min-h-[168px] flex-col p-3">
+        <div className="min-h-[52px]">
+          <h2 className="truncate text-[15px] font-semibold leading-snug text-white">
+            {item.name || "Untitled"}
+          </h2>
+
+          <p className="mt-1 truncate text-xs text-gray-400">
+            {item.stoneType || item.category || "Gem"}
+          </p>
+        </div>
+
+        <p className="mt-2 truncate text-xs text-gray-300">
+          {item.carat ? `${item.carat} ct` : "—"}
+          {item.color ? ` • ${item.color}` : ""}
+        </p>
+
         <Link
           to={`/stone/${item.id}`}
-          className="relative mt-4 block w-full overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-amber-300/10 px-4 py-3 text-center text-sm font-semibold text-amber-300 transition-all duration-200 hover:from-amber-400 hover:to-amber-300 hover:text-black hover:shadow-lg hover:shadow-amber-400/10 active:scale-95"
+          className="relative mt-auto block w-full overflow-hidden rounded-xl border border-amber-400/25 bg-gradient-to-r from-amber-400/10 to-amber-300/10 px-4 py-2.5 text-center text-sm font-semibold text-amber-300 transition-all duration-200 hover:from-amber-400 hover:to-amber-300 hover:text-black active:scale-[0.98]"
         >
           <span className="relative z-10">View Stone</span>
-          <span className="absolute inset-0 bg-amber-400/20 opacity-0 transition-opacity duration-200 active:opacity-100"></span>
+          <span className="absolute inset-0 bg-amber-400/20 opacity-0 transition-opacity duration-200 active:opacity-100" />
         </Link>
       </div>
     </article>
