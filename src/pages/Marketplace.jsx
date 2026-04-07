@@ -285,7 +285,7 @@ function MarketplaceDetailModal({
   );
 }
 
-function MarketplaceCard({ item, onOpen }) {
+function MarketplaceCard({ item }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#020617]/95 transition hover:border-amber-400/40">
       <Link to={`/stone/${item.id}`} className="block w-full text-left">
@@ -298,7 +298,6 @@ function MarketplaceCard({ item, onOpen }) {
                 className="h-full w-full object-cover"
                 loading="lazy"
                 decoding="async"
-                fetchPriority="low"
                 sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
               />
             ) : (
@@ -356,9 +355,10 @@ function MarketplaceCard({ item, onOpen }) {
       <div className="px-3 pb-3">
         <Link
           to={`/stone/${item.id}`}
-          className="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white transition hover:border-amber-400 hover:text-amber-300"
+          className="relative mt-4 block w-full overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 to-amber-300/10 px-4 py-3 text-center text-sm font-semibold text-amber-300 transition-all duration-200 hover:from-amber-400 hover:to-amber-300 hover:text-black hover:shadow-lg hover:shadow-amber-400/10 active:scale-95"
         >
-          View Details
+          <span className="relative z-10">View Details →</span>
+          <span className="absolute inset-0 bg-amber-400/20 opacity-0 transition-opacity duration-200 active:opacity-100"></span>
         </Link>
       </div>
     </article>
@@ -382,7 +382,6 @@ function LoadingCard() {
 function Marketplace() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [revealedPhones, setRevealedPhones] = useState({});
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -430,12 +429,6 @@ function Marketplace() {
     });
   }, [items, search]);
 
-  const handleRevealPhone = (itemId) => {
-    setRevealedPhones((prev) => ({
-      ...prev,
-      [itemId]: true,
-    }));
-  };
 
   return (
     <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
@@ -490,25 +483,14 @@ function Marketplace() {
           <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((item) => (
               <MarketplaceCard
-                key={item.id}
-                item={item}
-                phoneRevealed={!!revealedPhones[item.id]}
-                onRevealPhone={handleRevealPhone}
-                onOpen={setSelectedItem}
+                  key={item.id}
+                  item={item}
               />
             ))}
           </div>
         </>
       )}
 
-      {selectedItem && (
-        <MarketplaceDetailModal
-          item={selectedItem}
-          phoneRevealed={!!revealedPhones[selectedItem.id]}
-          onRevealPhone={handleRevealPhone}
-          onClose={() => setSelectedItem(null)}
-        />
-      )}
     </div>
   );
 }
