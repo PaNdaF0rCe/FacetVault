@@ -58,6 +58,19 @@ function buildMetaDescription(item) {
     : "View gemstone details and inquire directly through FacetVault.";
 }
 
+function DetailBlock({ label, value }) {
+  if (!value && value !== 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+        {label}
+      </p>
+      <p className="mt-2 text-sm font-medium text-white">{value}</p>
+    </div>
+  );
+}
+
 function StoneDetail() {
   const { id } = useParams();
 
@@ -141,8 +154,23 @@ function StoneDetail() {
           <meta name="twitter:image" content={ogImage} />
         </Helmet>
 
-        <div className="p-6 text-white">
-          <p>Loading stone...</p>
+        <div className="mx-auto max-w-6xl px-4 py-6 text-white sm:px-6 lg:px-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 w-2/3 rounded bg-white/10" />
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="aspect-square rounded-3xl bg-white/5" />
+              <div className="space-y-4">
+                <div className="h-24 rounded-3xl bg-white/5" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="h-20 rounded-2xl bg-white/5" />
+                  <div className="h-20 rounded-2xl bg-white/5" />
+                  <div className="h-20 rounded-2xl bg-white/5" />
+                  <div className="h-20 rounded-2xl bg-white/5" />
+                </div>
+                <div className="h-28 rounded-3xl bg-white/5" />
+              </div>
+            </div>
+          </div>
         </div>
       </>
     );
@@ -167,15 +195,26 @@ function StoneDetail() {
           <meta name="twitter:image" content={ogImage} />
         </Helmet>
 
-        <div className="p-6 text-white">
-          <h1 className="text-xl font-semibold">Stone not found</h1>
-          <p className="mt-2 text-gray-400">
-            This gemstone may have been removed or is no longer available.
-          </p>
+        <div className="mx-auto max-w-3xl px-4 py-10 text-white sm:px-6 lg:px-8">
+          <div className="rounded-3xl border border-white/10 bg-[#020617]/90 p-8 text-center">
+            <h1 className="text-2xl font-semibold text-white">Stone not found</h1>
+            <p className="mt-3 text-sm leading-6 text-gray-400">
+              This gemstone may have been removed or is no longer available.
+            </p>
+          </div>
         </div>
       </>
     );
   }
+
+  const summaryChips = [
+    item.category,
+    item.stoneType,
+    item.color,
+    item.cut,
+    item.origin,
+    formatCarat(item.carat),
+  ].filter(Boolean);
 
   return (
     <>
@@ -196,57 +235,128 @@ function StoneDetail() {
         <meta name="twitter:image" content={ogImage} />
       </Helmet>
 
-      <div className="mx-auto max-w-5xl px-4 py-6 text-white">
-        <h1 className="text-2xl font-semibold text-amber-300">
-          {item.name || "Untitled Gem"}
-        </h1>
+      <div className="mx-auto max-w-6xl px-4 py-5 text-white sm:px-6 lg:px-8">
+        <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.82),rgba(4,14,30,0.76))] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] sm:p-6">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-amber-400/80">
+            Available Stone
+          </p>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-2xl border border-white/10">
-            {item.imageUrl ? (
-              <img
-                src={item.imageUrl}
-                alt={item.name || "Gemstone"}
-                className="w-full object-cover"
-              />
-            ) : (
-              <div className="p-10 text-center text-gray-500">
-                No image available
-              </div>
-            )}
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-amber-300 sm:text-4xl">
+                {item.name || "Untitled Gem"}
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-gray-400 sm:text-base sm:leading-7">
+                Individually documented gemstone available for direct inquiry and purchase.
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              <span className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
+                Only {item.quantity && Number(item.quantity) > 0 ? item.quantity : 1} available
+              </span>
+            </div>
           </div>
+        </section>
 
-          <div className="space-y-4">
-            <p><strong>Type:</strong> {item.stoneType || "—"}</p>
-            <p><strong>Category:</strong> {item.category || "—"}</p>
-            <p><strong>Carat:</strong> {formatCarat(item.carat) || "—"}</p>
-            <p><strong>Color:</strong> {item.color || "—"}</p>
-            <p><strong>Cut:</strong> {item.cut || "—"}</p>
-            <p><strong>Origin:</strong> {item.origin || "—"}</p>
-            <p><strong>Price:</strong> {formatMoney(item.salePrice)}</p>
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+          <section className="space-y-5">
+            <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#04101f] shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+              <div className="aspect-square w-full">
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name || "Gemstone"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">
+                    No image available
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-5">
+              <h2 className="text-sm font-semibold text-white">Quick Summary</h2>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {summaryChips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full border border-white/10 px-3 py-1.5 text-[11px] text-gray-300"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </section>
+          </section>
+
+          <section className="space-y-5">
+            <div className="rounded-[28px] border border-amber-400/15 bg-[#020617]/95 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                Price
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-white">
+                {formatMoney(item.salePrice)}
+              </p>
+              <p className="mt-2 text-sm text-gray-400">
+                Message directly to confirm availability, payment, and delivery details.
+              </p>
+
+              <div className="mt-5 space-y-3">
+                <a
+                  href={buildWhatsAppLink(item)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
+                >
+                  Enquire on WhatsApp
+                </a>
+
+                {CONTACT_PHONE ? (
+                  <div className="rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white">
+                    {CONTACT_PHONE}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-5">
+              <h2 className="text-sm font-semibold text-white">Stone Details</h2>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DetailBlock label="Stone Type" value={item.stoneType || "—"} />
+                <DetailBlock label="Category" value={item.category || "—"} />
+                <DetailBlock label="Carat" value={formatCarat(item.carat) || "—"} />
+                <DetailBlock label="Color" value={item.color || "—"} />
+                <DetailBlock label="Cut" value={item.cut || "—"} />
+                <DetailBlock label="Origin" value={item.origin || "—"} />
+                <DetailBlock
+                  label="Quantity"
+                  value={
+                    item.quantity !== null &&
+                    item.quantity !== undefined &&
+                    item.quantity !== ""
+                      ? String(item.quantity)
+                      : "1"
+                  }
+                />
+                <DetailBlock label="Price" value={formatMoney(item.salePrice)} />
+              </div>
+            </section>
 
             {item.notes ? (
-              <div className="mt-4">
-                <p className="text-sm text-gray-400">Notes</p>
-                <p className="mt-1">{item.notes}</p>
-              </div>
+              <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-5">
+                <h2 className="text-sm font-semibold text-white">Notes</h2>
+                <div className="mt-3 rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 text-sm leading-7 text-gray-300">
+                  {item.notes}
+                </div>
+              </section>
             ) : null}
-
-            <a
-              href={buildWhatsAppLink(item)}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-6 block rounded-xl bg-amber-400 px-4 py-3 text-center font-semibold text-black hover:bg-amber-300"
-            >
-              Ask About This Stone
-            </a>
-
-            {CONTACT_PHONE ? (
-              <p className="mt-2 text-center text-sm text-gray-400">
-                {CONTACT_PHONE}
-              </p>
-            ) : null}
-          </div>
+          </section>
         </div>
       </div>
     </>
