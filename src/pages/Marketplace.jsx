@@ -4,6 +4,7 @@ import {
   CONTACT_PHONE,
   WHATSAPP_NUMBER,
 } from "../config/appConfig";
+import { Link } from "react-router-dom";
 
 function formatMoney(value) {
   if (value === null || value === undefined || value === "") {
@@ -283,69 +284,67 @@ function MarketplaceDetailModal({
 function MarketplaceCard({ item, onOpen }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-white/10 bg-[#020617]/95 transition hover:border-amber-400/40">
-      <button
-        type="button"
-        onClick={() => onOpen(item)}
-        className="w-full text-left"
-      >
-        <div className="aspect-square w-full overflow-hidden bg-[#04101f]">
-          {item.imageUrl ? (
-            <img
-              src={item.imageUrl}
-              alt={item.name || "Gemstone"}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
-              No image
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2 p-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-[10px] text-amber-300">Tap to view →</p>
-
-              <h2 className="truncate text-sm font-semibold text-white">
-                {item.name || "Untitled"}
-              </h2>
-
-              <p className="text-xs text-gray-400">
-                {item.stoneType || item.category || "Gem"}
-              </p>
-            </div>
-
-            <span className="text-[9px] text-emerald-300">1 left</span>
+      <Link to={`/stone/${item.id}`} className="block w-full text-left">
+        <div>
+          <div className="aspect-square w-full overflow-hidden bg-[#04101f]">
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.name || "Gemstone"}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+                No image
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-1 text-center text-[11px]">
-            <div className="min-w-0">
-              <p className="text-[9px] text-gray-500">Size</p>
-              <p className="truncate text-white">
-                {item.carat ? `${item.carat}ct` : "—"}
-              </p>
+          <div className="space-y-2 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] text-amber-300">View details →</p>
+
+                <h2 className="truncate text-sm font-semibold text-white">
+                  {item.name || "Untitled"}
+                </h2>
+
+                <p className="text-xs text-gray-400">
+                  {item.stoneType || item.category || "Gem"}
+                </p>
+              </div>
+
+              <span className="text-[9px] text-emerald-300">1 left</span>
             </div>
 
-            <div className="min-w-0">
-              <p className="text-[9px] text-gray-500">Colour</p>
-              <p className="truncate text-white">{item.color || "—"}</p>
+            <div className="grid grid-cols-3 gap-1 text-center text-[11px]">
+              <div className="min-w-0">
+                <p className="text-[9px] text-gray-500">Size</p>
+                <p className="truncate text-white">
+                  {item.carat ? `${item.carat}ct` : "—"}
+                </p>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[9px] text-gray-500">Colour</p>
+                <p className="truncate text-white">{item.color || "—"}</p>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[9px] text-gray-500">Price</p>
+                <p className="truncate text-gray-400">View</p>
+              </div>
             </div>
 
-            <div className="min-w-0">
-              <p className="text-[9px] text-gray-500">Price</p>
-              <p className="truncate text-gray-400">View</p>
+            <div className="flex flex-wrap gap-1.5">
+              <DetailChip>{item.category}</DetailChip>
+              <DetailChip>{item.cut}</DetailChip>
+              <DetailChip>{item.origin}</DetailChip>
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            <DetailChip>{item.category}</DetailChip>
-            <DetailChip>{item.cut}</DetailChip>
-            <DetailChip>{item.origin}</DetailChip>
           </div>
         </div>
-      </button>
+      </Link>
 
       <div className="px-3 pb-3">
         <a

@@ -14,6 +14,9 @@ import About from "./pages/About";
 import HowToBuy from "./pages/HowToBuy";
 import Contact from "./pages/Contact";
 
+// NEW: Stone Detail Page
+import StoneDetail from "./pages/StoneDetail";
+
 function App() {
   return (
     <BrowserRouter>
@@ -24,6 +27,10 @@ function App() {
             {/* Public pages */}
             <Route path="/" element={<Home />} />
             <Route path="/collection" element={<Marketplace />} />
+
+            {/* NEW: Individual stone page */}
+            <Route path="/stone/:id" element={<StoneDetail />} />
+
             <Route path="/about" element={<About />} />
             <Route path="/how-to-buy" element={<HowToBuy />} />
             <Route path="/contact" element={<Contact />} />
