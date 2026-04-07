@@ -357,6 +357,8 @@ function GemDetailModal({
                         className="h-full w-full object-cover"
                         loading="eager"
                         decoding="async"
+                        fetchPriority="high"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
                       />
                     </div>
                   </div>

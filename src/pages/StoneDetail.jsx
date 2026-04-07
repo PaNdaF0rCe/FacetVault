@@ -269,6 +269,10 @@ function StoneDetail() {
                     src={item.imageUrl}
                     alt={item.name || "Gemstone"}
                     className="h-full w-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                    sizes="(max-width: 1024px) 100vw, 55vw"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">

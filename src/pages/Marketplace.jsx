@@ -194,6 +194,10 @@ function MarketplaceDetailModal({
                         src={item.imageUrl}
                         alt={item.name || "Gemstone"}
                         className="h-full w-full object-cover"
+                        loading="eager"
+                        decoding="async"
+                        fetchPriority="high"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">
@@ -293,6 +297,9 @@ function MarketplaceCard({ item, onOpen }) {
                 alt={item.name || "Gemstone"}
                 className="h-full w-full object-cover"
                 loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+                sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
