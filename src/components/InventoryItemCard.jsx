@@ -29,8 +29,9 @@ function InventoryItemCard({ item, onClick }) {
     >
       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-black ring-1 ring-white/10 sm:h-24 sm:w-24">
         <img
-          src={item.imageUrl}
+          src={item.thumbnailUrl || item.imageUrl}
           alt={item.name}
+          loading="lazy"
           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
       </div>

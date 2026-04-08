@@ -298,7 +298,7 @@ function StoneDetail() {
                 <div className="aspect-square w-full">
                   {item.imageUrl ? (
                     <img
-                      src={item.imageUrl}
+                      src={item.imageUrl || item.thumbnailUrl}
                       alt={item.name || "Gemstone"}
                       className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]"
                       loading="eager"

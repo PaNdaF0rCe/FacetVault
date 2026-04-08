@@ -11,7 +11,7 @@ import {
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
 import { createDocument, getDocument } from "./db-operations";
-import { uploadFileToStorage } from "./storage-utils";
+import { uploadFileToStorage, uploadImageWithThumbnail } from "./storage-utils";
 import { updateUserStats } from "./users";
 import { UnauthorizedError } from "./errors";
 
@@ -114,19 +114,21 @@ export async function uploadInventoryItem(filePayload, metadata, userId) {
       let uploadedThumbnail = null;
 
       // 🔥 Handle BOTH formats (backward compatible)
-      if (filePayload?.original && filePayload?.thumbnail) {
-        uploadedOriginal = await uploadFileToStorage(
-          filePayload.original,
-          userId
-        );
+      let uploadResult = null;
 
-        uploadedThumbnail = await uploadFileToStorage(
-          filePayload.thumbnail,
-          userId
-        );
+      if (filePayload?.original) {
+        uploadResult = await uploadImageWithThumbnail(filePayload, userId);
       } else {
-        // fallback for old usage
-        uploadedOriginal = await uploadFileToStorage(filePayload, userId);
+        // fallback (old behavior)
+        const oldUpload = await uploadFileToStorage(filePayload, userId);
+
+        uploadResult = {
+          imageUrl: oldUpload.downloadURL,
+          imagePath: oldUpload.path,
+          thumbnailUrl: null,
+          thumbnailPath: null,
+          fileName: oldUpload.filename
+        };
       }
 
       const itemData = {
@@ -162,13 +164,12 @@ export async function uploadInventoryItem(filePayload, metadata, userId) {
         saleUpdatedAt: metadata.isForSale ? new Date() : null,
 
         // 🔥 MAIN IMAGE
-        fileName: uploadedOriginal.filename,
-        imageUrl: uploadedOriginal.downloadURL,
-        imagePath: uploadedOriginal.path,
+        fileName: uploadResult.fileName || null,
+        imageUrl: uploadResult.imageUrl,
+        imagePath: uploadResult.imagePath,
 
-        // 🔥 NEW: THUMBNAIL
-        thumbnailUrl: uploadedThumbnail?.downloadURL || null,
-        thumbnailPath: uploadedThumbnail?.path || null,
+        thumbnailUrl: uploadResult.thumbnailUrl || null,
+        thumbnailPath: uploadResult.thumbnailPath || null,
 
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -204,35 +205,39 @@ export const updateInventoryItem = async (
 
     let nextImageData = {};
     let oldImagePathToDelete = null;
+    let oldThumbnailPathToDelete = null;
 
     if (newImageFile) {
       let uploadedOriginal = null;
       let uploadedThumbnail = null;
 
-      if (newImageFile?.original && newImageFile?.thumbnail) {
-        uploadedOriginal = await uploadFileToStorage(
-          newImageFile.original,
-          userId
-        );
+      let uploadResult = null;
 
-        uploadedThumbnail = await uploadFileToStorage(
-          newImageFile.thumbnail,
-          userId
-        );
+      if (newImageFile?.original) {
+        uploadResult = await uploadImageWithThumbnail(newImageFile, userId);
       } else {
-        uploadedOriginal = await uploadFileToStorage(newImageFile, userId);
+        const oldUpload = await uploadFileToStorage(newImageFile, userId);
+
+        uploadResult = {
+          imageUrl: oldUpload.downloadURL,
+          imagePath: oldUpload.path,
+          thumbnailUrl: null,
+          thumbnailPath: null,
+          fileName: oldUpload.filename
+        };
       }
 
       nextImageData = {
-        fileName: uploadedOriginal.filename,
-        imageUrl: uploadedOriginal.downloadURL,
-        imagePath: uploadedOriginal.path,
+        fileName: uploadResult.fileName || null,
+        imageUrl: uploadResult.imageUrl,
+        imagePath: uploadResult.imagePath,
 
-        thumbnailUrl: uploadedThumbnail?.downloadURL || null,
-        thumbnailPath: uploadedThumbnail?.path || null,
+        thumbnailUrl: uploadResult.thumbnailUrl || null,
+        thumbnailPath: uploadResult.thumbnailPath || null,
       };
 
       oldImagePathToDelete = existingItem.imagePath || null;
+      oldThumbnailPathToDelete = existingItem.thumbnailPath || null;
     }
 
     await updateDoc(itemRef, {
@@ -247,6 +252,15 @@ export const updateInventoryItem = async (
         await deleteObject(oldImageRef);
       } catch (storageError) {
         console.log("Old image cleanup skipped or failed:", storageError);
+      }
+    }
+
+    if (oldThumbnailPathToDelete) {
+      try {
+        const oldThumbRef = ref(storage, oldThumbnailPathToDelete);
+        await deleteObject(oldThumbRef);
+      } catch (storageError) {
+        console.log("Old thumbnail cleanup skipped or failed:", storageError);
       }
     }
 
@@ -277,6 +291,15 @@ export const deleteInventoryItem = async (itemId, userId) => {
         await deleteObject(imageRef);
       } catch (storageError) {
         console.log("No image found or error deleting image:", storageError);
+      }
+    }
+
+    if (item.thumbnailPath) {
+      try {
+        const thumbRef = ref(storage, item.thumbnailPath);
+        await deleteObject(thumbRef);
+      } catch (storageError) {
+        console.log("No thumbnail found or error deleting thumbnail:", storageError);
       }
     }
 

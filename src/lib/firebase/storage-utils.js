@@ -50,3 +50,47 @@ export async function getFileFromStorage(path) {
     throw error;
   }
 }
+
+export async function uploadImageWithThumbnail(imagePayload, userId) {
+  try {
+    if (!imagePayload?.original) {
+      throw new Error('No image provided');
+    }
+
+    const timestamp = Date.now();
+
+    // ORIGINAL IMAGE
+    const originalExt = imagePayload.original.name?.split('.').pop() || 'jpg';
+    const originalName = `gem_${timestamp}.${originalExt}`;
+    const originalPath = `inventory/${userId}/original/${originalName}`;
+
+    const originalRef = ref(storage, originalPath);
+    await uploadBytes(originalRef, imagePayload.original);
+    const originalURL = await getDownloadURL(originalRef);
+
+    let thumbnailURL = null;
+    let thumbnailPath = null;
+
+    // THUMBNAIL (optional but expected)
+    if (imagePayload.thumbnail) {
+      const thumbName = `gem_${timestamp}_thumb.webp`;
+      thumbnailPath = `inventory/${userId}/thumbnails/${thumbName}`;
+
+      const thumbRef = ref(storage, thumbnailPath);
+      await uploadBytes(thumbRef, imagePayload.thumbnail);
+      thumbnailURL = await getDownloadURL(thumbRef);
+    }
+
+    return {
+      fileName: originalName,
+      imageUrl: originalURL,
+      imagePath: originalPath,
+      thumbnailUrl: thumbnailURL,
+      thumbnailPath: thumbnailPath
+    };
+
+  } catch (error) {
+    console.error('Error uploading image with thumbnail:', error);
+    throw error;
+  }
+}

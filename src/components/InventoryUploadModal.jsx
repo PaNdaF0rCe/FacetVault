@@ -96,37 +96,61 @@ function getInitialFormData(initialData, mode) {
   };
 }
 
-async function createThumbnail(file, maxWidth = 600) {
-  return new Promise((resolve) => {
+async function createThumbnail(file, maxWidth = 900, quality = 0.72) {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      img.src = e.target.result;
+      img.src = e.target?.result;
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Failed to read image file."));
     };
 
     img.onload = () => {
-      const canvas = document.createElement("canvas");
+      try {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
 
-      const scale = maxWidth / img.width;
-      canvas.width = maxWidth;
-      canvas.height = img.height * scale;
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
 
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to create image canvas."));
+          return;
+        }
 
-      canvas.toBlob(
-        (blob) => {
-          const thumbnailFile = new File(
-            [blob],
-            `thumb_${file.name}`,
-            { type: "image/webp" }
-          );
-          resolve(thumbnailFile);
-        },
-        "image/webp",
-        0.8
-      );
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Failed to generate compressed image."));
+              return;
+            }
+
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            const thumbnailFile = new File(
+              [blob],
+              `${baseName}-thumb.webp`,
+              { type: "image/webp" }
+            );
+
+            resolve(thumbnailFile);
+          },
+          "image/webp",
+          quality
+        );
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = () => {
+      reject(new Error("Selected file is not a valid image."));
     };
 
     reader.readAsDataURL(file);
@@ -273,31 +297,33 @@ function InventoryUploadModal({
         saleUpdatedAt: formData.isForSale ? new Date() : null,
       };
 
-      if (isEditMode) {
-        let imagePayload = null;
+      let imagePayload = null;
 
-        if (imageFile) {
-          const thumbnailFile = await createThumbnail(imageFile);
-          imagePayload = {
-            original: imageFile,
-            thumbnail: thumbnailFile,
-          };
+      if (imageFile) {
+        let thumbnailFile = null;
+
+        try {
+          thumbnailFile = await createThumbnail(imageFile);
+        } catch (thumbnailError) {
+          console.warn("Thumbnail generation failed, continuing with original image only:", thumbnailError);
         }
 
+        imagePayload = {
+          original: imageFile,
+          thumbnail: thumbnailFile,
+        };
+      }
+
+      if (isEditMode) {
         await updateInventoryItem(
           initialData.id,
           metadata,
           userId,
           imagePayload
-        );y
+        );
       } else {
-        const thumbnailFile = await createThumbnail(imageFile);
-
         await uploadInventoryItem(
-          {
-            original: imageFile,
-            thumbnail: thumbnailFile,
-          },
+          imagePayload,
           metadata,
           userId
         );
