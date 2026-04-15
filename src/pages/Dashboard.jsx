@@ -505,7 +505,7 @@ function GemDetailModal({
           </div>
 
           <div className="sticky bottom-0 border-t border-white/10 bg-[#061224]/95 p-3 backdrop-blur sm:p-4">
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-between sm:gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={onEdit}
