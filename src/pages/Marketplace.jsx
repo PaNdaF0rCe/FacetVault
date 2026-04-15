@@ -358,15 +358,15 @@ function Marketplace() {
           </div>
 
           {/* SCROLLABLE FILTERS */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex flex-wrap gap-2">
             {[
               { key: "all", label: "All" },
-              { key: "precious", label: "Precious" },
-              { key: "semi", label: "Semi-Precious" },
-              { key: "collector", label: "Collector" },
-              { key: "under5k", label: "Under 5K" },
-              { key: "featured", label: "Featured" },
-              { key: "new", label: "New" },
+                { key: "featured", label: "Featured" },
+                { key: "new", label: "New" },
+                { key: "under5k", label: "Under 5K" },
+                { key: "precious", label: "Precious" },
+                { key: "semi", label: "Semi-Precious" },
+                { key: "collector", label: "Collector" },
             ].map((f) => (
               <button
                 key={f.key}
