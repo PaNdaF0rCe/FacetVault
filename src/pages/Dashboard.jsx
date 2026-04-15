@@ -7,6 +7,7 @@ import Toast from "../components/Toast";
 import {
   getFilteredInventory,
   deleteInventoryItem,
+  updateInventoryItem,
 } from "../lib/firebase/inventory-operations";
 import { updateUserStats } from "../lib/firebase/users";
 
@@ -48,13 +49,19 @@ function formatDate(value) {
   });
 }
 
-function DetailField({ label, value }) {
+function DetailField({ label, value, accent = false }) {
   return (
-    <div>
-      <p className="text-xs uppercase tracking-[0.14em] text-gray-400">
+    <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-gray-400">
         {label}
       </p>
-      <p className="mt-1 text-sm text-white">{value || "—"}</p>
+      <p
+        className={`mt-2 text-sm font-medium ${
+          accent ? "text-amber-300" : "text-white"
+        }`}
+      >
+        {value || "—"}
+      </p>
     </div>
   );
 }
@@ -275,6 +282,7 @@ function GemDetailModal({
   onClose,
   onEdit,
   onDelete,
+  onToggleSold,
 }) {
   useEffect(() => {
     if (!gem) return;
@@ -307,161 +315,236 @@ function GemDetailModal({
     >
       <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
         <div
-          key={gem.id}
-          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-[#1e293b] bg-[#020617] text-gray-200 shadow-[0_24px_60px_rgba(0,0,0,0.4)] sm:max-h-[92vh]"
+          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_60px_rgba(0,0,0,0.4)] sm:max-h-[92vh]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 z-10 border-b border-[#1e293b] bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
+          <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 p-5 backdrop-blur">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
+                <p className="text-xs uppercase tracking-[0.22em] text-amber-400/80">
                   Collection entry
                 </p>
-                <h2 className="mt-1 text-xl font-semibold text-amber-300 sm:text-2xl">
+                <h2 className="mt-1 text-2xl font-semibold text-amber-300">
                   {gem.name}
                 </h2>
-                <p className="mt-1 text-sm text-gray-400">
-                  Review the saved gem details and manage this entry.
+                <p className="mt-1 text-xs text-gray-500">
+                  {gem.stoneCode || "—"}
                 </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {gem.isForSale && (
+                    <span className="rounded-full bg-emerald-400 px-2.5 py-1 text-xs font-medium text-black">
+                      For Sale
+                    </span>
+                  )}
+                  {gem.isFeatured && (
+                    <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-medium text-black">
+                      Featured
+                    </span>
+                  )}
+                  {gem.isCollectorPiece && (
+                    <span className="rounded-full bg-purple-400 px-2.5 py-1 text-xs font-medium text-black">
+                      Collector
+                    </span>
+                  )}
+                  {gem.isSold && (
+                    <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-medium text-white">
+                      SOLD
+                    </span>
+                  )}
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Close gem details"
                 disabled={isBusy}
+                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ✕
               </button>
             </div>
           </div>
 
-          <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-            <div className="relative">
-              {isRefreshing && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[#020617]/70 backdrop-blur-[2px]">
-                  <div className="rounded-2xl border border-white/10 bg-[#091427]/95 px-5 py-4 text-sm text-white shadow-lg">
-                    Saving changes...
-                  </div>
+          <div className="relative flex-1 overflow-y-auto p-4 sm:p-6">
+            {isRefreshing && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[#020617]/70 backdrop-blur-[2px]">
+                <div className="rounded-2xl border border-white/10 bg-[#091427]/95 px-5 py-4 text-sm text-white shadow-lg">
+                  Saving changes...
                 </div>
-              )}
+              </div>
+            )}
 
-              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-                <div className="space-y-5">
-                  <div className="overflow-hidden rounded-2xl border border-[#1e293b] bg-[#04101f]">
-                    <div className="aspect-square w-full bg-[#04101f]">
-                      <img
-                        src={gem.imageUrl}
-                        alt={gem.name}
-                        className="h-full w-full object-cover"
-                        loading="eager"
-                        decoding="async"
-                        fetchpriority="high"
-                        sizes="(max-width: 1024px) 100vw, 50vw"
-                      />
+            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+              <div className="space-y-5">
+                <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#04101f] shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
+                  {gem.imageUrl ? (
+                    <img
+                      src={gem.imageUrl}
+                      alt={gem.name}
+                      className="aspect-square w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex aspect-square items-center justify-center text-sm text-gray-500">
+                      No image available
                     </div>
-                  </div>
+                  )}
+                </div>
 
-                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
+                  <div className="flex items-center justify-between gap-3">
                     <h3 className="text-sm font-semibold text-white">
-                      Quick summary
+                      Commercial Summary
                     </h3>
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                      {gem.stoneType && (
-                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                          {gem.stoneType}
-                        </span>
-                      )}
-                      {gem.category && (
-                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                          {gem.category}
-                        </span>
-                      )}
-                      {gem.color && (
-                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                          {gem.color}
-                        </span>
-                      )}
-                      {gem.cut && (
-                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                          {gem.cut}
-                        </span>
-                      )}
-                      {gem.origin && (
-                        <span className="rounded-full border border-white/10 px-3 py-1.5 text-gray-300">
-                          {gem.origin}
-                        </span>
-                      )}
-                    </div>
-                  </section>
-                </div>
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                      Quick view
+                    </span>
+                  </div>
 
-                <div className="space-y-5">
-                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-white">Details</h3>
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <DetailField
+                      label="Price Paid"
+                      value={formatPrice(gem.pricePaid)}
+                    />
+                    <DetailField
+                      label="Sale Price"
+                      value={gem.isForSale ? formatPrice(gem.salePrice) : "Not listed"}
+                      accent={gem.isForSale}
+                    />
+                    <DetailField
+                      label="Quantity"
+                      value={String(gem.quantity || 1)}
+                    />
+                    <DetailField
+                      label="Status"
+                      value={
+                        gem.isSold
+                          ? "Sold"
+                          : gem.isForSale
+                          ? "Listed for sale"
+                          : "Private collection"
+                      }
+                      accent={gem.isSold || gem.isForSale}
+                    />
+                  </div>
+                </section>
+              </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <DetailField label="Stone Type" value={gem.stoneType} />
-                      <DetailField label="Category" value={gem.category} />
-                      <DetailField label="Carat" value={formatCarat(gem.carat)} />
-                      <DetailField label="Color" value={gem.color || "—"} />
-                      <DetailField label="Cut" value={gem.cut || "—"} />
-                      <DetailField label="Origin" value={gem.origin || "—"} />
-                      <DetailField
-                        label="Price Paid"
-                        value={formatPrice(gem.pricePaid)}
-                      />
-                      <DetailField
-                        label="Quantity"
-                        value={String(gem.quantity || "—")}
-                      />
-                      <DetailField
-                        label="Created"
-                        value={formatDate(gem.createdAt)}
-                      />
-                      <DetailField
-                        label="Last Updated"
-                        value={formatDate(gem.updatedAt)}
-                      />
-                    </div>
-                  </section>
+              <div className="space-y-5">
+                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-white">
+                      Stone Details
+                    </h3>
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                      Identification
+                    </span>
+                  </div>
 
-                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <DetailField
+                      label="Stone Type"
+                      value={gem.stoneType || "—"}
+                    />
+                    <DetailField
+                      label="Category"
+                      value={gem.category || "—"}
+                    />
+                    <DetailField
+                      label="Carat"
+                      value={formatCarat(gem.carat)}
+                    />
+                    <DetailField
+                      label="Color"
+                      value={gem.color || "—"}
+                    />
+                    <DetailField
+                      label="Cut"
+                      value={gem.cut || "—"}
+                    />
+                    <DetailField
+                      label="Origin"
+                      value={gem.origin || "—"}
+                    />
+                  </div>
+                </section>
+
+                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-white">
+                      Timeline
+                    </h3>
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                      Record history
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <DetailField
+                      label="Created"
+                      value={formatDate(gem.createdAt)}
+                    />
+                    <DetailField
+                      label="Last Updated"
+                      value={formatDate(gem.updatedAt)}
+                    />
+                  </div>
+                </section>
+
+                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
+                  <div className="flex items-center justify-between gap-3">
                     <h3 className="text-sm font-semibold text-white">Notes</h3>
-                    <div className="mt-3 break-words rounded-xl border border-[#1e293b] bg-[#020617] p-4 text-sm leading-6 text-gray-300">
-                      {gem.notes || "No notes"}
-                    </div>
-                  </section>
-                </div>
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                      Internal
+                    </span>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-white/10 bg-[#020617] p-4 text-sm leading-7 text-gray-300">
+                    {gem.notes || "No notes added"}
+                  </div>
+                </section>
               </div>
             </div>
           </div>
 
-          <div className="sticky bottom-0 border-t border-[#1e293b] bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  onClick={onEdit}
-                  disabled={isBusy}
-                  className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-5 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Edit Gem
-                </button>
-
-                <button
-                  onClick={onDelete}
-                  disabled={isBusy}
-                  className="rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Delete Gem
-                </button>
-              </div>
+          <div className="sticky bottom-0 border-t border-white/10 bg-[#061224]/95 p-3 backdrop-blur sm:p-4">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-between sm:gap-3">
+              <button
+                type="button"
+                onClick={onEdit}
+                disabled={isBusy}
+                className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Edit Gem
+              </button>
 
               <button
+                type="button"
+                onClick={onDelete}
+                disabled={isBusy}
+                className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Delete Gem
+              </button>
+
+              <button
+                type="button"
+                onClick={onToggleSold}
+                disabled={isBusy}
+                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  gem.isSold
+                    ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                    : "bg-red-500 text-white hover:bg-red-400"
+                }`}
+              >
+                {gem.isSold ? "Mark Available" : "Mark Sold"}
+              </button>
+
+              <button
+                type="button"
                 onClick={onClose}
                 disabled={isBusy}
-                className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Close
               </button>
@@ -483,6 +566,7 @@ function Dashboard() {
   const [isRefreshingSelectedGem, setIsRefreshingSelectedGem] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingGem, setIsDeletingGem] = useState(false);
+  const [isTogglingSold, setIsTogglingSold] = useState(false);
   const [toast, setToast] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -558,7 +642,8 @@ function Dashboard() {
     !!editingGem ||
     isRefreshingSelectedGem ||
     showDeleteConfirm ||
-    isDeletingGem;
+    isDeletingGem ||
+    isTogglingSold;
 
   const handleOpenGem = useCallback((gem) => {
     setEditingGem(null);
@@ -613,6 +698,47 @@ function Dashboard() {
       setIsDeletingGem(false);
     }
   }, [selectedGem, user?.uid, filters, showToast]);
+
+  const handleToggleSold = useCallback(async () => {
+    if (!selectedGem?.id || !user?.uid || isTogglingSold) return;
+
+    try {
+      setIsTogglingSold(true);
+
+      await updateInventoryItem(
+        selectedGem.id,
+        {
+          isSold: !selectedGem.isSold,
+          isForSale: selectedGem.isSold ? selectedGem.isForSale : false,
+        },
+        user.uid
+      );
+
+      const refreshedItems = await getFilteredInventory(user.uid, filters);
+      setGems(refreshedItems);
+
+      const refreshedGem =
+        refreshedItems.find((item) => item.id === selectedGem.id) || null;
+      setSelectedGem(refreshedGem);
+
+      showToast({
+        type: "success",
+        title: refreshedGem?.isSold ? "Marked as sold" : "Marked as available",
+        message: refreshedGem?.isSold
+          ? "This gem is now marked as sold."
+          : "This gem is available again.",
+      });
+    } catch (error) {
+      console.error("Error toggling sold status:", error);
+      showToast({
+        type: "error",
+        title: "Update failed",
+        message: "Could not update sold status.",
+      });
+    } finally {
+      setIsTogglingSold(false);
+    }
+  }, [selectedGem, user?.uid, filters, isTogglingSold, showToast]);
 
   const handleUploadSuccess = useCallback(async () => {
     try {
@@ -769,11 +895,12 @@ function Dashboard() {
         <GemDetailModal
           key={selectedGem.id}
           gem={selectedGem}
-          isRefreshing={isRefreshingSelectedGem}
+          isRefreshing={isRefreshingSelectedGem || isTogglingSold}
           isBusy={detailModalBusy}
           onClose={handleCloseSelectedGem}
           onEdit={handleStartEdit}
           onDelete={handleRequestDelete}
+          onToggleSold={handleToggleSold}
         />
       )}
 

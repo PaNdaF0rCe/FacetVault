@@ -1,297 +1,139 @@
 import { useEffect, useMemo, useState } from "react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
-import {
-  CONTACT_PHONE,
-  WHATSAPP_NUMBER,
-} from "../config/appConfig";
 import { Link } from "react-router-dom";
 
+const PRICE_THRESHOLD = 5000;
+const NEW_DAYS = 14;
+
 function formatMoney(value) {
-  if (value === null || value === undefined || value === "") {
-    return "Price on request";
-  }
+  if (value === null || value === undefined || value === "") return null;
 
   const num = Number(value);
-  if (Number.isNaN(num)) return "Price on request";
+  if (Number.isNaN(num)) return null;
 
   return `LKR ${num.toLocaleString()}`;
 }
 
-function formatCarat(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const num = Number(value);
-  if (Number.isNaN(num)) return null;
-  return `${num} ct`;
+function getJsDate(value) {
+  if (!value) return null;
+
+  if (value instanceof Date) return value;
+
+  if (typeof value?.toDate === "function") {
+    const date = value.toDate();
+    return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null;
+  }
+
+  if (typeof value?.seconds === "number") {
+    const date = new Date(value.seconds * 1000);
+    return !Number.isNaN(date.getTime()) ? date : null;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(value);
+    return !Number.isNaN(date.getTime()) ? date : null;
+  }
+
+  return null;
 }
 
-function buildWhatsAppLink(item) {
-  const name = item?.name || "this gemstone";
-  const carat = item?.carat ? `${item.carat}ct` : "";
-  const color = item?.color || "";
-  const price = item?.salePrice
-    ? ` (LKR ${Number(item.salePrice).toLocaleString()})`
-    : "";
+function isNewArrival(item) {
+  const createdAt = getJsDate(item?.createdAt || item?.updatedAt);
+  if (!createdAt) return false;
 
-  const message = `Hi, I’d like to check availability for ${name}${
-    carat ? ` (${carat})` : ""
-  }${color ? ` - ${color}` : ""}${price}.`;
+  const now = new Date();
+  const diffMs = now.getTime() - createdAt.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return diffDays >= 0 && diffDays <= NEW_DAYS;
 }
 
-function DetailChip({ children }) {
-  if (!children) return null;
+function isPreciousStone(stoneType = "") {
+  const value = String(stoneType).toLowerCase().trim();
 
   return (
-    <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] text-gray-300">
-      {children}
-    </span>
+    value.includes("sapphire") ||
+    value.includes("ruby") ||
+    value.includes("emerald") ||
+    value.includes("diamond")
   );
 }
 
-function DetailRow({ label, value }) {
-  if (!value && value !== 0) return null;
+function getDisplayPrice(item) {
+  const salePrice = Number(item?.salePrice);
 
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-[0.16em] text-gray-500">
-        {label}
-      </p>
-      <p className="mt-1 text-sm text-white">{value}</p>
-    </div>
-  );
-}
-
-function ContactActions({ item, phoneRevealed, onRevealPhone }) {
-  const hasWhatsApp = !!WHATSAPP_NUMBER;
-  const hasPhone = !!CONTACT_PHONE;
-  const whatsappLink = buildWhatsAppLink(item);
-
-  return (
-    <div className="space-y-3">
-      {hasWhatsApp ? (
-        <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noreferrer"
-          className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
-        >
-          Ask About This Stone
-        </a>
-      ) : (
-        <button
-          type="button"
-          onClick={() => onRevealPhone(item.id)}
-          className="block w-full rounded-2xl bg-amber-400 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-amber-300"
-        >
-          Contact Me
-        </button>
-      )}
-
-      {!phoneRevealed ? (
-        <button
-          type="button"
-          onClick={() => onRevealPhone(item.id)}
-          className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
-        >
-          Show Phone Number
-        </button>
-      ) : hasPhone ? (
-        hasWhatsApp ? (
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noreferrer"
-            className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/5"
-          >
-            {CONTACT_PHONE}
-          </a>
-        ) : (
-          <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-white">
-            {CONTACT_PHONE}
-          </div>
-        )
-      ) : (
-        <div className="block w-full rounded-2xl border border-white/10 px-4 py-3 text-center text-sm text-gray-300">
-          Contact number not configured yet
-        </div>
-      )}
-
-      {phoneRevealed && hasWhatsApp && (
-        <p className="text-center text-xs text-gray-500">
-          Click the number to open WhatsApp
-        </p>
-      )}
-    </div>
-  );
-}
-
-function MarketplaceDetailModal({
-  item,
-  phoneRevealed,
-  onRevealPhone,
-  onClose,
-}) {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleEscape = (event) => {
-      if (event.key === "Escape") onClose();
+  if (Number.isNaN(salePrice)) {
+    return {
+      text: "View price",
+      small: true,
     };
+  }
 
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleEscape);
+  if (salePrice <= PRICE_THRESHOLD) {
+    return {
+      text: formatMoney(salePrice),
+      small: false,
     };
-  }, [onClose]);
+  }
 
-  if (!item) return null;
+  return {
+    text: "View price",
+    small: true,
+  };
+}
 
+function getPrimaryBadge(item) {
+  if (item?.isFeatured) {
+    return {
+      label: "Featured",
+      className: "border-amber-400/30 bg-amber-400/15 text-amber-300",
+    };
+  }
+
+  if (item?.isCollectorPiece) {
+    return {
+      label: "Collector",
+      className: "border-fuchsia-400/30 bg-fuchsia-400/15 text-fuchsia-300",
+    };
+  }
+
+  if (isNewArrival(item)) {
+    return {
+      label: "New",
+      className: "border-sky-400/30 bg-sky-400/15 text-sky-300",
+    };
+  }
+
+  const salePrice = Number(item?.salePrice);
+  if (!Number.isNaN(salePrice) && salePrice <= PRICE_THRESHOLD) {
+    return {
+      label: "Under 5K",
+      className: "border-emerald-400/30 bg-emerald-400/15 text-emerald-300",
+    };
+  }
+
+  return null;
+}
+
+function FilterChip({ label, active, onClick }) {
   return (
-    <div
-      className="fixed inset-0 z-[80] bg-black/75 backdrop-blur-[1px]"
-      onClick={onClose}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition sm:px-4 sm:text-sm ${
+        active
+          ? "border-amber-400 bg-amber-400 text-black"
+          : "border-white/10 bg-white/[0.03] text-gray-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
+      }`}
     >
-      <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
-        <div
-          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:max-h-[92vh]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
-                  Available Stone
-                </p>
-                <h2 className="mt-1 text-xl font-semibold text-amber-300 sm:text-2xl">
-                  {item.name || "Untitled Gem"}
-                </h2>
-                <p className="mt-1 text-sm text-gray-400">
-                  Full gemstone details and contact options
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-              <div className="space-y-5">
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#04101f]">
-                  <div className="aspect-square w-full">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name || "Gemstone"}
-                        className="h-full w-full object-cover"
-                        loading="eager"
-                        decoding="async"
-                        fetchPriority="high"
-                        sizes="(max-width: 1024px) 100vw, 50vw"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">
-                        No image available
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-white">
-                    Quick Summary
-                  </h3>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <DetailChip>{item.category}</DetailChip>
-                    <DetailChip>{item.stoneType}</DetailChip>
-                    <DetailChip>{item.color}</DetailChip>
-                    <DetailChip>{item.cut}</DetailChip>
-                    <DetailChip>{item.origin}</DetailChip>
-                    <DetailChip>{formatCarat(item.carat)}</DetailChip>
-                  </div>
-                </section>
-              </div>
-
-              <div className="space-y-5">
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-white">Details</h3>
-
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <DetailRow label="Stone Type" value={item.stoneType} />
-                    <DetailRow label="Category" value={item.category} />
-                    <DetailRow label="Carat" value={formatCarat(item.carat)} />
-                    <DetailRow label="Color" value={item.color} />
-                    <DetailRow label="Cut" value={item.cut} />
-                    <DetailRow label="Origin" value={item.origin} />
-                    <DetailRow
-                      label="Quantity"
-                      value={
-                        item.quantity !== null &&
-                        item.quantity !== undefined &&
-                        item.quantity !== ""
-                          ? String(item.quantity)
-                          : null
-                      }
-                    />
-                    <DetailRow
-                      label="Selling Price"
-                      value={formatMoney(item.salePrice)}
-                    />
-                  </div>
-                </section>
-
-                {item.notes ? (
-                  <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-white">Notes</h3>
-                    <div className="mt-3 rounded-xl border border-white/10 bg-[#020617] p-4 text-sm leading-6 text-gray-300">
-                      {item.notes}
-                    </div>
-                  </section>
-                ) : null}
-
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-white">
-                    Contact
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-400">
-                    Reach out directly for availability, payment, and delivery details.
-                  </p>
-
-                  <div className="mt-4">
-                    <ContactActions
-                      item={item}
-                      phoneRevealed={phoneRevealed}
-                      onRevealPhone={onRevealPhone}
-                    />
-                  </div>
-                </section>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {label}
+    </button>
   );
 }
 
 function MarketplaceCard({ item }) {
-  const quantity =
-    item.quantity !== null &&
-    item.quantity !== undefined &&
-    item.quantity !== ""
-      ? Number(item.quantity)
-      : 1;
+  const displayPrice = getDisplayPrice(item);
+  const badge = getPrimaryBadge(item);
 
   return (
     <article className="group overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
@@ -312,15 +154,19 @@ function MarketplaceCard({ item }) {
             </div>
           )}
 
-          <div className="absolute right-2.5 top-2.5">
-            <span className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300 backdrop-blur">
-              {quantity} left
-            </span>
+          <div className="absolute right-2.5 top-2.5 flex flex-col items-end gap-1.5">
+            {badge ? (
+              <span
+                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur ${badge.className}`}
+              >
+                {badge.label}
+              </span>
+            ) : null}
           </div>
         </div>
       </Link>
 
-      <div className="flex min-h-[150px] flex-col p-2.5">
+      <div className="flex min-h-[162px] flex-col p-2.5">
         <div className="min-h-[44px]">
           <h2 className="truncate text-[14px] font-semibold leading-tight text-white">
             {item.name || "Untitled"}
@@ -328,6 +174,18 @@ function MarketplaceCard({ item }) {
 
           <p className="mt-[2px] truncate text-[11px] text-gray-400">
             {item.stoneType || item.category || "Gem"}
+          </p>
+        </div>
+
+        <div className="mt-1 h-[20px]">
+          <p
+            className={`truncate ${
+              displayPrice.small
+                ? "text-[11px] font-medium text-gray-400"
+                : "text-[12px] font-semibold text-amber-300"
+            }`}
+          >
+            {displayPrice.text}
           </p>
         </div>
 
@@ -355,7 +213,8 @@ function LoadingCard() {
       <div className="space-y-3 p-3">
         <div className="h-4 w-2/3 rounded bg-white/5" />
         <div className="h-3 w-1/2 rounded bg-white/5" />
-        <div className="h-12 rounded bg-white/5" />
+        <div className="h-4 w-1/3 rounded bg-white/5" />
+        <div className="h-3 w-3/4 rounded bg-white/5" />
         <div className="h-9 rounded-xl bg-white/5" />
       </div>
     </div>
@@ -366,7 +225,7 @@ function Marketplace() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [activeCollection, setActiveCollection] = useState("all");
 
   useEffect(() => {
     let mounted = true;
@@ -374,8 +233,13 @@ function Marketplace() {
     const loadItems = async () => {
       try {
         const data = await getPublicSaleInventory();
+
         if (mounted) {
-          setItems(Array.isArray(data) ? data : []);
+          const safeItems = Array.isArray(data)
+            ? data.filter((item) => item?.isSold !== true)
+            : [];
+
+          setItems(safeItems);
         }
       } catch (error) {
         console.error("Failed to load public sale inventory:", error);
@@ -397,21 +261,76 @@ function Marketplace() {
   }, []);
 
   const filteredItems = useMemo(() => {
+    let result = [...items];
+
+    switch (activeCollection) {
+      case "precious":
+        result = result.filter((item) => isPreciousStone(item.stoneType));
+        break;
+      case "semi":
+        result = result.filter((item) => !isPreciousStone(item.stoneType));
+        break;
+      case "collector":
+        result = result.filter((item) => item.isCollectorPiece === true);
+        break;
+      case "under5k":
+        result = result.filter((item) => {
+          const price = Number(item?.salePrice);
+          return !Number.isNaN(price) && price <= PRICE_THRESHOLD;
+        });
+        break;
+      case "featured":
+        result = result.filter((item) => item.isFeatured === true);
+        break;
+      case "new":
+        result = result.filter((item) => isNewArrival(item));
+        break;
+      case "all":
+      default:
+        break;
+    }
+
     const term = search.trim().toLowerCase();
-    if (!term) return items;
 
-    return items.filter((item) => {
-      return (
-        (item.name || "").toLowerCase().includes(term) ||
-        (item.stoneType || "").toLowerCase().includes(term) ||
-        (item.category || "").toLowerCase().includes(term) ||
-        (item.color || "").toLowerCase().includes(term) ||
-        (item.cut || "").toLowerCase().includes(term) ||
-        (item.origin || "").toLowerCase().includes(term)
-      );
-    });
-  }, [items, search]);
+    if (term) {
+      result = result.filter((item) => {
+        return (
+          (item.name || "").toLowerCase().includes(term) ||
+          (item.stoneType || "").toLowerCase().includes(term) ||
+          (item.category || "").toLowerCase().includes(term) ||
+          (item.color || "").toLowerCase().includes(term) ||
+          (item.cut || "").toLowerCase().includes(term) ||
+          (item.origin || "").toLowerCase().includes(term) ||
+          (item.stoneCode || "").toLowerCase().includes(term)
+        );
+      });
+    }
 
+    return result;
+  }, [items, search, activeCollection]);
+
+  const emptyStateTitle = useMemo(() => {
+    switch (activeCollection) {
+      case "featured":
+        return "No featured stones found";
+      case "collector":
+        return "No collector pieces found";
+      case "under5k":
+        return "No stones under LKR 5,000 found";
+      case "new":
+        return "No new arrivals found";
+      case "precious":
+        return "No precious stones found";
+      case "semi":
+        return "No semi-precious stones found";
+      default:
+        return "No gemstones found";
+    }
+  }, [activeCollection]);
+
+  const emptyStateText = search.trim()
+    ? "Try a different search term or collection."
+    : "There are no public sale items in this collection right now.";
 
   return (
     <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
@@ -433,8 +352,46 @@ function Marketplace() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, type, color, cut, or origin"
+            placeholder="Search by name, type, color, cut, origin, or code"
             className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
+          />
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <FilterChip
+            label="All"
+            active={activeCollection === "all"}
+            onClick={() => setActiveCollection("all")}
+          />
+          <FilterChip
+            label="Precious"
+            active={activeCollection === "precious"}
+            onClick={() => setActiveCollection("precious")}
+          />
+          <FilterChip
+            label="Semi-Precious"
+            active={activeCollection === "semi"}
+            onClick={() => setActiveCollection("semi")}
+          />
+          <FilterChip
+            label="Collector Pieces"
+            active={activeCollection === "collector"}
+            onClick={() => setActiveCollection("collector")}
+          />
+          <FilterChip
+            label="Under LKR 5,000"
+            active={activeCollection === "under5k"}
+            onClick={() => setActiveCollection("under5k")}
+          />
+          <FilterChip
+            label="Featured"
+            active={activeCollection === "featured"}
+            onClick={() => setActiveCollection("featured")}
+          />
+          <FilterChip
+            label="New Arrivals"
+            active={activeCollection === "new"}
+            onClick={() => setActiveCollection("new")}
           />
         </div>
       </section>
@@ -448,11 +405,9 @@ function Marketplace() {
       ) : filteredItems.length === 0 ? (
         <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
           <h2 className="text-xl font-semibold text-white">
-            No gemstones found
+            {emptyStateTitle}
           </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            There are no public sale items matching your search right now.
-          </p>
+          <p className="mt-2 text-sm text-gray-400">{emptyStateText}</p>
         </section>
       ) : (
         <>
@@ -465,15 +420,11 @@ function Marketplace() {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((item) => (
-              <MarketplaceCard
-                  key={item.id}
-                  item={item}
-              />
+              <MarketplaceCard key={item.id} item={item} />
             ))}
           </div>
         </>
       )}
-
     </div>
   );
 }

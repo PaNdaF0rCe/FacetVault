@@ -26,6 +26,7 @@ function TextInput({
   required = false,
   min,
   step,
+  disabled = false,
 }) {
   return (
     <input
@@ -37,9 +38,21 @@ function TextInput({
       required={required}
       min={min}
       step={step}
-      className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400"
+      disabled={disabled}
+      className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
     />
   );
+}
+
+function generateStoneCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "FV-";
+
+  for (let i = 0; i < 5; i += 1) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return code;
 }
 
 function getInitialFormData(initialData, mode) {
@@ -77,6 +90,9 @@ function getInitialFormData(initialData, mode) {
         initialData.salePrice !== ""
           ? String(initialData.salePrice)
           : "",
+      isFeatured: !!initialData.isFeatured,
+      isCollectorPiece: !!initialData.isCollectorPiece,
+      isSold: !!initialData.isSold,
     };
   }
 
@@ -93,6 +109,9 @@ function getInitialFormData(initialData, mode) {
     notes: "",
     isForSale: false,
     salePrice: "",
+    isFeatured: false,
+    isCollectorPiece: false,
+    isSold: false,
   };
 }
 
@@ -133,11 +152,9 @@ async function createThumbnail(file, maxWidth = 900, quality = 0.72) {
             }
 
             const baseName = file.name.replace(/\.[^/.]+$/, "");
-            const thumbnailFile = new File(
-              [blob],
-              `${baseName}-thumb.webp`,
-              { type: "image/webp" }
-            );
+            const thumbnailFile = new File([blob], `${baseName}-thumb.webp`, {
+              type: "image/webp",
+            });
 
             resolve(thumbnailFile);
           },
@@ -231,6 +248,15 @@ function InventoryUploadModal({
         next.salePrice = "";
       }
 
+      if (name === "isSold" && checked) {
+        next.isForSale = false;
+        next.salePrice = "";
+      }
+
+      if (name === "isForSale" && checked) {
+        next.isSold = false;
+      }
+
       return next;
     });
   };
@@ -269,7 +295,11 @@ function InventoryUploadModal({
     }
 
     if (formData.isForSale && !formData.salePrice.trim()) {
-      notify("error", "Please enter a sale price for items listed for sale.", "Sale price required");
+      notify(
+        "error",
+        "Please enter a sale price for items listed for sale.",
+        "Sale price required"
+      );
       return;
     }
 
@@ -294,6 +324,9 @@ function InventoryUploadModal({
           formData.isForSale && formData.salePrice?.trim()
             ? Number(formData.salePrice)
             : null,
+        isFeatured: !!formData.isFeatured,
+        isCollectorPiece: !!formData.isCollectorPiece,
+        isSold: !!formData.isSold,
         saleUpdatedAt: formData.isForSale ? new Date() : null,
       };
 
@@ -305,7 +338,10 @@ function InventoryUploadModal({
         try {
           thumbnailFile = await createThumbnail(imageFile);
         } catch (thumbnailError) {
-          console.warn("Thumbnail generation failed, continuing with original image only:", thumbnailError);
+          console.warn(
+            "Thumbnail generation failed, continuing with original image only:",
+            thumbnailError
+          );
         }
 
         imagePayload = {
@@ -315,16 +351,14 @@ function InventoryUploadModal({
       }
 
       if (isEditMode) {
-        await updateInventoryItem(
-          initialData.id,
-          metadata,
-          userId,
-          imagePayload
-        );
+        await updateInventoryItem(initialData.id, metadata, userId, imagePayload);
       } else {
         await uploadInventoryItem(
           imagePayload,
-          metadata,
+          {
+            ...metadata,
+            stoneCode: generateStoneCode(),
+          },
           userId
         );
       }
@@ -577,7 +611,7 @@ function InventoryUploadModal({
                       Sale settings
                     </h3>
                     <p className="mt-1 text-xs text-gray-400">
-                      Control whether this gem appears in the public collection.
+                      Control sale visibility, showcase status, and sold state.
                     </p>
                   </div>
 
@@ -585,9 +619,28 @@ function InventoryUploadModal({
                     <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#020617] px-4 py-3">
                       <input
                         type="checkbox"
+                        name="isSold"
+                        checked={formData.isSold}
+                        onChange={handleChange}
+                        className="h-4 w-4 accent-red-500"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          Mark as sold
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Sold gems are automatically removed from public sale visibility.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#020617] px-4 py-3">
+                      <input
+                        type="checkbox"
                         name="isForSale"
                         checked={formData.isForSale}
                         onChange={handleChange}
+                        disabled={formData.isSold}
                         className="h-4 w-4 accent-amber-400"
                       />
                       <div>
@@ -612,9 +665,46 @@ function InventoryUploadModal({
                           min="0"
                           step="0.01"
                           required={formData.isForSale}
+                          disabled={formData.isSold}
                         />
                       </div>
                     )}
+
+                    <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#020617] px-4 py-3">
+                      <input
+                        type="checkbox"
+                        name="isFeatured"
+                        checked={formData.isFeatured}
+                        onChange={handleChange}
+                        className="h-4 w-4 accent-amber-400"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          Featured
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Highlight this stone in the marketplace.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#020617] px-4 py-3">
+                      <input
+                        type="checkbox"
+                        name="isCollectorPiece"
+                        checked={formData.isCollectorPiece}
+                        onChange={handleChange}
+                        className="h-4 w-4 accent-amber-400"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          Collector Piece
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Mark this as premium or special inventory.
+                        </p>
+                      </div>
+                    </label>
                   </div>
                 </section>
 
@@ -713,8 +803,8 @@ function InventoryUploadModal({
                                 ? "New image selected"
                                 : "Ready to upload"
                               : isEditMode
-                              ? "Current saved image"
-                              : "Ready to upload"}
+                                ? "Current saved image"
+                                : "Ready to upload"}
                           </p>
                         </div>
                       </div>
@@ -735,7 +825,8 @@ function InventoryUploadModal({
                   <div className="mt-3 space-y-2 text-sm text-gray-400">
                     <p>• Name and photo are the most important fields.</p>
                     <p>• Sale price is required only if the gem is listed publicly.</p>
-                    <p>• Public visitors will only see items marked for sale.</p>
+                    <p>• Sold items should not stay listed for sale.</p>
+                    <p>• Featured and Collector Piece are manual showcase controls.</p>
                   </div>
                 </section>
               </div>
@@ -764,8 +855,8 @@ function InventoryUploadModal({
                     ? "Saving Changes..."
                     : "Saving..."
                   : isEditMode
-                  ? "Save Changes"
-                  : "Save Gem"}
+                    ? "Save Changes"
+                    : "Save Gem"}
               </button>
             </div>
           </div>
