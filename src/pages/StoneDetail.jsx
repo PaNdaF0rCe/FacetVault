@@ -7,17 +7,14 @@ const NEW_DAYS = 14;
 
 function getJsDate(value) {
   if (!value) return null;
-
   if (typeof value?.toDate === "function") return value.toDate();
   if (value?.seconds) return new Date(value.seconds * 1000);
-
   return new Date(value);
 }
 
 function isNew(item) {
   const date = getJsDate(item?.createdAt);
   if (!date) return false;
-
   const diff = (new Date() - date) / (1000 * 60 * 60 * 24);
   return diff <= NEW_DAYS;
 }
@@ -37,18 +34,16 @@ function buildWhatsAppLink(item) {
     item.stoneCode || "N/A"
   }].`;
 
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    message
-  )}`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
 function DetailBlock({ label, value }) {
   if (!value && value !== 0) return null;
 
   return (
-    <div className="rounded-xl border border-white/10 p-3">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-sm text-white mt-1">{value}</p>
+    <div className="lux-card p-3">
+      <p className="text-xs text-gray-400">{label}</p>
+      <p className="mt-1 text-sm text-white">{value}</p>
     </div>
   );
 }
@@ -94,36 +89,41 @@ function StoneDetail() {
     );
 
   return (
-    <div className="p-4 text-white max-w-6xl mx-auto space-y-6">
-      <button onClick={() => navigate(-1)} className="text-amber-300">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-6 text-white">
+
+      {/* BACK */}
+      <button
+        onClick={() => navigate(-1)}
+        className="text-sm text-amber-300 hover:text-amber-200"
+      >
         ← Back
       </button>
 
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl text-amber-300 font-semibold">
+        <h1 className="text-3xl font-semibold text-white">
           {item.name}
         </h1>
 
         {item.stoneCode && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="mt-1 text-xs text-gray-500">
             {item.stoneCode}
           </p>
         )}
 
-        <div className="flex gap-2 mt-2">
+        <div className="mt-3 flex gap-2">
           {item.isFeatured && (
-            <span className="text-xs px-2 py-1 bg-amber-400 text-black rounded">
+            <span className="rounded-full bg-amber-400/20 px-2 py-1 text-xs text-amber-300">
               Featured
             </span>
           )}
           {item.isCollectorPiece && (
-            <span className="text-xs px-2 py-1 bg-purple-400 text-black rounded">
+            <span className="rounded-full bg-purple-400/20 px-2 py-1 text-xs text-purple-300">
               Collector
             </span>
           )}
           {isNew(item) && (
-            <span className="text-xs px-2 py-1 bg-blue-400 text-black rounded">
+            <span className="rounded-full bg-blue-400/20 px-2 py-1 text-xs text-blue-300">
               New
             </span>
           )}
@@ -131,12 +131,22 @@ function StoneDetail() {
       </div>
 
       {/* MAIN */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <img src={item.imageUrl} className="rounded-xl" />
+      <div className="grid gap-8 md:grid-cols-2">
 
+        {/* IMAGE */}
+        <div className="lux-card overflow-hidden">
+          <img
+            src={item.imageUrl}
+            className="w-full object-cover"
+            alt={item.name}
+          />
+        </div>
+
+        {/* DETAILS */}
         <div>
-          <p className="text-gray-400 text-sm">Price</p>
-          <p className="text-2xl text-white font-semibold mb-4">
+
+          <p className="text-sm text-gray-400">Price</p>
+          <p className="mt-1 text-3xl font-semibold text-amber-300">
             {formatMoney(item.salePrice)}
           </p>
 
@@ -144,12 +154,12 @@ function StoneDetail() {
             href={buildWhatsAppLink(item)}
             target="_blank"
             rel="noreferrer"
-            className="block bg-amber-400 text-black text-center py-3 rounded-lg font-semibold"
+            className="lux-button-primary mt-6 w-full"
           >
             Secure this stone
           </a>
 
-          <div className="grid grid-cols-2 gap-3 mt-6">
+          <div className="mt-6 grid grid-cols-2 gap-3">
             <DetailBlock label="Stone Type" value={item.stoneType} />
             <DetailBlock label="Category" value={item.category} />
             <DetailBlock label="Carat" value={formatCarat(item.carat)} />
@@ -161,26 +171,34 @@ function StoneDetail() {
           {item.notes && (
             <div className="mt-6">
               <p className="text-sm text-gray-400 mb-1">Notes</p>
-              <p className="text-sm text-white">{item.notes}</p>
+              <p className="text-sm text-white leading-relaxed">
+                {item.notes}
+              </p>
             </div>
           )}
+
         </div>
       </div>
 
       {/* RELATED */}
       {related.length > 0 && (
         <div>
-          <h2 className="text-xl text-white mb-3">Related Stones</h2>
+          <h2 className="mb-4 text-xl font-semibold text-white">
+            Related Stones
+          </h2>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {related.map((r) => (
               <Link
                 key={r.id}
                 to={`/stone/${r.id}`}
-                className="border border-white/10 rounded-xl overflow-hidden"
+                className="lux-card overflow-hidden"
               >
-                <img src={r.imageUrl} className="aspect-square object-cover" />
-                <div className="p-2 text-sm text-white">
+                <img
+                  src={r.imageUrl}
+                  className="aspect-square w-full object-cover"
+                />
+                <div className="p-3 text-sm text-white">
                   {r.name}
                 </div>
               </Link>
@@ -188,6 +206,7 @@ function StoneDetail() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

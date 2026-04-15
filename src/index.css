@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------- BASE ---------------- */
+
 html,
 body,
 #root {
@@ -11,17 +13,40 @@ body,
 body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
-  background: #060b16;
+  background: radial-gradient(
+      circle at 20% 10%,
+      rgba(251, 191, 36, 0.04),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 90%,
+      rgba(59, 130, 246, 0.06),
+      transparent 50%
+    ),
+    #050810;
   color: #e5e7eb;
+  letter-spacing: 0.2px;
 }
 
+/* ---------------- TYPOGRAPHY ---------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.02em;
+}
+
+/* ---------------- INPUTS ---------------- */
+
 .lux-input {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(10, 18, 32, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 12px 14px;
   color: #f8fafc;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(6px);
 }
 
 .lux-input::placeholder {
@@ -30,25 +55,30 @@ body {
 
 .lux-input:focus {
   outline: none;
-  border-color: #fbbf24;
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.08);
 }
+
+/* ---------------- BUTTONS ---------------- */
 
 .lux-button-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, #fbbf24, #d4a017);
   color: #0f172a;
   padding: 12px 18px;
   font-weight: 700;
-  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.15);
 }
 
 .lux-button-primary:hover {
-  filter: brightness(1.03);
-  transform: translateY(-1px);
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.2);
 }
 
 .lux-button-secondary {
@@ -57,17 +87,80 @@ body {
   justify-content: center;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(10, 18, 32, 0.6);
   color: #e5e7eb;
   padding: 12px 18px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(6px);
 }
 
 .lux-button-secondary:hover {
-  border-color: rgba(251, 191, 36, 0.45);
+  border-color: rgba(251, 191, 36, 0.5);
   color: #fff;
+  background: rgba(15, 23, 42, 0.8);
 }
+
+/* ---------------- CARD SYSTEM ---------------- */
+
+.lux-card {
+  background: rgba(10, 18, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+}
+
+.lux-card:hover {
+  border-color: rgba(251, 191, 36, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------------- DIVIDERS ---------------- */
+
+.lux-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(251, 191, 36, 0.3),
+    transparent
+  );
+}
+
+/* ---------------- SECTION WRAPPER ---------------- */
+
+.lux-section {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+/* ---------------- GLOW EFFECT ---------------- */
+
+.lux-glow {
+  position: relative;
+}
+
+.lux-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at center,
+    rgba(251, 191, 36, 0.15),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lux-glow:hover::after {
+  opacity: 1;
+}
+
+/* ---------------- SIMPLE INPUT ---------------- */
 
 .input-dark {
   background: #020617;
@@ -81,6 +174,8 @@ body {
   outline: none;
   border-color: #fbbf24;
 }
+
+/* ---------------- UTILITIES ---------------- */
 
 .line-clamp-2 {
   display: -webkit-box;

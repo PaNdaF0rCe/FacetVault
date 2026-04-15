@@ -120,10 +120,10 @@ function FilterChip({ label, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition sm:px-4 sm:text-sm ${
+      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
         active
-          ? "border-amber-400 bg-amber-400 text-black"
-          : "border-white/10 bg-white/[0.03] text-gray-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
+          ? "bg-amber-400 text-black shadow-[0_6px_20px_rgba(251,191,36,0.25)]"
+          : "border border-white/10 bg-white/[0.03] text-gray-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
       }`}
     >
       {label}
@@ -135,8 +135,15 @@ function MarketplaceCard({ item }) {
   const displayPrice = getDisplayPrice(item);
   const badge = getPrimaryBadge(item);
 
+  const detailText = [
+    item.carat ? `${item.carat} ct` : null,
+    item.color || null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
   return (
-    <article className="group overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
       <Link to={`/stone/${item.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
           {item.imageUrl ? (
@@ -166,40 +173,52 @@ function MarketplaceCard({ item }) {
         </div>
       </Link>
 
-      <div className="flex min-h-[162px] flex-col p-2.5">
-        <div className="min-h-[44px]">
-          <h2 className="truncate text-[14px] font-semibold leading-tight text-white">
+      <div className="flex flex-1 flex-col p-3 sm:p-3.5">
+        <div className="min-h-[40px]">
+          <h2
+            className="line-clamp-2 text-[14px] font-semibold leading-[1.25] text-white"
+            title={item.name || "Untitled"}
+          >
             {item.name || "Untitled"}
           </h2>
+        </div>
 
-          <p className="mt-[2px] truncate text-[11px] text-gray-400">
+        <div className="mt-1 h-[18px]">
+          <p
+            className="truncate text-[11px] text-gray-400"
+            title={item.stoneType || item.category || "Gem"}
+          >
             {item.stoneType || item.category || "Gem"}
           </p>
         </div>
 
-        <div className="mt-1 h-[20px]">
+        <div className="mt-2 h-[20px]">
           <p
-            className={`truncate ${
+            className={`truncate leading-5 ${
               displayPrice.small
-                ? "text-[11px] font-medium text-gray-400"
-                : "text-[12px] font-semibold text-amber-300"
+                ? "text-[12px] font-medium text-gray-400"
+                : "text-[13px] font-semibold text-amber-300"
             }`}
+            title={displayPrice.text}
           >
             {displayPrice.text}
           </p>
         </div>
 
-        <p className="mt-1 truncate text-[11px] text-gray-300">
-          {item.carat ? `${item.carat} ct` : "—"}
-          {item.color ? ` • ${item.color}` : ""}
-        </p>
+        <div className="mt-1 min-h-[34px]">
+          <p
+            className="line-clamp-2 text-[11px] leading-[1.35] text-gray-300"
+            title={detailText || "—"}
+          >
+            {detailText || "—"}
+          </p>
+        </div>
 
         <Link
           to={`/stone/${item.id}`}
-          className="relative mt-auto block w-full overflow-hidden rounded-xl border border-amber-400/25 bg-gradient-to-r from-amber-400/10 to-amber-300/10 px-4 py-2.5 text-center text-sm font-semibold text-amber-300 transition-all duration-200 hover:from-amber-400 hover:to-amber-300 hover:text-black active:scale-[0.98]"
+          className="mt-3 block w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-center text-sm font-semibold text-white transition-all duration-200 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
         >
-          <span className="relative z-10">View Stone</span>
-          <span className="absolute inset-0 bg-amber-400/20 opacity-0 transition-opacity duration-200 active:opacity-100" />
+          View Stone
         </Link>
       </div>
     </article>
@@ -214,8 +233,7 @@ function LoadingCard() {
         <div className="h-4 w-2/3 rounded bg-white/5" />
         <div className="h-3 w-1/2 rounded bg-white/5" />
         <div className="h-4 w-1/3 rounded bg-white/5" />
-        <div className="h-3 w-3/4 rounded bg-white/5" />
-        <div className="h-9 rounded-xl bg-white/5" />
+        <div className="h-8 rounded-xl bg-white/5" />
       </div>
     </div>
   );
@@ -343,10 +361,7 @@ function Marketplace() {
           Curated Gemstones
         </h1>
 
-        {/* FILTER SECTION */}
         <div className="mt-5 space-y-3">
-
-          {/* SEARCH */}
           <div className="relative">
             <input
               type="text"
@@ -357,28 +372,22 @@ function Marketplace() {
             />
           </div>
 
-          {/* SCROLLABLE FILTERS */}
           <div className="flex flex-wrap gap-2">
             {[
               { key: "all", label: "All" },
-                { key: "featured", label: "Featured" },
-                { key: "new", label: "New" },
-                { key: "under5k", label: "Under 5K" },
-                { key: "precious", label: "Precious" },
-                { key: "semi", label: "Semi-Precious" },
-                { key: "collector", label: "Collector" },
+              { key: "featured", label: "Featured" },
+              { key: "new", label: "New" },
+              { key: "under5k", label: "Under 5K" },
+              { key: "precious", label: "Precious" },
+              { key: "semi", label: "Semi-Precious" },
+              { key: "collector", label: "Collector" },
             ].map((f) => (
-              <button
+              <FilterChip
                 key={f.key}
+                label={f.label}
+                active={activeCollection === f.key}
                 onClick={() => setActiveCollection(f.key)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                  activeCollection === f.key
-                    ? "bg-amber-400 text-black shadow-md"
-                    : "border border-white/10 text-white/70 hover:text-white hover:border-white/20"
-                }`}
-              >
-                {f.label}
-              </button>
+              />
             ))}
           </div>
         </div>
@@ -406,7 +415,7 @@ function Marketplace() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
             {filteredItems.map((item) => (
               <MarketplaceCard key={item.id} item={item} />
             ))}
