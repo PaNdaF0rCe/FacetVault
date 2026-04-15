@@ -343,17 +343,6 @@ function Marketplace() {
           Curated Gemstones
         </h1>
 
-
-        <div className="mt-5 max-w-md">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, type, color, cut, origin, or code"
-            className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
-          />
-        </div>
-
         {/* FILTER SECTION */}
         <div className="mt-5 space-y-3">
 
