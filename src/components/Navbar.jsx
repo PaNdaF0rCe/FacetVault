@@ -71,10 +71,30 @@ function AccountDropdown({
       </div>
 
       <div className="p-2 md:hidden">
-        <MobileMenuLink to="/collection" label="Collection" currentPath={currentPath} onClick={onClose} />
-        <MobileMenuLink to="/about" label="About" currentPath={currentPath} onClick={onClose} />
-        <MobileMenuLink to="/how-to-buy" label="How to Buy" currentPath={currentPath} onClick={onClose} />
-        <MobileMenuLink to="/contact" label="Contact" currentPath={currentPath} onClick={onClose} />
+        <MobileMenuLink
+          to="/collection"
+          label="Collection"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+        <MobileMenuLink
+          to="/about"
+          label="About"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+        <MobileMenuLink
+          to="/how-to-buy"
+          label="How to Buy"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+        <MobileMenuLink
+          to="/contact"
+          label="Contact"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
 
         {isAdmin && (
           <MobileMenuLink
@@ -167,16 +187,10 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.75))] backdrop-blur-2xl">
-
-      {/* Glow line */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
-
-      {/* Top subtle line */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/5" />
 
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-
-        {/* Logo */}
         <Link to="/" className="flex min-w-0 items-center gap-3 group">
           <img
             src={logo}
@@ -195,12 +209,27 @@ function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 lg:flex">
-          <DesktopNavLink to="/collection" label="Collection" currentPath={location.pathname} />
-          <DesktopNavLink to="/about" label="About" currentPath={location.pathname} />
-          <DesktopNavLink to="/how-to-buy" label="How to Buy" currentPath={location.pathname} />
-          <DesktopNavLink to="/contact" label="Contact" currentPath={location.pathname} />
+          <DesktopNavLink
+            to="/collection"
+            label="Collection"
+            currentPath={location.pathname}
+          />
+          <DesktopNavLink
+            to="/about"
+            label="About"
+            currentPath={location.pathname}
+          />
+          <DesktopNavLink
+            to="/how-to-buy"
+            label="How to Buy"
+            currentPath={location.pathname}
+          />
+          <DesktopNavLink
+            to="/contact"
+            label="Contact"
+            currentPath={location.pathname}
+          />
 
           {isAdmin && (
             <DesktopNavLink
@@ -212,7 +241,6 @@ function Navbar() {
           )}
         </nav>
 
-        {/* Right Side */}
         <div className="flex items-center gap-2">
           {!user ? (
             <GuestActions currentPath={location.pathname} />
@@ -220,11 +248,20 @@ function Navbar() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.05] text-sm font-medium text-white transition hover:bg-white/[0.1]"
+                className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-white transition hover:border-white/20 hover:bg-white/[0.08]"
                 aria-label="Open account menu"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/25 bg-amber-400/10 text-sm font-semibold text-amber-200">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-400/25 bg-amber-400/10 text-sm font-semibold text-amber-200">
                   {userInitial}
+                </div>
+
+                <div className="hidden min-w-0 text-left lg:block">
+                  <p className="max-w-[180px] truncate text-sm font-medium text-white">
+                    {displaySource}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/35">
+                    {isAdmin ? "Admin" : "Account"}
+                  </p>
                 </div>
               </button>
 

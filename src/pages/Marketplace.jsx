@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { Link } from "react-router-dom";
+import {
+  getExchangeRates,
+  detectCurrency,
+  convertFromLkr,
+  formatCurrency,
+} from "../lib/services/exchangeRates";
 
 const PRICE_THRESHOLD = 5000;
 const NEW_DAYS = 14;
-
-function formatMoney(value) {
-  if (value === null || value === undefined || value === "") return null;
-
-  const num = Number(value);
-  if (Number.isNaN(num)) return null;
-
-  return `LKR ${num.toLocaleString()}`;
-}
 
 function getJsDate(value) {
   if (!value) return null;
@@ -57,29 +54,6 @@ function isPreciousStone(stoneType = "") {
     value.includes("emerald") ||
     value.includes("diamond")
   );
-}
-
-function getDisplayPrice(item) {
-  const salePrice = Number(item?.salePrice);
-
-  if (Number.isNaN(salePrice)) {
-    return {
-      text: "View price",
-      small: true,
-    };
-  }
-
-  if (salePrice <= PRICE_THRESHOLD) {
-    return {
-      text: formatMoney(salePrice),
-      small: false,
-    };
-  }
-
-  return {
-    text: "View price",
-    small: true,
-  };
 }
 
 function getPrimaryBadge(item) {
@@ -131,14 +105,34 @@ function FilterChip({ label, active, onClick }) {
   );
 }
 
-function MarketplaceCard({ item }) {
-  const displayPrice = getDisplayPrice(item);
+function MarketplaceCard({ item, rates, currency }) {
+  const salePrice = Number(item?.salePrice);
+
+  let primaryPrice = "View price";
+  let secondaryPrice = null;
+  let isSmall = true;
+
+  if (!Number.isNaN(salePrice) && salePrice <= PRICE_THRESHOLD) {
+    if (currency === "LKR" || !rates?.rates) {
+      primaryPrice = `LKR ${salePrice.toLocaleString()}`;
+      isSmall = false;
+    } else {
+      const converted = convertFromLkr(salePrice, currency, rates.rates);
+
+      if (converted) {
+        primaryPrice = `Approx. ${formatCurrency(converted, currency)}`;
+        secondaryPrice = `LKR ${salePrice.toLocaleString()}`;
+        isSmall = false;
+      } else {
+        primaryPrice = `LKR ${salePrice.toLocaleString()}`;
+        isSmall = false;
+      }
+    }
+  }
+
   const badge = getPrimaryBadge(item);
 
-  const detailText = [
-    item.carat ? `${item.carat} ct` : null,
-    item.color || null,
-  ]
+  const detailText = [item.carat ? `${item.carat} ct` : null, item.color || null]
     .filter(Boolean)
     .join(" • ");
 
@@ -192,17 +186,23 @@ function MarketplaceCard({ item }) {
           </p>
         </div>
 
-        <div className="mt-2 h-[20px]">
+        <div className="mt-2 min-h-[20px]">
           <p
             className={`truncate leading-5 ${
-              displayPrice.small
+              isSmall
                 ? "text-[12px] font-medium text-gray-400"
                 : "text-[13px] font-semibold text-amber-300"
             }`}
-            title={displayPrice.text}
+            title={primaryPrice}
           >
-            {displayPrice.text}
+            {primaryPrice}
           </p>
+
+          {secondaryPrice ? (
+            <p className="mt-0.5 text-[11px] text-gray-400" title={secondaryPrice}>
+              {secondaryPrice}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-1 min-h-[34px]">
@@ -244,6 +244,8 @@ function Marketplace() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCollection, setActiveCollection] = useState("all");
+  const [rates, setRates] = useState(null);
+  const currency = detectCurrency();
 
   useEffect(() => {
     let mounted = true;
@@ -271,7 +273,19 @@ function Marketplace() {
       }
     };
 
+    const loadRates = async () => {
+      try {
+        const data = await getExchangeRates();
+        if (mounted) {
+          setRates(data);
+        }
+      } catch (error) {
+        console.error("Failed to load exchange rates:", error);
+      }
+    };
+
     loadItems();
+    loadRates();
 
     return () => {
       mounted = false;
@@ -401,9 +415,7 @@ function Marketplace() {
         </div>
       ) : filteredItems.length === 0 ? (
         <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
-          <h2 className="text-xl font-semibold text-white">
-            {emptyStateTitle}
-          </h2>
+          <h2 className="text-xl font-semibold text-white">{emptyStateTitle}</h2>
           <p className="mt-2 text-sm text-gray-400">{emptyStateText}</p>
         </section>
       ) : (
@@ -415,9 +427,14 @@ function Marketplace() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+          <div className="grid grid-cols-2 items-stretch gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((item) => (
-              <MarketplaceCard key={item.id} item={item} />
+              <MarketplaceCard
+                key={item.id}
+                item={item}
+                rates={rates}
+                currency={currency}
+              />
             ))}
           </div>
         </>
