@@ -318,13 +318,13 @@ function GemDetailModal({
           className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_60px_rgba(0,0,0,0.4)] sm:max-h-[92vh]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 p-5 backdrop-blur">
+          <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 p-4 backdrop-blur sm:p-5">
             <div className="flex items-start justify-between gap-4">
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs uppercase tracking-[0.22em] text-amber-400/80">
                   Collection entry
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold text-amber-300">
+                <h2 className="mt-1 truncate text-xl font-semibold text-amber-300 sm:text-2xl">
                   {gem.name}
                 </h2>
                 <p className="mt-1 text-xs text-gray-500">
@@ -379,13 +379,15 @@ function GemDetailModal({
               <div className="space-y-5">
                 <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#04101f] shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
                   {gem.imageUrl ? (
-                    <img
-                      src={gem.imageUrl}
-                      alt={gem.name}
-                      className="aspect-square w-full object-cover"
-                    />
+                    <div className="flex justify-center p-4 sm:p-0">
+                      <img
+                        src={gem.imageUrl}
+                        alt={gem.name}
+                        className="h-[260px] w-[260px] rounded-[24px] object-cover sm:h-auto sm:w-full sm:rounded-none sm:aspect-square"
+                      />
+                    </div>
                   ) : (
-                    <div className="flex aspect-square items-center justify-center text-sm text-gray-500">
+                    <div className="flex h-[260px] items-center justify-center text-sm text-gray-500 sm:aspect-square sm:h-auto">
                       No image available
                     </div>
                   )}
@@ -408,7 +410,11 @@ function GemDetailModal({
                     />
                     <DetailField
                       label="Sale Price"
-                      value={gem.isForSale ? formatPrice(gem.salePrice) : "Not listed"}
+                      value={
+                        gem.isForSale
+                          ? formatPrice(gem.salePrice)
+                          : "Not listed"
+                      }
                       accent={gem.isForSale}
                     />
                     <DetailField
@@ -454,18 +460,9 @@ function GemDetailModal({
                       label="Carat"
                       value={formatCarat(gem.carat)}
                     />
-                    <DetailField
-                      label="Color"
-                      value={gem.color || "—"}
-                    />
-                    <DetailField
-                      label="Cut"
-                      value={gem.cut || "—"}
-                    />
-                    <DetailField
-                      label="Origin"
-                      value={gem.origin || "—"}
-                    />
+                    <DetailField label="Color" value={gem.color || "—"} />
+                    <DetailField label="Cut" value={gem.cut || "—"} />
+                    <DetailField label="Origin" value={gem.origin || "—"} />
                   </div>
                 </section>
 

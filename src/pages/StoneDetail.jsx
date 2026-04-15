@@ -179,7 +179,11 @@ function StoneDetail() {
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="lux-card overflow-hidden">
-          <img src={item.imageUrl} className="w-full object-cover" alt={item.name} />
+          <img
+            src={item.imageUrl}
+            className="aspect-square w-full object-cover"
+            alt={item.name}
+          />
         </div>
 
         <div>
