@@ -3,30 +3,155 @@ import { useAuth } from "../contexts/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import logo from "../assets/logo-diamond.png";
 
-function DropdownLink({
+function DesktopNavLink({ to, label, currentPath, admin = false }) {
+  const active =
+    currentPath === to || (to !== "/" && currentPath.startsWith(to));
+
+  return (
+    <Link
+      to={to}
+      className={`relative rounded-full px-4 py-2 text-sm font-medium tracking-[0.01em] transition-all duration-200 ${
+        active
+          ? admin
+            ? "bg-amber-400 text-black shadow-[0_8px_24px_rgba(251,191,36,0.22)]"
+            : "bg-white/10 text-white"
+          : admin
+          ? "text-amber-300/90 hover:bg-amber-400/10 hover:text-amber-200"
+          : "text-white/78 hover:bg-white/5 hover:text-white"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function MobileMenuLink({
   to,
-  children,
+  label,
+  currentPath,
   onClick,
-  active = false,
-  accent = "default",
+  admin = false,
 }) {
-  const activeClass =
-    accent === "admin"
-      ? active
-        ? "bg-white/5 text-amber-300"
-        : "text-amber-300/85 hover:bg-white/5 hover:text-amber-300"
-      : active
-      ? "bg-white/5 text-white"
-      : "text-white/85 hover:bg-white/5 hover:text-white";
+  const active =
+    currentPath === to || (to !== "/" && currentPath.startsWith(to));
 
   return (
     <Link
       to={to}
       onClick={onClick}
-      className={`block px-4 py-3 text-sm transition ${activeClass}`}
+      className={`block rounded-2xl px-4 py-3 text-sm transition ${
+        active
+          ? admin
+            ? "bg-amber-400 text-black"
+            : "bg-white/10 text-white"
+          : admin
+          ? "text-amber-300 hover:bg-white/5"
+          : "text-white/85 hover:bg-white/5 hover:text-white"
+      }`}
     >
-      {children}
+      {label}
     </Link>
+  );
+}
+
+function AccountDropdown({
+  displaySource,
+  isAdmin,
+  onLogout,
+  onClose,
+  currentPath,
+}) {
+  return (
+    <div className="absolute right-0 mt-3 w-64 overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(7,18,36,0.98))] shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+      <div className="border-b border-white/10 px-4 py-4">
+        <p className="truncate text-sm font-medium text-white">{displaySource}</p>
+        <p className="mt-1 text-xs text-white/40">
+          {isAdmin ? "Admin account" : "Account"}
+        </p>
+      </div>
+
+      <div className="p-2 md:hidden">
+        <MobileMenuLink
+          to="/collection"
+          label="Collection"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+        <MobileMenuLink
+          to="/about"
+          label="About"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+        <MobileMenuLink
+          to="/how-to-buy"
+          label="How to Buy"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+        <MobileMenuLink
+          to="/contact"
+          label="Contact"
+          currentPath={currentPath}
+          onClick={onClose}
+        />
+
+        {isAdmin && (
+          <MobileMenuLink
+            to="/admin"
+            label="Admin"
+            currentPath={currentPath}
+            onClick={onClose}
+            admin
+          />
+        )}
+      </div>
+
+      <div className="border-t border-white/10" />
+
+      <button
+        onClick={onLogout}
+        className="w-full px-4 py-3 text-left text-sm text-white/85 transition hover:bg-white/5 hover:text-white"
+      >
+        Logout
+      </button>
+    </div>
+  );
+}
+
+function GuestActions({ currentPath }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Link
+        to="/login"
+        className={`hidden rounded-full px-4 py-2 text-sm font-medium transition sm:inline-flex ${
+          currentPath === "/login"
+            ? "bg-white/10 text-white"
+            : "text-white/80 hover:bg-white/5 hover:text-white"
+        }`}
+      >
+        Login
+      </Link>
+
+      <Link
+        to="/signup"
+        className={`hidden rounded-full px-4 py-2 text-sm font-semibold transition sm:inline-flex ${
+          currentPath === "/signup"
+            ? "bg-amber-300 text-black"
+            : "bg-amber-400 text-black hover:bg-amber-300"
+        }`}
+      >
+        Sign Up
+      </Link>
+
+      <Link
+        to="/login"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white transition hover:border-white/20 hover:bg-white/[0.06] sm:hidden"
+        aria-label="Login"
+      >
+        👤
+      </Link>
+    </div>
   );
 }
 
@@ -61,156 +186,98 @@ function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#020617]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-        <Link to="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <img
-            src={logo}
-            alt="FacetVault"
-            className="h-9 w-9 object-contain sm:h-11 sm:w-11"
-          />
+    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.88))] backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-400/45 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/5" />
 
-          <span className="truncate text-lg font-semibold tracking-wide sm:text-xl">
-            <span className="text-amber-300">Facet</span>
-            <span className="text-white">Vault</span>
-          </span>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <Link to="/" className="flex min-w-0 items-center gap-3">
+          <div className="flex items-center justify-center">
+            <img
+              src={logo}
+              alt="FacetVault"
+              className="h-8 w-8 object-contain"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <div className="truncate text-[1.05rem] font-semibold tracking-[0.04em] sm:text-[1.15rem]">
+              <span className="text-amber-300">Facet</span>
+              <span className="text-white">Vault</span>
+            </div>
+            <p className="hidden text-[10px] uppercase tracking-[0.22em] text-white/35 sm:block">
+              Curated Gemstones
+            </p>
+          </div>
         </Link>
 
-        {!user ? (
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/collection"
-              className={`rounded-xl px-3 py-2 text-sm transition ${
-                location.pathname === "/collection"
-                  ? "bg-white/10 text-white"
-                  : "text-white/80 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              Collection
-            </Link>
+        <nav className="hidden items-center gap-1 lg:flex">
+          <DesktopNavLink
+            to="/collection"
+            label="Collection"
+            currentPath={location.pathname}
+          />
+          <DesktopNavLink
+            to="/about"
+            label="About"
+            currentPath={location.pathname}
+          />
+          <DesktopNavLink
+            to="/how-to-buy"
+            label="How to Buy"
+            currentPath={location.pathname}
+          />
+          <DesktopNavLink
+            to="/contact"
+            label="Contact"
+            currentPath={location.pathname}
+          />
+          {isAdmin && (
+            <DesktopNavLink
+              to="/admin"
+              label="Admin"
+              currentPath={location.pathname}
+              admin
+            />
+          )}
+        </nav>
 
-            <Link
-              to="/about"
-              className={`hidden rounded-xl px-3 py-2 text-sm transition md:block ${
-                location.pathname === "/about"
-                  ? "bg-white/10 text-white"
-                  : "text-white/80 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              About
-            </Link>
+        <div className="flex items-center gap-2">
+          {!user ? (
+            <GuestActions currentPath={location.pathname} />
+          ) : (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((prev) => !prev)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] text-sm font-medium text-white transition hover:bg-white/[0.1]"
+                aria-label="Open account menu"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/20 bg-amber-400/10 text-sm font-semibold text-amber-200">
+                  {userInitial}
+                </div>
 
-            <Link
-              to="/login"
-              className="hidden rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/5 hover:text-white sm:block"
-            >
-              Login
-            </Link>
-
-            <Link
-              to="/signup"
-              className="hidden rounded-xl bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300 sm:block"
-            >
-              Sign up
-            </Link>
-
-            <Link
-              to="/login"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white sm:hidden"
-              aria-label="Login"
-            >
-              👤
-            </Link>
-          </div>
-        ) : (
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setMenuOpen((prev) => !prev)}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-2 transition hover:bg-white/10 sm:gap-3 sm:px-3"
-              aria-label="Open account menu"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400/20 font-semibold text-amber-200 sm:h-9 sm:w-9">
-                {userInitial}
-              </div>
-
-              <div className="hidden text-left sm:block">
-                <p className="max-w-[160px] truncate text-sm text-white">
-                  {displaySource}
-                </p>
-                <p className="text-xs text-white/40">
-                  {isAdmin ? "Admin" : "Account"}
-                </p>
-              </div>
-            </button>
-
-            {menuOpen && (
-              <div className="absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#0b1120] shadow-xl">
-                <div className="border-b border-white/10 px-4 py-3">
-                  <p className="truncate text-sm text-white">{displaySource}</p>
-                  <p className="text-xs text-white/40">
+                <div className="hidden text-left xl:block">
+                  <p className="max-w-[150px] truncate text-sm text-white">
+                    {displaySource}
+                  </p>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">
                     {isAdmin ? "Admin" : "Account"}
                   </p>
                 </div>
+              </button>
 
-                <DropdownLink
-                  to="/collection"
-                  onClick={closeMenu}
-                  active={location.pathname === "/collection"}
-                >
-                  Collection
-                </DropdownLink>
-
-                <DropdownLink
-                  to="/about"
-                  onClick={closeMenu}
-                  active={location.pathname === "/about"}
-                >
-                  About
-                </DropdownLink>
-
-                <DropdownLink
-                  to="/how-to-buy"
-                  onClick={closeMenu}
-                  active={location.pathname === "/how-to-buy"}
-                >
-                  How to Buy
-                </DropdownLink>
-
-                <DropdownLink
-                  to="/contact"
-                  onClick={closeMenu}
-                  active={location.pathname === "/contact"}
-                >
-                  Contact
-                </DropdownLink>
-
-                {isAdmin && (
-                  <>
-                    <div className="border-t border-white/10" />
-
-                    <DropdownLink
-                      to="/admin"
-                      onClick={closeMenu}
-                      active={location.pathname === "/admin"}
-                      accent="admin"
-                    >
-                      Admin
-                    </DropdownLink>
-                  </>
-                )}
-
-                <div className="border-t border-white/10" />
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-3 text-left text-sm text-white transition hover:bg-white/5"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+              {menuOpen && (
+                <AccountDropdown
+                  displaySource={displaySource}
+                  isAdmin={isAdmin}
+                  onLogout={handleLogout}
+                  onClose={closeMenu}
+                  currentPath={location.pathname}
+                />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -343,9 +343,6 @@ function Marketplace() {
           Curated Gemstones
         </h1>
 
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-400 sm:mt-2 sm:text-base sm:leading-6">
-          Individually selected stones. Direct purchase. No middlemen.
-        </p>
 
         <div className="mt-5 max-w-md">
           <input
@@ -357,42 +354,44 @@ function Marketplace() {
           />
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <FilterChip
-            label="All"
-            active={activeCollection === "all"}
-            onClick={() => setActiveCollection("all")}
-          />
-          <FilterChip
-            label="Precious"
-            active={activeCollection === "precious"}
-            onClick={() => setActiveCollection("precious")}
-          />
-          <FilterChip
-            label="Semi-Precious"
-            active={activeCollection === "semi"}
-            onClick={() => setActiveCollection("semi")}
-          />
-          <FilterChip
-            label="Collector Pieces"
-            active={activeCollection === "collector"}
-            onClick={() => setActiveCollection("collector")}
-          />
-          <FilterChip
-            label="Under LKR 5,000"
-            active={activeCollection === "under5k"}
-            onClick={() => setActiveCollection("under5k")}
-          />
-          <FilterChip
-            label="Featured"
-            active={activeCollection === "featured"}
-            onClick={() => setActiveCollection("featured")}
-          />
-          <FilterChip
-            label="New Arrivals"
-            active={activeCollection === "new"}
-            onClick={() => setActiveCollection("new")}
-          />
+        {/* FILTER SECTION */}
+        <div className="mt-5 space-y-3">
+
+          {/* SEARCH */}
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search gemstones..."
+              className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
+            />
+          </div>
+
+          {/* SCROLLABLE FILTERS */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {[
+              { key: "all", label: "All" },
+              { key: "precious", label: "Precious" },
+              { key: "semi", label: "Semi-Precious" },
+              { key: "collector", label: "Collector" },
+              { key: "under5k", label: "Under 5K" },
+              { key: "featured", label: "Featured" },
+              { key: "new", label: "New" },
+            ].map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setActiveCollection(f.key)}
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
+                  activeCollection === f.key
+                    ? "bg-amber-400 text-black shadow-md"
+                    : "border border-white/10 text-white/70 hover:text-white hover:border-white/20"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
