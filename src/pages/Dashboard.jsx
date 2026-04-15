@@ -120,7 +120,7 @@ function DeleteConfirmModal({
               type="button"
               onClick={onCancel}
               disabled={isDeleting}
-              className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -129,7 +129,7 @@ function DeleteConfirmModal({
               type="button"
               onClick={onConfirm}
               disabled={isDeleting}
-              className="rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDeleting ? "Deleting..." : "Yes, Delete Gem"}
             </button>
@@ -379,15 +379,13 @@ function GemDetailModal({
               <div className="space-y-5">
                 <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#04101f] shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
                   {gem.imageUrl ? (
-                    <div className="flex justify-center p-4 sm:p-0">
-                      <img
-                        src={gem.imageUrl}
-                        alt={gem.name}
-                        className="h-[260px] w-[260px] rounded-[24px] object-cover sm:h-auto sm:w-full sm:rounded-none sm:aspect-square"
-                      />
-                    </div>
+                    <img
+                      src={gem.imageUrl}
+                      alt={gem.name}
+                      className="aspect-square w-full object-cover"
+                    />
                   ) : (
-                    <div className="flex h-[260px] items-center justify-center text-sm text-gray-500 sm:aspect-square sm:h-auto">
+                    <div className="flex aspect-square items-center justify-center text-sm text-gray-500">
                       No image available
                     </div>
                   )}
@@ -505,12 +503,12 @@ function GemDetailModal({
           </div>
 
           <div className="sticky bottom-0 border-t border-white/10 bg-[#061224]/95 p-3 backdrop-blur sm:p-4">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2">
               <button
                 type="button"
                 onClick={onEdit}
                 disabled={isBusy}
-                className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Edit Gem
               </button>
@@ -519,7 +517,7 @@ function GemDetailModal({
                 type="button"
                 onClick={onDelete}
                 disabled={isBusy}
-                className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Delete Gem
               </button>
@@ -528,7 +526,7 @@ function GemDetailModal({
                 type="button"
                 onClick={onToggleSold}
                 disabled={isBusy}
-                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   gem.isSold
                     ? "bg-emerald-400 text-black hover:bg-emerald-300"
                     : "bg-red-500 text-white hover:bg-red-400"
@@ -541,7 +539,7 @@ function GemDetailModal({
                 type="button"
                 onClick={onClose}
                 disabled={isBusy}
-                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Close
               </button>
