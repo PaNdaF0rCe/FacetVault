@@ -36,7 +36,7 @@ function Layout() {
   const showNavbar = !["/login", "/signup"].includes(location.pathname);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden text-gray-100">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-clip text-gray-100">
       {/* Background Layers */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[#050810]" />
@@ -52,7 +52,7 @@ function Layout() {
 
       {showNavbar && <Navbar />}
 
-      <main className="relative mx-auto w-full max-w-[1400px] overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <main className="relative mx-auto w-full max-w-[1400px] min-w-0 overflow-x-clip px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
@@ -60,9 +60,11 @@ function Layout() {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="w-full"
+            className="w-full min-w-0 max-w-full"
           >
-            <Outlet />
+            <div className="w-full min-w-0 max-w-full overflow-x-clip">
+              <Outlet />
+            </div>
           </motion.div>
         </AnimatePresence>
       </main>
