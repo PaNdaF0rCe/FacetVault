@@ -137,14 +137,14 @@ function MarketplaceCard({ item, rates, currency }) {
     .join(" • ");
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
       <Link to={`/stone/${item.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
           {item.imageUrl ? (
             <img
               src={item.thumbnailUrl || item.imageUrl}
               alt={item.name || "Gemstone"}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.015]"
               loading="lazy"
               decoding="async"
               sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
@@ -167,17 +167,17 @@ function MarketplaceCard({ item, rates, currency }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-3 sm:p-3.5">
-        <div className="min-h-[40px]">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <div className="min-h-[34px]">
           <h2
-            className="line-clamp-2 text-[14px] font-semibold leading-[1.25] text-white"
+            className="line-clamp-2 text-[13px] font-semibold leading-[1.25] text-white"
             title={item.name || "Untitled"}
           >
             {item.name || "Untitled"}
           </h2>
         </div>
 
-        <div className="mt-1 h-[18px]">
+        <div className="mt-0.5 h-[16px]">
           <p
             className="truncate text-[11px] text-gray-400"
             title={item.stoneType || item.category || "Gem"}
@@ -186,11 +186,11 @@ function MarketplaceCard({ item, rates, currency }) {
           </p>
         </div>
 
-        <div className="mt-2 min-h-[20px]">
+        <div className="mt-1.5 min-h-[18px]">
           <p
-            className={`truncate leading-5 ${
+            className={`truncate leading-tight ${
               isSmall
-                ? "text-[12px] font-medium text-gray-400"
+                ? "text-[11px] font-medium text-gray-400"
                 : "text-[13px] font-semibold text-amber-300"
             }`}
             title={primaryPrice}
@@ -198,14 +198,14 @@ function MarketplaceCard({ item, rates, currency }) {
             {primaryPrice}
           </p>
 
-          {secondaryPrice ? (
-            <p className="mt-0.5 text-[11px] text-gray-400" title={secondaryPrice}>
+          {secondaryPrice && (
+            <p className="mt-0.5 text-[10px] text-gray-500">
               {secondaryPrice}
             </p>
-          ) : null}
+          )}
         </div>
 
-        <div className="mt-1 min-h-[34px]">
+        <div className="mt-1 min-h-[28px]">
           <p
             className="line-clamp-2 text-[11px] leading-[1.35] text-gray-300"
             title={detailText || "—"}
@@ -216,7 +216,7 @@ function MarketplaceCard({ item, rates, currency }) {
 
         <Link
           to={`/stone/${item.id}`}
-          className="mt-3 block w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-center text-sm font-semibold text-white transition-all duration-200 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
+          className="mt-2.5 block w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-center text-[13px] font-medium text-white transition-all duration-200 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
         >
           View Stone
         </Link>

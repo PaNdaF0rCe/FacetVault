@@ -1,15 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import FilterBar from "../components/FilterBar";
 import InventoryItemCard from "../components/InventoryItemCard";
-import InventoryUploadModal from "../components/InventoryUploadModal";
 import Toast from "../components/Toast";
-import {
-  getFilteredInventory,
-  deleteInventoryItem,
-  updateInventoryItem,
-} from "../lib/firebase/inventory-operations";
-import { updateUserStats } from "../lib/firebase/users";
+import { getFilteredInventory } from "../lib/firebase/inventory-operations";
 
 function formatCarat(value) {
   if (value === null || value === undefined || value === "") return "—";
@@ -27,117 +22,6 @@ function formatPrice(value) {
   const num = Number(value);
   if (Number.isNaN(num)) return "—";
   return `LKR ${num.toLocaleString()}`;
-}
-
-function formatDate(value) {
-  if (!value) return "—";
-
-  let date = value;
-
-  if (typeof value?.toDate === "function") {
-    date = value.toDate();
-  } else if (!(value instanceof Date)) {
-    date = new Date(value);
-  }
-
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "—";
-
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function DetailField({ label, value, accent = false }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
-      <p className="text-[11px] uppercase tracking-[0.16em] text-gray-400">
-        {label}
-      </p>
-      <p
-        className={`mt-2 text-sm font-medium ${
-          accent ? "text-amber-300" : "text-white"
-        }`}
-      >
-        {value || "—"}
-      </p>
-    </div>
-  );
-}
-
-function DeleteConfirmModal({
-  gemName,
-  onCancel,
-  onConfirm,
-  isDeleting = false,
-}) {
-  const handleBackdropClick = () => {
-    if (!isDeleting) onCancel();
-  };
-
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === "Escape" && !isDeleting) {
-        onCancel();
-      }
-    };
-
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [isDeleting, onCancel]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-[1px]"
-      onClick={handleBackdropClick}
-    >
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className="w-full max-w-md rounded-3xl border border-white/10 bg-[#020617] p-5 text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:p-6"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="mb-4">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-red-400/80">
-              Confirm deletion
-            </p>
-            <h2 className="mt-1 text-xl font-semibold text-white">
-              Delete this gem?
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-gray-400">
-              This will permanently remove{" "}
-              <span className="font-medium text-gray-200">{gemName}</span> from
-              your collection.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-red-400/15 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-            This action cannot be undone.
-          </div>
-
-          <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isDeleting}
-              className="w-full rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={onConfirm}
-              disabled={isDeleting}
-              className="w-full rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isDeleting ? "Deleting..." : "Yes, Delete Gem"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function EmptyCollectionState({ onAddGem }) {
@@ -239,7 +123,7 @@ function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
           <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
             Value
           </p>
-          <p className="mt-1 truncate text-sm font-semibold text-white">
+          <p className="mt-1 text-sm font-semibold text-white">
             {formatPrice(totalValue)}
           </p>
         </div>
@@ -254,7 +138,7 @@ function LoadingSkeletons() {
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
-          className="animate-pulse rounded-2xl border border-white/8 bg-[#020617]/95 p-4"
+          className="rounded-2xl border border-white/8 bg-[#020617]/95 p-4"
         >
           <div className="flex items-center gap-4">
             <div className="h-20 w-20 rounded-xl bg-white/5 sm:h-24 sm:w-24" />
@@ -275,293 +159,12 @@ function LoadingSkeletons() {
   );
 }
 
-function GemDetailModal({
-  gem,
-  isRefreshing,
-  isBusy,
-  onClose,
-  onEdit,
-  onDelete,
-  onToggleSold,
-}) {
-  useEffect(() => {
-    if (!gem) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleEscape = (event) => {
-      if (event.key === "Escape" && !isBusy) {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [gem, isBusy, onClose]);
-
-  if (!gem) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-[1px]"
-      onClick={() => {
-        if (!isBusy) onClose();
-      }}
-    >
-      <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
-        <div
-          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_60px_rgba(0,0,0,0.4)] sm:max-h-[92vh]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 p-4 backdrop-blur sm:p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.22em] text-amber-400/80">
-                  Collection entry
-                </p>
-                <h2 className="mt-1 truncate text-xl font-semibold text-amber-300 sm:text-2xl">
-                  {gem.name}
-                </h2>
-                <p className="mt-1 text-xs text-gray-500">
-                  {gem.stoneCode || "—"}
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {gem.isForSale && (
-                    <span className="rounded-full bg-emerald-400 px-2.5 py-1 text-xs font-medium text-black">
-                      For Sale
-                    </span>
-                  )}
-                  {gem.isFeatured && (
-                    <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-medium text-black">
-                      Featured
-                    </span>
-                  )}
-                  {gem.isCollectorPiece && (
-                    <span className="rounded-full bg-purple-400 px-2.5 py-1 text-xs font-medium text-black">
-                      Collector
-                    </span>
-                  )}
-                  {gem.isSold && (
-                    <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-medium text-white">
-                      SOLD
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isBusy}
-                className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          <div className="relative flex-1 overflow-y-auto p-4 sm:p-6">
-            {isRefreshing && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[#020617]/70 backdrop-blur-[2px]">
-                <div className="rounded-2xl border border-white/10 bg-[#091427]/95 px-5 py-4 text-sm text-white shadow-lg">
-                  Saving changes...
-                </div>
-              </div>
-            )}
-
-            <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-              <div className="space-y-5">
-                <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#04101f] shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
-                  {gem.imageUrl ? (
-                    <img
-                      src={gem.imageUrl}
-                      alt={gem.name}
-                      className="aspect-square w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex aspect-square items-center justify-center text-sm text-gray-500">
-                      No image available
-                    </div>
-                  )}
-                </div>
-
-                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">
-                      Commercial Summary
-                    </h3>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
-                      Quick view
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <DetailField
-                      label="Price Paid"
-                      value={formatPrice(gem.pricePaid)}
-                    />
-                    <DetailField
-                      label="Sale Price"
-                      value={
-                        gem.isForSale
-                          ? formatPrice(gem.salePrice)
-                          : "Not listed"
-                      }
-                      accent={gem.isForSale}
-                    />
-                    <DetailField
-                      label="Quantity"
-                      value={String(gem.quantity || 1)}
-                    />
-                    <DetailField
-                      label="Status"
-                      value={
-                        gem.isSold
-                          ? "Sold"
-                          : gem.isForSale
-                          ? "Listed for sale"
-                          : "Private collection"
-                      }
-                      accent={gem.isSold || gem.isForSale}
-                    />
-                  </div>
-                </section>
-              </div>
-
-              <div className="space-y-5">
-                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">
-                      Stone Details
-                    </h3>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
-                      Identification
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <DetailField
-                      label="Stone Type"
-                      value={gem.stoneType || "—"}
-                    />
-                    <DetailField
-                      label="Category"
-                      value={gem.category || "—"}
-                    />
-                    <DetailField
-                      label="Carat"
-                      value={formatCarat(gem.carat)}
-                    />
-                    <DetailField label="Color" value={gem.color || "—"} />
-                    <DetailField label="Cut" value={gem.cut || "—"} />
-                    <DetailField label="Origin" value={gem.origin || "—"} />
-                  </div>
-                </section>
-
-                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">
-                      Timeline
-                    </h3>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
-                      Record history
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <DetailField
-                      label="Created"
-                      value={formatDate(gem.createdAt)}
-                    />
-                    <DetailField
-                      label="Last Updated"
-                      value={formatDate(gem.updatedAt)}
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-[28px] border border-white/10 bg-[#04101f]/70 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-white">Notes</h3>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
-                      Internal
-                    </span>
-                  </div>
-
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-[#020617] p-4 text-sm leading-7 text-gray-300">
-                    {gem.notes || "No notes added"}
-                  </div>
-                </section>
-              </div>
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 border-t border-white/10 bg-[#061224]/95 p-3 backdrop-blur sm:p-4">
-            <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={onEdit}
-                disabled={isBusy}
-                className="w-full rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Edit Gem
-              </button>
-
-              <button
-                type="button"
-                onClick={onDelete}
-                disabled={isBusy}
-                className="w-full rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Delete Gem
-              </button>
-
-              <button
-                type="button"
-                onClick={onToggleSold}
-                disabled={isBusy}
-                className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                  gem.isSold
-                    ? "bg-emerald-400 text-black hover:bg-emerald-300"
-                    : "bg-red-500 text-white hover:bg-red-400"
-                }`}
-              >
-                {gem.isSold ? "Mark Available" : "Mark Sold"}
-              </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isBusy}
-                className="w-full rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [gems, setGems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedGem, setSelectedGem] = useState(null);
-  const [editingGem, setEditingGem] = useState(null);
-  const [isRefreshingSelectedGem, setIsRefreshingSelectedGem] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeletingGem, setIsDeletingGem] = useState(false);
-  const [isTogglingSold, setIsTogglingSold] = useState(false);
   const [toast, setToast] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -581,6 +184,7 @@ function Dashboard() {
     if (!user?.uid) return;
 
     setIsLoading(true);
+
     try {
       const items = await getFilteredInventory(user.uid, filters);
       setGems(items);
@@ -599,12 +203,6 @@ function Dashboard() {
   useEffect(() => {
     fetchGems();
   }, [fetchGems]);
-
-  useEffect(() => {
-    if (!showUploadModal && !editingGem && !selectedGem && !showDeleteConfirm) {
-      document.body.style.overflow = "";
-    }
-  }, [showUploadModal, editingGem, selectedGem, showDeleteConfirm]);
 
   const totalEntries = useMemo(() => {
     return gems.reduce((sum, item) => {
@@ -633,167 +231,6 @@ function Dashboard() {
     }, 0);
   }, [gems]);
 
-  const detailModalBusy =
-    !!editingGem ||
-    isRefreshingSelectedGem ||
-    showDeleteConfirm ||
-    isDeletingGem ||
-    isTogglingSold;
-
-  const handleOpenGem = useCallback((gem) => {
-    setEditingGem(null);
-    setShowDeleteConfirm(false);
-    setSelectedGem(gem);
-  }, []);
-
-  const handleCloseSelectedGem = useCallback(() => {
-    if (detailModalBusy) return;
-    setSelectedGem(null);
-  }, [detailModalBusy]);
-
-  const handleRequestDelete = useCallback(() => {
-    if (!selectedGem || detailModalBusy) return;
-    setShowDeleteConfirm(true);
-  }, [selectedGem, detailModalBusy]);
-
-  const handleCancelDelete = useCallback(() => {
-    if (isDeletingGem) return;
-    setShowDeleteConfirm(false);
-  }, [isDeletingGem]);
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!selectedGem?.id || !user?.uid) return;
-
-    try {
-      setIsDeletingGem(true);
-
-      await deleteInventoryItem(selectedGem.id, user.uid);
-      await updateUserStats(user.uid);
-
-      const refreshedItems = await getFilteredInventory(user.uid, filters);
-      setGems(refreshedItems);
-
-      setShowDeleteConfirm(false);
-      setSelectedGem(null);
-      setEditingGem(null);
-
-      showToast({
-        type: "success",
-        title: "Gem deleted",
-        message: "The gem was removed from your collection.",
-      });
-    } catch (error) {
-      console.error("Error deleting gem:", error);
-      showToast({
-        type: "error",
-        title: "Delete failed",
-        message: "Failed to delete gem.",
-      });
-    } finally {
-      setIsDeletingGem(false);
-    }
-  }, [selectedGem, user?.uid, filters, showToast]);
-
-  const handleToggleSold = useCallback(async () => {
-    if (!selectedGem?.id || !user?.uid || isTogglingSold) return;
-
-    try {
-      setIsTogglingSold(true);
-
-      await updateInventoryItem(
-        selectedGem.id,
-        {
-          isSold: !selectedGem.isSold,
-          isForSale: selectedGem.isSold ? selectedGem.isForSale : false,
-        },
-        user.uid
-      );
-
-      const refreshedItems = await getFilteredInventory(user.uid, filters);
-      setGems(refreshedItems);
-
-      const refreshedGem =
-        refreshedItems.find((item) => item.id === selectedGem.id) || null;
-      setSelectedGem(refreshedGem);
-
-      showToast({
-        type: "success",
-        title: refreshedGem?.isSold ? "Marked as sold" : "Marked as available",
-        message: refreshedGem?.isSold
-          ? "This gem is now marked as sold."
-          : "This gem is available again.",
-      });
-    } catch (error) {
-      console.error("Error toggling sold status:", error);
-      showToast({
-        type: "error",
-        title: "Update failed",
-        message: "Could not update sold status.",
-      });
-    } finally {
-      setIsTogglingSold(false);
-    }
-  }, [selectedGem, user?.uid, filters, isTogglingSold, showToast]);
-
-  const handleUploadSuccess = useCallback(async () => {
-    try {
-      setShowUploadModal(false);
-      await updateUserStats(user.uid);
-      await fetchGems();
-
-      showToast({
-        type: "success",
-        title: "Gem saved",
-        message: "Your new gem was added to the collection.",
-      });
-    } catch (error) {
-      console.error("Error refreshing after upload:", error);
-      setShowUploadModal(false);
-      await fetchGems();
-    }
-  }, [user?.uid, fetchGems, showToast]);
-
-  const handleStartEdit = useCallback(() => {
-    if (!selectedGem || detailModalBusy) return;
-    setEditingGem(selectedGem);
-  }, [selectedGem, detailModalBusy]);
-
-  const handleEditSuccess = useCallback(async () => {
-    try {
-      const editedId = editingGem?.id || selectedGem?.id;
-
-      setEditingGem(null);
-      setIsRefreshingSelectedGem(true);
-
-      await updateUserStats(user.uid);
-
-      const refreshedItems = await getFilteredInventory(user.uid, filters);
-      setGems(refreshedItems);
-
-      if (editedId) {
-        const refreshedGem =
-          refreshedItems.find((item) => item.id === editedId) || null;
-        setSelectedGem(refreshedGem);
-      }
-
-      showToast({
-        type: "success",
-        title: "Gem updated",
-        message: "Your changes were saved successfully.",
-      });
-    } catch (error) {
-      console.error("Error refreshing after edit:", error);
-      showToast({
-        type: "error",
-        title: "Update refresh failed",
-        message: "The gem was updated, but the view did not refresh cleanly.",
-      });
-      await fetchGems();
-    } finally {
-      setIsRefreshingSelectedGem(false);
-    }
-  }, [editingGem, selectedGem, user?.uid, filters, showToast, fetchGems]);
-
   return (
     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       <Toast toast={toast} onClose={() => setToast(null)} />
@@ -817,7 +254,7 @@ function Dashboard() {
 
           <button
             type="button"
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => navigate("/admin/add")}
             className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:self-start lg:self-auto"
           >
             Add New Gem
@@ -863,61 +300,17 @@ function Dashboard() {
       {isLoading ? (
         <LoadingSkeletons />
       ) : gems.length === 0 ? (
-        <EmptyCollectionState onAddGem={() => setShowUploadModal(true)} />
+        <EmptyCollectionState onAddGem={() => navigate("/admin/add")} />
       ) : (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
           {gems.map((item) => (
             <InventoryItemCard
               key={item.id}
               item={item}
-              onClick={handleOpenGem}
+              onClick={() => navigate(`/admin/stone/${item.id}`)}
             />
           ))}
         </div>
-      )}
-
-      {showUploadModal && (
-        <InventoryUploadModal
-          onClose={() => setShowUploadModal(false)}
-          onSuccess={handleUploadSuccess}
-          userId={user.uid}
-          mode="create"
-          onNotify={showToast}
-        />
-      )}
-
-      {selectedGem && (
-        <GemDetailModal
-          key={selectedGem.id}
-          gem={selectedGem}
-          isRefreshing={isRefreshingSelectedGem || isTogglingSold}
-          isBusy={detailModalBusy}
-          onClose={handleCloseSelectedGem}
-          onEdit={handleStartEdit}
-          onDelete={handleRequestDelete}
-          onToggleSold={handleToggleSold}
-        />
-      )}
-
-      {editingGem && (
-        <InventoryUploadModal
-          key={`edit-${editingGem.id}`}
-          onClose={() => setEditingGem(null)}
-          onSuccess={handleEditSuccess}
-          userId={user.uid}
-          mode="edit"
-          initialData={editingGem}
-          onNotify={showToast}
-        />
-      )}
-
-      {showDeleteConfirm && selectedGem && (
-        <DeleteConfirmModal
-          gemName={selectedGem.name}
-          onCancel={handleCancelDelete}
-          onConfirm={handleConfirmDelete}
-          isDeleting={isDeletingGem}
-        />
       )}
     </div>
   );

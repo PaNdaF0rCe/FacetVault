@@ -8,14 +8,14 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
-
-// NEW PAGES
 import About from "./pages/About";
 import HowToBuy from "./pages/HowToBuy";
 import Contact from "./pages/Contact";
-
-// NEW: Stone Detail Page
 import StoneDetail from "./pages/StoneDetail";
+
+import AddGemPage from "./pages/admin/AddGemPage";
+import EditGemPage from "./pages/admin/EditGemPage";
+import AdminStoneDetailPage from "./pages/admin/AdminStoneDetailPage";
 
 function App() {
   return (
@@ -23,22 +23,15 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
-
-            {/* Public pages */}
             <Route path="/" element={<Home />} />
             <Route path="/collection" element={<Marketplace />} />
-
-            {/* NEW: Individual stone page */}
             <Route path="/stone/:id" element={<StoneDetail />} />
-
             <Route path="/about" element={<About />} />
             <Route path="/how-to-buy" element={<HowToBuy />} />
             <Route path="/contact" element={<Contact />} />
-
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
-            {/* Admin only */}
             <Route
               path="/admin"
               element={
@@ -48,6 +41,32 @@ function App() {
               }
             />
 
+            <Route
+              path="/admin/add"
+              element={
+                <AdminRoute>
+                  <AddGemPage />
+                </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/admin/edit/:id"
+              element={
+                <AdminRoute>
+                  <EditGemPage />
+                </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/admin/stone/:id"
+              element={
+                <AdminRoute>
+                  <AdminStoneDetailPage />
+                </AdminRoute>
+              }
+            />
           </Route>
         </Routes>
       </AuthProvider>

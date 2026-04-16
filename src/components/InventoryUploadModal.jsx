@@ -385,9 +385,9 @@ function InventoryUploadModal({
         if (!saving) onClose();
       }}
     >
-      <div className="flex min-h-full items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
+      <div className="flex min-h-full items-start justify-center overflow-y-auto px-3 py-4 sm:items-center sm:px-4 sm:py-6">
         <div
-          className="my-3 flex max-h-[calc(100vh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:max-h-[92vh]"
+          className="my-0 flex max-h-[calc(100vh-2rem)] w-full max-w-[720px] flex-col overflow-hidden rounded-[26px] border border-white/10 bg-[#020617] text-gray-200 shadow-[0_24px_70px_rgba(0,0,0,0.45)] sm:max-h-[92vh] sm:max-w-3xl sm:rounded-3xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="sticky top-0 z-10 border-b border-white/10 bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
@@ -421,11 +421,11 @@ function InventoryUploadModal({
           <form
             id="gem-form"
             onSubmit={handleSubmit}
-            className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6"
+            className="flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5"
           >
-            <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
               <div className="space-y-5">
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                <section className="rounded-[24px] border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-white">
                       Gem details
@@ -605,7 +605,7 @@ function InventoryUploadModal({
                   </div>
                 </section>
 
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                <section className="rounded-[24px] border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-white">
                       Sale settings
@@ -708,7 +708,7 @@ function InventoryUploadModal({
                   </div>
                 </section>
 
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                <section className="rounded-[24px] border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-white">Notes</h3>
                     <p className="mt-1 text-xs text-gray-400">
@@ -724,14 +724,14 @@ function InventoryUploadModal({
                       placeholder="Bought for personal collection. Nice purple saturation. Needs further identification check."
                       value={formData.notes}
                       onChange={handleChange}
-                      className="min-h-[120px] w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400"
+                      className="min-h-[110px] w-full rounded-xl border border-[#1e293b] bg-[#020617] px-4 py-3 text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400"
                     />
                   </div>
                 </section>
               </div>
 
               <div className="space-y-5">
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                <section className="rounded-[24px] border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-white">
                       Gem Photo
@@ -781,10 +781,10 @@ function InventoryUploadModal({
                     </p>
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-[#020617]">
+                  <div className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#020617]">
                     {previewUrl ? (
                       <div>
-                        <div className="aspect-square w-full bg-[#020617]">
+                        <div className="aspect-[4/3] w-full bg-[#020617] sm:aspect-square">
                           <img
                             src={previewUrl}
                             alt="Gem preview"
@@ -809,7 +809,7 @@ function InventoryUploadModal({
                         </div>
                       </div>
                     ) : (
-                      <div className="flex aspect-square items-center justify-center px-6 text-center text-sm text-gray-500">
+                      <div className="flex aspect-[4/3] items-center justify-center px-6 text-center text-sm text-gray-500 sm:aspect-square">
                         {isEditMode
                           ? "No saved image found"
                           : "No image selected yet"}
@@ -818,7 +818,7 @@ function InventoryUploadModal({
                   </div>
                 </section>
 
-                <section className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
+                <section className="rounded-[24px] border border-white/10 bg-[#04101f]/70 p-4 sm:p-5">
                   <h3 className="text-sm font-semibold text-white">
                     Quick check
                   </h3>
@@ -833,7 +833,7 @@ function InventoryUploadModal({
             </div>
           </form>
 
-          <div className="sticky bottom-0 border-t border-white/10 bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-6">
+          <div className="sticky bottom-0 border-t border-white/10 bg-[#061224]/95 px-4 py-4 backdrop-blur sm:px-5">
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
               <button
                 type="button"

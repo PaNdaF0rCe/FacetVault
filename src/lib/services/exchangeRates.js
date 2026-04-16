@@ -11,17 +11,24 @@ export async function getExchangeRates() {
 
 export function detectCurrency() {
   try {
-    const locale = Intl.NumberFormat().resolvedOptions().locale;
+    const locale = Intl.NumberFormat().resolvedOptions().locale?.toUpperCase() || "";
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
 
-    if (locale.includes("LK")) return "LKR";
+    if (
+      locale.includes("LK") ||
+      timeZone === "Asia/Colombo"
+    ) {
+      return "LKR";
+    }
+
     if (locale.includes("CA")) return "CAD";
     if (locale.includes("GB")) return "GBP";
     if (locale.includes("AU")) return "AUD";
     if (locale.includes("US")) return "USD";
 
-    return "USD";
+    return "LKR";
   } catch {
-    return "USD";
+    return "LKR";
   }
 }
 
