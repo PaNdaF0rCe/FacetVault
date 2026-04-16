@@ -1,20 +1,19 @@
-// (FULL FILE — CLEAN + UPGRADED)
-
 import {
   collection,
   query,
   where,
   orderBy,
   getDocs,
+  getDoc,
   doc,
   deleteDoc,
   updateDoc,
+  limit,
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
 import { createDocument, getDocument } from "./db-operations";
-import { uploadFileToStorage, uploadImageWithThumbnail } from "./storage-utils";
-import { updateUserStats } from "./users";
+import { uploadImageWithThumbnail } from "./storage-utils";
 import { UnauthorizedError } from "./errors";
 
 /* ---------------- HELPERS ---------------- */
@@ -36,20 +35,27 @@ function normalizeDateValue(value) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function normalizeNumberValue(value) {
-  if (value === null || value === undefined || value === "") return -1;
-  const num = Number(value);
-  return Number.isNaN(num) ? -1 : num;
+function mapDoc(docSnap) {
+  return {
+    id: docSnap.id,
+    ...docSnap.data(),
+  };
+}
+
+function sortByUpdatedDesc(items) {
+  return [...items].sort(
+    (a, b) => normalizeDateValue(b.updatedAt) - normalizeDateValue(a.updatedAt)
+  );
+}
+
+function isVisiblePublicItem(item) {
+  return !!item?.isForSale && !item?.isSold;
 }
 
 /* ---------------- BACKFILL FUNCTION ---------------- */
 
 export async function backfillStoneCodes(userId) {
-  const q = query(
-    collection(db, "inventory"),
-    where("userId", "==", userId)
-  );
-
+  const q = query(collection(db, "inventory"), where("userId", "==", userId));
   const snapshot = await getDocs(q);
 
   const updates = [];
@@ -58,11 +64,9 @@ export async function backfillStoneCodes(userId) {
     const data = docSnap.data();
 
     if (!data.stoneCode) {
-      const newCode = generateStoneCode();
-
       updates.push(
         updateDoc(doc(db, "inventory", docSnap.id), {
-          stoneCode: newCode,
+          stoneCode: generateStoneCode(),
         })
       );
     }
@@ -82,10 +86,7 @@ export async function getFilteredInventory(userId, filters = {}) {
 
   const snapshot = await getDocs(q);
 
-  let items = snapshot.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  }));
+  let items = snapshot.docs.map(mapDoc);
 
   if (filters.search?.trim()) {
     const term = filters.search.toLowerCase();
@@ -114,7 +115,6 @@ export async function uploadInventoryItem(filePayload, metadata, userId) {
     ...metadata,
     userId,
     stoneCode: metadata.stoneCode || generateStoneCode(),
-
     isSold: false,
 
     imageUrl: uploadResult?.imageUrl || null,
@@ -160,11 +160,8 @@ export async function updateInventoryItem(
   await updateDoc(refDoc, {
     ...updatedData,
     ...imageUpdate,
-
     stoneCode: existing.stoneCode || generateStoneCode(),
-
     isSold: !!updatedData.isSold,
-
     updatedAt: new Date(),
   });
 
@@ -187,10 +184,16 @@ export async function deleteInventoryItem(itemId, userId) {
     } catch {}
   }
 
+  if (item.thumbnailPath) {
+    try {
+      await deleteObject(ref(storage, item.thumbnailPath));
+    } catch {}
+  }
+
   return true;
 }
 
-/* ---------------- PUBLIC ---------------- */
+/* ---------------- PUBLIC LIST ---------------- */
 
 export async function getPublicSaleInventory() {
   const q = query(
@@ -200,20 +203,62 @@ export async function getPublicSaleInventory() {
 
   const snapshot = await getDocs(q);
 
-  let items = snapshot.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  }));
+  const items = snapshot.docs.map(mapDoc).filter(isVisiblePublicItem);
 
-  // REMOVE SOLD ITEMS
-  items = items.filter((i) => !i.isSold);
+  return sortByUpdatedDesc(items);
+}
 
-  items.sort((a, b) => {
-    return (
-      normalizeDateValue(b.updatedAt) -
-      normalizeDateValue(a.updatedAt)
+/* ---------------- PUBLIC SINGLE ITEM ---------------- */
+
+export async function getPublicStoneById(itemId) {
+  const docRef = doc(db, "inventory", itemId);
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) return null;
+
+  const item = mapDoc(snapshot);
+
+  if (!isVisiblePublicItem(item)) return null;
+
+  return item;
+}
+
+/* ---------------- RELATED ITEMS ---------------- */
+
+export async function getRelatedPublicStones(item, maxItems = 4) {
+  if (!item) return [];
+
+  const results = [];
+  const seen = new Set([item.id]);
+
+  const runQuery = async (field, value) => {
+    if (!value || results.length >= maxItems) return;
+
+    const q = query(
+      collection(db, "inventory"),
+      where("isForSale", "==", true),
+      where(field, "==", value),
+      orderBy("updatedAt", "desc"),
+      limit(Math.max(maxItems * 2, 8))
     );
-  });
 
-  return items;
+    const snapshot = await getDocs(q);
+
+    for (const docSnap of snapshot.docs) {
+      const candidate = mapDoc(docSnap);
+
+      if (!isVisiblePublicItem(candidate)) continue;
+      if (seen.has(candidate.id)) continue;
+
+      seen.add(candidate.id);
+      results.push(candidate);
+
+      if (results.length >= maxItems) break;
+    }
+  };
+
+  await runQuery("stoneType", item.stoneType);
+  await runQuery("category", item.category);
+
+  return results.slice(0, maxItems);
 }

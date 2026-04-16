@@ -78,7 +78,7 @@ function getPrimaryBadge(item) {
     };
   }
 
-  const salePrice = Number(item?.salePrice);
+  const salePrice = Number(item?.salePrice ?? item?.pricePaid);
   if (!Number.isNaN(salePrice) && salePrice <= PRICE_THRESHOLD) {
     return {
       label: "Under 5K",
@@ -94,7 +94,7 @@ function FilterChip({ label, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+      className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
         active
           ? "bg-amber-400 text-black shadow-[0_6px_20px_rgba(251,191,36,0.25)]"
           : "border border-white/10 bg-white/[0.03] text-gray-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
@@ -105,14 +105,51 @@ function FilterChip({ label, active, onClick }) {
   );
 }
 
+function MarketplaceImage({ item }) {
+  const [loaded, setLoaded] = useState(false);
+  const imageSrc = item.thumbnailUrl || item.imageUrl;
+
+  if (!imageSrc) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+        No image
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className={`absolute inset-0 bg-white/[0.04] transition-opacity duration-500 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <div className="h-full w-full animate-pulse bg-white/[0.06]" />
+      </div>
+
+      <img
+        src={imageSrc}
+        alt={item.name || "Gemstone"}
+        className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.015] ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        loading="lazy"
+        decoding="async"
+        sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+        onLoad={() => setLoaded(true)}
+      />
+    </>
+  );
+}
+
 function MarketplaceCard({ item, rates, currency }) {
-  const salePrice = Number(item?.salePrice);
+  const salePrice = Number(item?.salePrice ?? item?.pricePaid);
 
   let primaryPrice = "View price";
   let secondaryPrice = null;
   let isSmall = true;
 
-  if (!Number.isNaN(salePrice) && salePrice <= PRICE_THRESHOLD) {
+  if (!Number.isNaN(salePrice) && salePrice > 0) {
     if (currency === "LKR" || !rates?.rates) {
       primaryPrice = `LKR ${salePrice.toLocaleString()}`;
       isSmall = false;
@@ -137,23 +174,10 @@ function MarketplaceCard({ item, rates, currency }) {
     .join(" • ");
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
       <Link to={`/stone/${item.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
-          {item.imageUrl ? (
-            <img
-              src={item.thumbnailUrl || item.imageUrl}
-              alt={item.name || "Gemstone"}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.015]"
-              loading="lazy"
-              decoding="async"
-              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
-              No image
-            </div>
-          )}
+          <MarketplaceImage item={item} />
 
           <div className="absolute right-2.5 top-2.5 flex flex-col items-end gap-1.5">
             {badge ? (
@@ -198,11 +222,9 @@ function MarketplaceCard({ item, rates, currency }) {
             {primaryPrice}
           </p>
 
-          {secondaryPrice && (
-            <p className="mt-0.5 text-[10px] text-gray-500">
-              {secondaryPrice}
-            </p>
-          )}
+          {secondaryPrice ? (
+            <p className="mt-0.5 text-[10px] text-gray-500">{secondaryPrice}</p>
+          ) : null}
         </div>
 
         <div className="mt-1 min-h-[28px]">
@@ -216,7 +238,7 @@ function MarketplaceCard({ item, rates, currency }) {
 
         <Link
           to={`/stone/${item.id}`}
-          className="mt-2.5 block w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-center text-[13px] font-medium text-white transition-all duration-200 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
+          className="mt-2.5 block w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-center text-[13px] font-medium text-white transition-[transform,border-color,background-color,color] duration-200 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
         >
           View Stone
         </Link>
@@ -307,7 +329,7 @@ function Marketplace() {
         break;
       case "under5k":
         result = result.filter((item) => {
-          const price = Number(item?.salePrice);
+          const price = Number(item?.salePrice ?? item?.pricePaid);
           return !Number.isNaN(price) && price <= PRICE_THRESHOLD;
         });
         break;
@@ -382,7 +404,7 @@ function Marketplace() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search gemstones..."
-              className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-400"
+              className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors duration-200 focus:border-amber-400"
             />
           </div>
 
@@ -422,8 +444,7 @@ function Marketplace() {
         <>
           <div className="flex items-center justify-between px-1">
             <p className="text-sm text-gray-400">
-              {filteredItems.length} item
-              {filteredItems.length === 1 ? "" : "s"} available
+              {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"} available
             </p>
           </div>
 

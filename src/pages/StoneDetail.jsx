@@ -1,285 +1,200 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
-import { WHATSAPP_NUMBER } from "../config/appConfig";
+import { useMemo } from "react";
+import { Link, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, MessageCircle } from "lucide-react";
 import {
-  getExchangeRates,
-  detectCurrency,
-  convertFromLkr,
-  formatCurrency,
-} from "../lib/services/exchangeRates";
+  getPublicStoneById,
+  getRelatedPublicStones,
+} from "../lib/firebase/inventory-operations";
 
-const NEW_DAYS = 14;
+function formatMoney(value) {
+  if (value === null || value === undefined || value === "") return null;
 
-function getJsDate(value) {
+  const num = Number(value);
+  if (Number.isNaN(num)) return null;
+
+  return new Intl.NumberFormat("en-LK", {
+    style: "currency",
+    currency: "LKR",
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+function DetailRow({ label, value }) {
   if (!value) return null;
-  if (typeof value?.toDate === "function") return value.toDate();
-  if (value?.seconds) return new Date(value.seconds * 1000);
-  return new Date(value);
-}
-
-function isNew(item) {
-  const date = getJsDate(item?.createdAt);
-  if (!date) return false;
-  const diff = (new Date() - date) / (1000 * 60 * 60 * 24);
-  return diff <= NEW_DAYS;
-}
-
-function formatCarat(value) {
-  if (!value && value !== 0) return null;
-  return `${value} ct`;
-}
-
-function buildWhatsAppLink(item) {
-  const message = `Hi, I’m interested in this ${item.name} [${
-    item.stoneCode || "N/A"
-  }].`;
-
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-}
-
-function DetailBlock({ label, value }) {
-  if (!value && value !== 0) return null;
 
   return (
-    <div className="lux-card p-3 sm:p-4">
-      <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">
-        {label}
-      </p>
-      <p className="mt-1 text-sm leading-relaxed text-white sm:text-[15px]">
-        {value}
-      </p>
+    <div className="flex justify-between gap-4 border-b border-white/10 py-3 text-sm">
+      <span className="text-white/60">{label}</span>
+      <span className="text-white text-right">{value}</span>
     </div>
   );
 }
 
-function StoneDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
-  const [items, setItems] = useState([]);
-  const [item, setItem] = useState(null);
-  const [rates, setRates] = useState(null);
-  const currency = detectCurrency();
-
-  useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      try {
-        const data = await getPublicSaleInventory();
-        const clean = Array.isArray(data) ? data.filter((i) => !i.isSold) : [];
-
-        if (mounted) {
-          setItems(clean);
-          setItem(clean.find((i) => i.id === id) || null);
-        }
-      } catch (error) {
-        console.error("Failed to load stone detail:", error);
-        if (mounted) {
-          setItems([]);
-          setItem(null);
-        }
-      }
-    };
-
-    const loadRates = async () => {
-      try {
-        const rateData = await getExchangeRates();
-        if (mounted) {
-          setRates(rateData);
-        }
-      } catch (error) {
-        console.error("Failed to load exchange rates:", error);
-      }
-    };
-
-    load();
-    loadRates();
-
-    return () => {
-      mounted = false;
-    };
-  }, [id]);
-
-  const related = useMemo(() => {
-    if (!item) return [];
-
-    return items
-      .filter(
-        (i) =>
-          i.id !== item.id &&
-          (i.stoneType === item.stoneType || i.category === item.category)
-      )
-      .slice(0, 4);
-  }, [items, item]);
-
-  if (!item) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-6 text-white sm:px-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-sm text-amber-300 transition hover:text-amber-200"
-        >
-          ← Back
-        </button>
-        <p className="mt-4 text-sm text-gray-300">Stone not found</p>
+function RelatedCard({ stone }) {
+  return (
+    <Link
+      to={`/stone/${stone.id}`}
+      className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 transition-transform duration-300 hover:-translate-y-1"
+    >
+      <div className="aspect-[4/3] overflow-hidden bg-white/5">
+        <img
+          src={stone.thumbnailUrl || stone.imageUrl}
+          alt={stone.name}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
+
+      <div className="p-4 space-y-2">
+        <h3 className="text-sm font-medium text-white line-clamp-1">
+          {stone.name || stone.stoneType}
+        </h3>
+
+        <p className="text-xs text-white/60 line-clamp-1">
+          {stone.stoneCode || stone.origin}
+        </p>
+
+        {stone.pricePaid ? (
+          <p className="text-sm font-semibold text-amber-300">
+            {formatMoney(stone.pricePaid)}
+          </p>
+        ) : null}
+      </div>
+    </Link>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div className="animate-pulse grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="aspect-square bg-white/10 rounded-2xl" />
+      <div className="space-y-4">
+        <div className="h-8 w-2/3 bg-white/10 rounded" />
+        <div className="h-4 w-1/3 bg-white/10 rounded" />
+        <div className="h-24 bg-white/10 rounded" />
+      </div>
+    </div>
+  );
+}
+
+export default function StoneDetail() {
+  const { id } = useParams();
+
+  const { data: stone, isLoading } = useQuery({
+    queryKey: ["stone", id],
+    queryFn: () => getPublicStoneById(id),
+    enabled: !!id,
+  });
+
+  const { data: related = [] } = useQuery({
+    queryKey: ["related", id],
+    queryFn: () => getRelatedPublicStones(stone, 4),
+    enabled: !!stone,
+  });
+
+  const whatsappLink = useMemo(() => {
+    if (!stone) return "#";
+
+    const msg = `Hi, I'm interested in this stone:
+${stone.name || stone.stoneType}
+${stone.stoneCode || ""}
+${window.location.href}`;
+
+    return `https://wa.me/94774126030?text=${encodeURIComponent(msg)}`;
+  }, [stone]);
+
+  if (isLoading) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 py-10">
+        <Skeleton />
+      </section>
     );
   }
 
-  const price = Number(item.salePrice);
-  const hasValidPrice = !Number.isNaN(price);
-
-  let primaryPrice = "Price on request";
-  let secondaryPrice = null;
-  let showDisclaimer = false;
-
-  if (hasValidPrice) {
-    if (currency === "LKR" || !rates?.rates) {
-      primaryPrice = `LKR ${price.toLocaleString()}`;
-    } else {
-      const converted = convertFromLkr(price, currency, rates.rates);
-
-      if (converted) {
-        primaryPrice = `Approx. ${formatCurrency(converted, currency)}`;
-        secondaryPrice = `Base price: LKR ${price.toLocaleString()}`;
-        showDisclaimer = true;
-      } else {
-        primaryPrice = `LKR ${price.toLocaleString()}`;
-      }
-    }
+  if (!stone) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 py-10 text-center text-white">
+        Stone not found
+      </section>
+    );
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-5 text-white sm:space-y-8 sm:px-6 sm:py-6">
-      <button
-        onClick={() => navigate(-1)}
-        className="inline-flex text-sm text-amber-300 transition hover:text-amber-200"
-      >
-        ← Back
-      </button>
+    <>
+      <Helmet>
+        <title>{stone.name || "Stone"} | FacetVault</title>
+      </Helmet>
 
-      <div className="space-y-3">
-        <div>
-          <h1 className="text-2xl font-semibold leading-tight text-white sm:text-3xl">
-            {item.name}
-          </h1>
+      <section className="max-w-7xl mx-auto px-4 py-10">
+        {/* Back */}
+        <Link
+          to="/collection"
+          className="flex items-center gap-2 text-sm text-white/70 hover:text-white mb-6"
+        >
+          <ChevronLeft size={16} />
+          Back to Collection
+        </Link>
 
-          {item.stoneCode && (
-            <p className="mt-1 text-xs tracking-[0.14em] text-gray-500">
-              {item.stoneCode}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {item.isFeatured && (
-            <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs text-amber-300">
-              Featured
-            </span>
-          )}
-          {item.isCollectorPiece && (
-            <span className="rounded-full bg-purple-400/20 px-2.5 py-1 text-xs text-purple-300">
-              Collector
-            </span>
-          )}
-          {isNew(item) && (
-            <span className="rounded-full bg-blue-400/20 px-2.5 py-1 text-xs text-blue-300">
-              New
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 md:gap-8">
-        <div className="lux-card overflow-hidden">
-          <img
-            src={item.imageUrl}
-            className="aspect-square w-full object-cover"
-            alt={item.name}
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <p className="text-sm text-gray-400">Price</p>
-          <p className="mt-1 text-2xl font-semibold leading-tight text-amber-300 sm:text-3xl">
-            {primaryPrice}
-          </p>
-
-          {secondaryPrice ? (
-            <p className="mt-2 text-sm text-gray-400">{secondaryPrice}</p>
-          ) : null}
-
-          {showDisclaimer ? (
-            <p className="mt-2 text-xs leading-relaxed text-gray-500">
-              Converted from LKR using daily exchange rates. Final confirmed
-              price may vary slightly.
-            </p>
-          ) : null}
-
-          <a
-            href={buildWhatsAppLink(item)}
-            target="_blank"
-            rel="noreferrer"
-            className="lux-button-primary mt-5 w-full sm:mt-6"
-          >
-            Secure this stone
-          </a>
-
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2">
-            <DetailBlock label="Stone Type" value={item.stoneType} />
-            <DetailBlock label="Category" value={item.category} />
-            <DetailBlock label="Carat" value={formatCarat(item.carat)} />
-            <DetailBlock label="Color" value={item.color} />
-            <DetailBlock label="Cut" value={item.cut} />
-            <DetailBlock label="Origin" value={item.origin} />
+        {/* Main */}
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          {/* Image */}
+          <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+            <img
+              src={stone.imageUrl || stone.thumbnailUrl}
+              alt={stone.name}
+              className="w-full h-full object-cover"
+            />
           </div>
 
-          {item.notes && (
-            <div className="mt-5 sm:mt-6">
-              <p className="mb-1 text-sm text-gray-400">Notes</p>
-              <p className="text-sm leading-relaxed text-white/90">
-                {item.notes}
+          {/* Details */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h1 className="text-3xl text-white font-semibold">
+              {stone.name || stone.stoneType}
+            </h1>
+
+            {stone.pricePaid && (
+              <p className="mt-4 text-2xl text-amber-300 font-semibold">
+                {formatMoney(stone.pricePaid)}
               </p>
+            )}
+
+            <div className="mt-6">
+              <DetailRow label="Type" value={stone.stoneType} />
+              <DetailRow label="Carat" value={stone.carat} />
+              <DetailRow label="Color" value={stone.color} />
+              <DetailRow label="Cut" value={stone.cut} />
+              <DetailRow label="Origin" value={stone.origin} />
+              <DetailRow label="Treatment" value={stone.treatment} />
             </div>
-          )}
-        </div>
-      </div>
 
-      {related.length > 0 && (
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">
-            Related Stones
-          </h2>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {related.map((r) => (
-              <Link
-                key={r.id}
-                to={`/stone/${r.id}`}
-                className="lux-card overflow-hidden transition hover:-translate-y-0.5"
-              >
-                <img
-                  src={r.imageUrl}
-                  className="aspect-square w-full object-cover"
-                  alt={r.name}
-                />
-                <div className="p-3">
-                  <p className="line-clamp-1 text-sm font-medium text-white">
-                    {r.name}
-                  </p>
-                  {r.stoneCode ? (
-                    <p className="mt-1 text-xs text-gray-500">{r.stoneCode}</p>
-                  ) : null}
-                </div>
-              </Link>
-            ))}
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-flex items-center gap-2 bg-amber-300 text-black px-5 py-3 rounded-full font-semibold"
+            >
+              <MessageCircle size={18} />
+              Inquire
+            </a>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Related */}
+        {related.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-xl text-white mb-4">Related Stones</h2>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {related.map((s) => (
+                <RelatedCard key={s.id} stone={s} />
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    </>
   );
 }
-
-export default StoneDetail;

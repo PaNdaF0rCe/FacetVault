@@ -10,7 +10,7 @@ function DesktopNavLink({ to, label, currentPath, admin = false }) {
   return (
     <Link
       to={to}
-      className={`relative rounded-full px-4 py-2 text-sm font-medium tracking-[0.03em] transition-all duration-200 ${
+      className={`relative rounded-full px-4 py-2 text-sm font-medium tracking-[0.03em] transition-colors duration-200 ${
         active
           ? admin
             ? "bg-amber-400 text-black shadow-[0_10px_30px_rgba(251,191,36,0.25)]"
@@ -39,7 +39,7 @@ function MobileMenuLink({
     <Link
       to={to}
       onClick={onClick}
-      className={`block rounded-2xl px-4 py-3 text-sm transition ${
+      className={`block rounded-2xl px-4 py-3 text-sm transition-colors duration-200 ${
         active
           ? admin
             ? "bg-amber-400 text-black"
@@ -111,7 +111,7 @@ function AccountDropdown({
 
       <button
         onClick={onLogout}
-        className="w-full px-4 py-3 text-left text-sm text-white/85 transition hover:bg-white/5 hover:text-white"
+        className="w-full px-4 py-3 text-left text-sm text-white/85 transition-colors duration-200 hover:bg-white/5 hover:text-white"
       >
         Logout
       </button>
@@ -124,7 +124,7 @@ function GuestActions({ currentPath }) {
     <div className="flex items-center gap-2">
       <Link
         to="/login"
-        className={`hidden rounded-full px-4 py-2 text-sm font-medium transition sm:inline-flex ${
+        className={`hidden rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 sm:inline-flex ${
           currentPath === "/login"
             ? "bg-white/10 text-white"
             : "text-white/80 hover:bg-white/5 hover:text-white"
@@ -135,7 +135,7 @@ function GuestActions({ currentPath }) {
 
       <Link
         to="/signup"
-        className={`hidden rounded-full px-4 py-2 text-sm font-semibold transition sm:inline-flex ${
+        className={`hidden rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 sm:inline-flex ${
           currentPath === "/signup"
             ? "bg-amber-300 text-black"
             : "bg-amber-400 text-black hover:bg-amber-300 shadow-[0_8px_25px_rgba(251,191,36,0.25)]"
@@ -146,7 +146,7 @@ function GuestActions({ currentPath }) {
 
       <Link
         to="/login"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white transition hover:border-white/20 hover:bg-white/[0.08] sm:hidden"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.08] sm:hidden"
         aria-label="Login"
       >
         👤
@@ -177,6 +177,10 @@ function Navbar() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = async () => {
@@ -186,12 +190,12 @@ function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.75))] backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.75))] backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/5" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/5" />
 
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-3 group">
+        <Link to="/" className="group flex min-w-0 items-center gap-3">
           <img
             src={logo}
             alt="FacetVault"
@@ -248,7 +252,7 @@ function Navbar() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
-                className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-white transition hover:border-white/20 hover:bg-white/[0.08]"
+                className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-2 py-1.5 text-sm text-white transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.08]"
                 aria-label="Open account menu"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-400/25 bg-amber-400/10 text-sm font-semibold text-amber-200">
