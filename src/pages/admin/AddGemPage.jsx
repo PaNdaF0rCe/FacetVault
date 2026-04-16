@@ -7,10 +7,10 @@ import { updateUserStats } from "../../lib/firebase/users";
 
 function FieldLabel({ children, optional = false }) {
   return (
-    <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">
+    <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.22em] text-white/42">
       {children}{" "}
       {optional && (
-        <span className="normal-case tracking-normal text-gray-500">
+        <span className="normal-case tracking-normal text-white/28">
           (optional)
         </span>
       )}
@@ -40,7 +40,7 @@ function TextInput({
       min={min}
       step={step}
       disabled={disabled}
-      className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-3.5 py-2.5 text-sm text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+      className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)] disabled:cursor-not-allowed disabled:opacity-50"
     />
   );
 }
@@ -177,14 +177,14 @@ async function createThumbnail(file, maxWidth = 900, quality = 0.72) {
 
 function CompactToggle({ label, name, checked, onChange }) {
   return (
-    <label className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#020617] px-3.5 py-2.5">
-      <span className="text-sm text-white">{label}</span>
+    <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-3 transition-colors duration-200 hover:border-white/12">
+      <span className="text-sm text-white/88">{label}</span>
       <input
         type="checkbox"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 accent-amber-400"
+        className="h-4 w-4 accent-amber-300"
       />
     </label>
   );
@@ -391,16 +391,16 @@ export function GemFormPage({
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-5">
+      <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-amber-400/80">
+            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-amber-300/72">
               {isEditMode ? "Collection update" : "Collection entry"}
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-amber-300 sm:text-3xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               {isEditMode ? "Edit Gem" : "Add New Gem"}
             </h1>
-            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-gray-400">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
               {isEditMode
                 ? "Update details, image, and sale status."
                 : "Add a new stone with photo and listing status."}
@@ -413,7 +413,7 @@ export function GemFormPage({
               navigate(isEditMode && gemId ? `/admin/stone/${gemId}` : "/admin")
             }
             disabled={saving}
-            className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:opacity-50"
+            className="rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
           >
             Back
           </button>
@@ -423,10 +423,10 @@ export function GemFormPage({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
-            <section className="rounded-3xl border border-white/10 bg-[#04101f]/70 p-4 sm:p-4.5">
+            <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4 sm:p-4.5">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-white">Gem details</h3>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-white/42">
                   Main identification and collection info.
                 </p>
               </div>
@@ -459,7 +459,7 @@ export function GemFormPage({
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-[#1e293b] bg-[#020617] px-3.5 py-2.5 text-sm text-gray-100 outline-none transition focus:border-amber-400"
+                    className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 text-sm text-white outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
                   >
                     <option value="Gem">Gem</option>
                     <option value="Rough">Rough</option>
@@ -553,10 +553,10 @@ export function GemFormPage({
               </div>
             </section>
 
-            <section className="rounded-3xl border border-white/10 bg-[#04101f]/70 p-4">
+            <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-white">Notes</h3>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-white/42">
                   Internal notes for this stone.
                 </p>
               </div>
@@ -567,23 +567,23 @@ export function GemFormPage({
                 value={formData.notes}
                 onChange={handleChange}
                 placeholder="Add notes about this gem..."
-                className="w-full rounded-2xl border border-[#1e293b] bg-[#020617] px-3.5 py-3 text-sm text-gray-100 placeholder-gray-500 outline-none transition focus:border-amber-400"
+                className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-3 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
               />
             </section>
           </div>
 
           <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-            <section className="rounded-3xl border border-white/10 bg-[#04101f]/70 p-4">
+            <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-white">Image</h3>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-white/42">
                   {isEditMode
                     ? "Replace only if needed."
                     : "Upload a clear image of the gem."}
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#020617]">
+              <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#020617]">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -591,7 +591,7 @@ export function GemFormPage({
                     className="aspect-[4/3] w-full object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-[4/3] items-center justify-center text-sm text-gray-500">
+                  <div className="flex aspect-[4/3] items-center justify-center text-sm text-white/30">
                     No image selected
                   </div>
                 )}
@@ -599,7 +599,7 @@ export function GemFormPage({
 
               <div className="mt-3 space-y-2.5">
                 <label className="block">
-                  <span className="mb-1 block text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">
+                  <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.22em] text-white/42">
                     Upload image
                   </span>
                   <input
@@ -608,7 +608,7 @@ export function GemFormPage({
                     capture="environment"
                     onChange={handleFileChange}
                     disabled={saving}
-                    className="block w-full text-sm text-gray-400 file:mr-3 file:rounded-xl file:border-0 file:bg-amber-400 file:px-3.5 file:py-2.5 file:text-sm file:font-semibold file:text-black hover:file:bg-amber-300"
+                    className="block w-full text-sm text-white/42 file:mr-3 file:rounded-2xl file:border-0 file:bg-amber-300 file:px-3.5 file:py-2.5 file:text-sm file:font-semibold file:text-[#09101c] hover:file:brightness-105"
                   />
                 </label>
 
@@ -617,7 +617,7 @@ export function GemFormPage({
                     type="button"
                     onClick={handleRemoveNewImage}
                     disabled={saving}
-                    className="w-full rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:opacity-50"
+                    className="w-full rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
                   >
                     Remove selected image
                   </button>
@@ -625,7 +625,7 @@ export function GemFormPage({
               </div>
             </section>
 
-            <section className="rounded-3xl border border-white/10 bg-[#04101f]/70 p-4">
+            <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-white">Status</h3>
               </div>
@@ -658,17 +658,15 @@ export function GemFormPage({
               </div>
             </section>
 
-            <div className="rounded-3xl border border-white/10 bg-[#04101f]/70 p-4">
+            <div className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
               <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving
-                    ? isEditMode
-                      ? "Saving..."
-                      : "Saving..."
+                    ? "Saving..."
                     : isEditMode
                     ? "Save Changes"
                     : "Save Gem"}
@@ -682,7 +680,7 @@ export function GemFormPage({
                     )
                   }
                   disabled={saving}
-                  className="w-full rounded-2xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:opacity-50"
+                  className="w-full rounded-2xl border border-white/8 bg-white/[0.025] px-5 py-3 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
                 >
                   Cancel
                 </button>

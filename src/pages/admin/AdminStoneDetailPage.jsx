@@ -49,8 +49,8 @@ function formatDate(value) {
 
 function DetailField({ label, value, accent = false }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#04101f]/70 p-3">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-gray-400">
+    <div className="rounded-2xl border border-white/8 bg-[#020617]/72 p-3">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-white/36">
         {label}
       </p>
       <p
@@ -182,13 +182,13 @@ function AdminStoneDetailPage() {
     return (
       <div className="space-y-3">
         <Toast toast={toast} onClose={() => setToast(null)} />
-        <section className="rounded-3xl border border-white/10 bg-[#020617]/90 p-5">
-          <div className="h-6 w-48 rounded bg-white/5" />
-          <div className="mt-3 h-4 w-32 rounded bg-white/5" />
+        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-5">
+          <div className="h-6 w-48 rounded bg-white/[0.05]" />
+          <div className="mt-3 h-4 w-32 rounded bg-white/[0.05]" />
         </section>
         <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="h-[280px] rounded-3xl border border-white/10 bg-white/5" />
-          <div className="h-[280px] rounded-3xl border border-white/10 bg-white/5" />
+          <div className="h-[280px] rounded-[28px] border border-white/8 bg-white/[0.04]" />
+          <div className="h-[280px] rounded-[28px] border border-white/8 bg-white/[0.04]" />
         </section>
       </div>
     );
@@ -198,14 +198,14 @@ function AdminStoneDetailPage() {
     return (
       <div className="space-y-3">
         <Toast toast={toast} onClose={() => setToast(null)} />
-        <section className="rounded-3xl border border-white/10 bg-[#020617]/90 p-6 text-center">
+        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] p-6 text-center">
           <p className="text-sm uppercase tracking-[0.2em] text-red-400/80">
             Detail unavailable
           </p>
           <h1 className="mt-2 text-2xl font-semibold text-white">
             Gem not found
           </h1>
-          <p className="mt-3 text-sm text-gray-400">
+          <p className="mt-3 text-sm text-white/45">
             This gem could not be loaded or you do not have access to it.
           </p>
         </section>
@@ -217,36 +217,36 @@ function AdminStoneDetailPage() {
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       <Toast toast={toast} onClose={() => setToast(null)} />
 
-      <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-5">
+      <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-amber-400/80">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300/72">
               Collection entry
             </p>
-            <h1 className="mt-1 truncate text-2xl font-semibold text-amber-300 sm:text-3xl">
+            <h1 className="mt-2 truncate text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               {gem.name}
             </h1>
-            <p className="mt-1 text-xs text-gray-500">{gem.stoneCode || "—"}</p>
+            <p className="mt-1.5 text-xs text-white/34">{gem.stoneCode || "—"}</p>
 
-            <div className="mt-2.5 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {gem.isForSale && (
-                <span className="rounded-full bg-emerald-400 px-2.5 py-1 text-xs font-medium text-black">
+                <span className="rounded-full bg-emerald-300 px-2.5 py-1 text-xs font-medium text-[#09101c]">
                   For Sale
                 </span>
               )}
               {gem.isFeatured && (
-                <span className="rounded-full bg-amber-400 px-2.5 py-1 text-xs font-medium text-black">
+                <span className="rounded-full bg-amber-300 px-2.5 py-1 text-xs font-medium text-[#09101c]">
                   Featured
                 </span>
               )}
               {gem.isCollectorPiece && (
-                <span className="rounded-full bg-purple-400 px-2.5 py-1 text-xs font-medium text-black">
+                <span className="rounded-full bg-purple-300 px-2.5 py-1 text-xs font-medium text-[#09101c]">
                   Collector
                 </span>
               )}
               {gem.isSold && (
                 <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-medium text-white">
-                  SOLD
+                  Sold
                 </span>
               )}
             </div>
@@ -255,7 +255,7 @@ function AdminStoneDetailPage() {
           <button
             type="button"
             onClick={() => navigate("/admin")}
-            className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
+            className="rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white"
           >
             Back to Dashboard
           </button>
@@ -264,7 +264,7 @@ function AdminStoneDetailPage() {
 
       <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
         <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-          <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[#04101f] shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
+          <div className="overflow-hidden rounded-[28px] border border-white/8 bg-[#04101f] shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
             {gem.imageUrl ? (
               <img
                 src={gem.imageUrl}
@@ -272,18 +272,18 @@ function AdminStoneDetailPage() {
                 className="aspect-[4/3] w-full object-cover"
               />
             ) : (
-              <div className="flex aspect-[4/3] items-center justify-center text-sm text-gray-500">
+              <div className="flex aspect-[4/3] items-center justify-center text-sm text-white/30">
                 No image available
               </div>
             )}
           </div>
 
-          <section className="rounded-[26px] border border-white/10 bg-[#04101f]/70 p-4">
+          <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-white">
                 Commercial Summary
               </h3>
-              <span className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-white/32">
                 Quick view
               </span>
             </div>
@@ -318,10 +318,10 @@ function AdminStoneDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <section className="rounded-[26px] border border-white/10 bg-[#04101f]/70 p-4">
+          <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-white">Stone Details</h3>
-              <span className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-white/32">
                 Identification
               </span>
             </div>
@@ -336,10 +336,10 @@ function AdminStoneDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-[26px] border border-white/10 bg-[#04101f]/70 p-4">
+          <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-white">Timeline</h3>
-              <span className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-white/32">
                 Record history
               </span>
             </div>
@@ -353,26 +353,26 @@ function AdminStoneDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-[26px] border border-white/10 bg-[#04101f]/70 p-4">
+          <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-white">Notes</h3>
-              <span className="text-[10px] uppercase tracking-[0.16em] text-gray-500">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-white/32">
                 Internal
               </span>
             </div>
 
-            <div className="mt-3 rounded-2xl border border-white/10 bg-[#020617] p-3.5 text-sm leading-6 text-gray-300">
+            <div className="mt-3 rounded-2xl border border-white/8 bg-[#020617] p-3.5 text-sm leading-6 text-white/68">
               {gem.notes || "No notes added"}
             </div>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#04101f]/70 p-4">
+          <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
             <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
               <button
                 type="button"
                 onClick={() => navigate(`/admin/edit/${gem.id}`)}
                 disabled={isDeleting || isTogglingSold}
-                className="w-full rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-400/15 disabled:opacity-50"
+                className="w-full rounded-2xl border border-amber-300/18 bg-amber-300/8 px-4 py-3 text-sm font-semibold text-amber-300 transition hover:bg-amber-300/12 disabled:opacity-50"
               >
                 Edit Gem
               </button>
@@ -383,7 +383,7 @@ function AdminStoneDetailPage() {
                 disabled={isDeleting || isTogglingSold}
                 className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:opacity-50 ${
                   gem.isSold
-                    ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                    ? "bg-emerald-300 text-[#09101c] hover:brightness-105"
                     : "bg-red-500 text-white hover:bg-red-400"
                 }`}
               >
@@ -407,14 +407,14 @@ function AdminStoneDetailPage() {
                 type="button"
                 onClick={() => navigate("/admin")}
                 disabled={isDeleting || isTogglingSold}
-                className="w-full rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:opacity-50"
+                className="w-full rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-3 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
               >
                 Close
               </button>
             </div>
 
             {showDeleteConfirm && (
-              <div className="mt-3 rounded-2xl border border-red-400/20 bg-red-500/10 p-4">
+              <div className="mt-3 rounded-2xl border border-red-400/18 bg-red-500/10 p-4">
                 <p className="text-sm font-semibold text-white">
                   Delete this gem?
                 </p>
@@ -436,7 +436,7 @@ function AdminStoneDetailPage() {
                     type="button"
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isDeleting}
-                    className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-white/20 hover:text-white disabled:opacity-50"
+                    className="rounded-2xl border border-white/8 bg-white/[0.025] px-5 py-3 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
                   >
                     Keep Gem
                   </button>

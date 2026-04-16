@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { Search } from "lucide-react";
+import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import {
   getExchangeRates,
   detectCurrency,
@@ -60,21 +62,21 @@ function getPrimaryBadge(item) {
   if (item?.isFeatured) {
     return {
       label: "Featured",
-      className: "border-amber-400/30 bg-amber-400/15 text-amber-300",
+      className: "border-amber-300/18 bg-amber-300/10 text-amber-200",
     };
   }
 
   if (item?.isCollectorPiece) {
     return {
       label: "Collector",
-      className: "border-fuchsia-400/30 bg-fuchsia-400/15 text-fuchsia-300",
+      className: "border-fuchsia-300/16 bg-fuchsia-300/8 text-fuchsia-200",
     };
   }
 
   if (isNewArrival(item)) {
     return {
       label: "New",
-      className: "border-sky-400/30 bg-sky-400/15 text-sky-300",
+      className: "border-sky-300/16 bg-sky-300/8 text-sky-200",
     };
   }
 
@@ -82,27 +84,11 @@ function getPrimaryBadge(item) {
   if (!Number.isNaN(salePrice) && salePrice <= PRICE_THRESHOLD) {
     return {
       label: "Under 5K",
-      className: "border-emerald-400/30 bg-emerald-400/15 text-emerald-300",
+      className: "border-emerald-300/16 bg-emerald-300/8 text-emerald-200",
     };
   }
 
   return null;
-}
-
-function FilterChip({ label, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-        active
-          ? "bg-amber-400 text-black shadow-[0_6px_20px_rgba(251,191,36,0.25)]"
-          : "border border-white/10 bg-white/[0.03] text-gray-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
-      }`}
-    >
-      {label}
-    </button>
-  );
 }
 
 function MarketplaceImage({ item }) {
@@ -111,7 +97,7 @@ function MarketplaceImage({ item }) {
 
   if (!imageSrc) {
     return (
-      <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+      <div className="flex h-full w-full items-center justify-center text-[11px] text-white/28">
         No image
       </div>
     );
@@ -120,17 +106,17 @@ function MarketplaceImage({ item }) {
   return (
     <>
       <div
-        className={`absolute inset-0 bg-white/[0.04] transition-opacity duration-500 ${
+        className={`absolute inset-0 transition-opacity duration-500 ${
           loaded ? "opacity-0" : "opacity-100"
         }`}
       >
-        <div className="h-full w-full animate-pulse bg-white/[0.06]" />
+        <div className="h-full w-full animate-pulse bg-white/[0.05]" />
       </div>
 
       <img
         src={imageSrc}
         alt={item.name || "Gemstone"}
-        className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.015] ${
+        className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.018] ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
         loading="lazy"
@@ -174,7 +160,7 @@ function MarketplaceCard({ item, rates, currency }) {
     .join(" • ");
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.98),rgba(4,14,30,0.96))] shadow-[0_12px_32px_rgba(0,0,0,0.16)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-amber-400/25">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] shadow-[0_14px_36px_rgba(0,0,0,0.16)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-amber-300/18 hover:shadow-[0_18px_42px_rgba(0,0,0,0.22)]">
       <Link to={`/stone/${item.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
           <MarketplaceImage item={item} />
@@ -191,30 +177,30 @@ function MarketplaceCard({ item, rates, currency }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
-        <div className="min-h-[34px]">
+      <div className="flex flex-1 flex-col p-3">
+        <div className="min-h-[36px]">
           <h2
-            className="line-clamp-2 text-[13px] font-semibold leading-[1.25] text-white"
+            className="line-clamp-2 text-[13px] font-semibold leading-[1.3] text-white"
             title={item.name || "Untitled"}
           >
             {item.name || "Untitled"}
           </h2>
         </div>
 
-        <div className="mt-0.5 h-[16px]">
+        <div className="mt-1 h-[16px]">
           <p
-            className="truncate text-[11px] text-gray-400"
+            className="truncate text-[11px] text-white/42"
             title={item.stoneType || item.category || "Gem"}
           >
             {item.stoneType || item.category || "Gem"}
           </p>
         </div>
 
-        <div className="mt-1.5 min-h-[18px]">
+        <div className="mt-2 min-h-[18px]">
           <p
             className={`truncate leading-tight ${
               isSmall
-                ? "text-[11px] font-medium text-gray-400"
+                ? "text-[11px] font-medium text-white/38"
                 : "text-[13px] font-semibold text-amber-300"
             }`}
             title={primaryPrice}
@@ -223,13 +209,13 @@ function MarketplaceCard({ item, rates, currency }) {
           </p>
 
           {secondaryPrice ? (
-            <p className="mt-0.5 text-[10px] text-gray-500">{secondaryPrice}</p>
+            <p className="mt-0.5 text-[10px] text-white/30">{secondaryPrice}</p>
           ) : null}
         </div>
 
-        <div className="mt-1 min-h-[28px]">
+        <div className="mt-1.5 min-h-[30px]">
           <p
-            className="line-clamp-2 text-[11px] leading-[1.35] text-gray-300"
+            className="line-clamp-2 text-[11px] leading-[1.4] text-white/52"
             title={detailText || "—"}
           >
             {detailText || "—"}
@@ -238,7 +224,7 @@ function MarketplaceCard({ item, rates, currency }) {
 
         <Link
           to={`/stone/${item.id}`}
-          className="mt-2.5 block w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-center text-[13px] font-medium text-white transition-[transform,border-color,background-color,color] duration-200 hover:border-amber-400/25 hover:bg-amber-400/10 hover:text-amber-200 active:scale-[0.98]"
+          className="mt-3 block w-full rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2.5 text-center text-[13px] font-medium text-white transition-[transform,border-color,background-color,color] duration-200 hover:border-amber-300/18 hover:bg-amber-300/8 hover:text-amber-200 active:scale-[0.98]"
         >
           View Stone
         </Link>
@@ -249,13 +235,13 @@ function MarketplaceCard({ item, rates, currency }) {
 
 function LoadingCard() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-2xl border border-white/10 bg-[#020617]/95">
-      <div className="aspect-square bg-white/5" />
+    <div className="animate-pulse overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))]">
+      <div className="aspect-square bg-white/[0.05]" />
       <div className="space-y-3 p-3">
-        <div className="h-4 w-2/3 rounded bg-white/5" />
-        <div className="h-3 w-1/2 rounded bg-white/5" />
-        <div className="h-4 w-1/3 rounded bg-white/5" />
-        <div className="h-8 rounded-xl bg-white/5" />
+        <div className="h-4 w-2/3 rounded bg-white/[0.05]" />
+        <div className="h-3 w-1/2 rounded bg-white/[0.05]" />
+        <div className="h-4 w-1/3 rounded bg-white/[0.05]" />
+        <div className="h-10 rounded-xl bg-white/[0.05]" />
       </div>
     </div>
   );
@@ -285,22 +271,16 @@ function Marketplace() {
         }
       } catch (error) {
         console.error("Failed to load public sale inventory:", error);
-        if (mounted) {
-          setItems([]);
-        }
+        if (mounted) setItems([]);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
 
     const loadRates = async () => {
       try {
         const data = await getExchangeRates();
-        if (mounted) {
-          setRates(data);
-        }
+        if (mounted) setRates(data);
       } catch (error) {
         console.error("Failed to load exchange rates:", error);
       }
@@ -339,7 +319,6 @@ function Marketplace() {
       case "new":
         result = result.filter((item) => isNewArrival(item));
         break;
-      case "all":
       default:
         break;
     }
@@ -386,79 +365,109 @@ function Marketplace() {
     ? "Try a different search term or collection."
     : "There are no public sale items in this collection right now.";
 
+  const filters = [
+    { key: "all", label: "All" },
+    { key: "featured", label: "Featured" },
+    { key: "new", label: "New" },
+    { key: "under5k", label: "Under 5K" },
+    { key: "precious", label: "Precious" },
+    { key: "semi", label: "Semi-Precious" },
+    { key: "collector", label: "Collector" },
+  ];
+
   return (
-    <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
-      <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-6">
+    <>
+      <Helmet>
+        <title>Collection | FacetVault</title>
+        <meta
+          name="description"
+          content="Browse the public gemstone collection on FacetVault."
+        />
+      </Helmet>
 
+      <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
+        <section className="relative pb-3 sm:pb-4">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_18%_0%,rgba(251,191,36,0.035),transparent_55%)]" />
 
-        <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-amber-300 sm:mt-2 sm:text-4xl">
-          Curated Gemstones
-        </h1>
-
-        <div className="mt-5 space-y-3">
-          <div className="relative">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search gemstones..."
-              className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors duration-200 focus:border-amber-400"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {[
-              { key: "all", label: "All" },
-              { key: "featured", label: "Featured" },
-              { key: "new", label: "New" },
-              { key: "under5k", label: "Under 5K" },
-              { key: "precious", label: "Precious" },
-              { key: "semi", label: "Semi-Precious" },
-              { key: "collector", label: "Collector" },
-            ].map((f) => (
-              <FilterChip
-                key={f.key}
-                label={f.label}
-                active={activeCollection === f.key}
-                onClick={() => setActiveCollection(f.key)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <LoadingCard key={index} />
-          ))}
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <section className="rounded-[28px] border border-white/10 bg-[#020617]/90 p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
-          <h2 className="text-xl font-semibold text-white">{emptyStateTitle}</h2>
-          <p className="mt-2 text-sm text-gray-400">{emptyStateText}</p>
-        </section>
-      ) : (
-        <>
-          <div className="flex items-center justify-between px-1">
-            <p className="text-sm text-gray-400">
-              {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"} available
+          <div className="relative z-10">
+            <p className="text-[10px] font-medium uppercase tracking-[0.34em] text-amber-300/65">
+              Curated Collection
             </p>
-          </div>
 
-          <div className="grid grid-cols-2 items-stretch gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {filteredItems.map((item) => (
-              <MarketplaceCard
-                key={item.id}
-                item={item}
-                rates={rates}
-                currency={currency}
-              />
+            <div className="mt-4">
+              <div className="relative max-w-xl">
+                <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-white/28">
+                  <Search size={14} strokeWidth={1.4} />
+                </div>
+
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search gemstones..."
+                  className="w-full border-0 border-b border-white/8 bg-transparent py-2.5 pl-6 pr-2 text-sm text-white placeholder:text-white/24 outline-none transition-[border-color,color] duration-200 focus:border-amber-300/30"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-5">
+              {filters.map((f) => {
+                const active = activeCollection === f.key;
+
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setActiveCollection(f.key)}
+                    className={`relative text-[11px] uppercase tracking-[0.2em] transition-colors duration-200 ${
+                      active
+                        ? "text-amber-300"
+                        : "text-white/38 hover:text-white/72"
+                    }`}
+                  >
+                    {active ? (
+                      <span className="absolute -left-2 top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full bg-amber-300" />
+                    ) : null}
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <LoadingCard key={index} />
             ))}
           </div>
-        </>
-      )}
-    </div>
+        ) : filteredItems.length === 0 ? (
+          <section className="rounded-[28px] border border-white/8 bg-white/[0.03] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
+            <h2 className="text-xl font-semibold text-white">{emptyStateTitle}</h2>
+            <p className="mt-2 text-sm text-white/45">{emptyStateText}</p>
+          </section>
+        ) : (
+          <>
+            <div className="mt-1 flex items-center justify-between px-0.5">
+              <p className="text-[13px] text-white/42">
+                {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"} available
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 items-stretch gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {filteredItems.map((item) => (
+                <MarketplaceCard
+                  key={item.id}
+                  item={item}
+                  rates={rates}
+                  currency={currency}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }
 

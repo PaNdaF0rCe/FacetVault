@@ -26,14 +26,14 @@ function formatPrice(value) {
 
 function EmptyCollectionState({ onAddGem }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#020617]/90 shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
-      <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.10),transparent_45%),linear-gradient(180deg,rgba(7,18,36,0.95),rgba(2,6,23,0.96))] px-5 py-8 sm:px-8 sm:py-10">
+    <section className="overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+      <div className="border-b border-white/8 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.08),transparent_42%),linear-gradient(180deg,rgba(7,18,36,0.9),rgba(2,6,23,0.96))] px-5 py-8 sm:px-8 sm:py-10">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 text-2xl text-amber-300 shadow-[0_10px_30px_rgba(251,191,36,0.08)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-300/18 bg-amber-300/8 text-2xl text-amber-300 shadow-[0_10px_28px_rgba(251,191,36,0.08)]">
             ◇
           </div>
 
-          <p className="mt-5 text-xs font-medium uppercase tracking-[0.22em] text-amber-400/80">
+          <p className="mt-5 text-[10px] font-medium uppercase tracking-[0.3em] text-amber-300/72">
             Start your vault
           </p>
 
@@ -41,7 +41,7 @@ function EmptyCollectionState({ onAddGem }) {
             Your collection is empty
           </h2>
 
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-400 sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/50 sm:text-base">
             Add your first gem to begin organizing your personal inventory with
             photos, stone details, pricing, and notes.
           </p>
@@ -49,7 +49,7 @@ function EmptyCollectionState({ onAddGem }) {
           <button
             type="button"
             onClick={onAddGem}
-            className="mt-6 inline-flex items-center justify-center rounded-2xl bg-amber-400 px-6 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300"
+            className="mt-6 inline-flex items-center justify-center rounded-2xl bg-amber-300 px-6 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105"
           >
             Add Your First Gem
           </button>
@@ -57,25 +57,25 @@ function EmptyCollectionState({ onAddGem }) {
       </div>
 
       <div className="grid gap-4 px-5 py-5 sm:grid-cols-3 sm:px-8 sm:py-6">
-        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+        <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
           <p className="text-sm font-semibold text-white">Track details</p>
-          <p className="mt-2 text-sm leading-6 text-gray-400">
+          <p className="mt-2 text-sm leading-6 text-white/48">
             Save stone type, cut, origin, carat weight, quantity, and collection
             notes in one place.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+        <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
           <p className="text-sm font-semibold text-white">Keep clear photos</p>
-          <p className="mt-2 text-sm leading-6 text-gray-400">
+          <p className="mt-2 text-sm leading-6 text-white/48">
             Attach an image to each entry so your collection stays easier to
             browse and identify.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
+        <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
           <p className="text-sm font-semibold text-white">Stay organized</p>
-          <p className="mt-2 text-sm leading-6 text-gray-400">
+          <p className="mt-2 text-sm leading-6 text-white/48">
             Filter and sort entries as your collection grows without losing
             track of what you own.
           </p>
@@ -87,22 +87,24 @@ function EmptyCollectionState({ onAddGem }) {
 
 function StatCard({ label, value, hint }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#04101f]/70 p-4">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-gray-400">
+    <div className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-4 backdrop-blur-md">
+      <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/42">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-      {hint && <p className="mt-1 text-sm text-gray-400">{hint}</p>}
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
+        {value}
+      </p>
+      {hint && <p className="mt-1 text-sm text-white/45">{hint}</p>}
     </div>
   );
 }
 
 function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#04101f]/75 px-3 py-3 sm:hidden">
-      <div className="grid grid-cols-3 divide-x divide-white/10 text-center">
+    <section className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.94),rgba(4,12,26,0.96))] px-3 py-3 sm:hidden">
+      <div className="grid grid-cols-3 divide-x divide-white/8 text-center">
         <div className="px-2">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">
             Gems
           </p>
           <p className="mt-1 text-sm font-semibold text-white">
@@ -111,7 +113,7 @@ function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
         </div>
 
         <div className="px-2">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">
             Carats
           </p>
           <p className="mt-1 text-sm font-semibold text-white">
@@ -120,7 +122,7 @@ function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
         </div>
 
         <div className="px-2">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">
             Value
           </p>
           <p className="mt-1 text-sm font-semibold text-white">
@@ -134,23 +136,23 @@ function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
 
 function LoadingSkeletons() {
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
-          className="rounded-2xl border border-white/8 bg-[#020617]/95 p-4"
+          className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] p-4"
         >
           <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-xl bg-white/5 sm:h-24 sm:w-24" />
+            <div className="h-20 w-20 rounded-[18px] bg-white/[0.05] sm:h-24 sm:w-24" />
             <div className="min-w-0 flex-1">
-              <div className="h-5 w-2/3 rounded bg-white/5" />
-              <div className="mt-3 h-4 w-1/3 rounded bg-white/5" />
+              <div className="h-5 w-2/3 rounded bg-white/[0.05]" />
+              <div className="mt-3 h-4 w-1/3 rounded bg-white/[0.05]" />
               <div className="mt-4 flex gap-2">
-                <div className="h-6 w-16 rounded-full bg-white/5" />
-                <div className="h-6 w-14 rounded-full bg-white/5" />
-                <div className="h-6 w-20 rounded-full bg-white/5" />
+                <div className="h-6 w-16 rounded-full bg-white/[0.05]" />
+                <div className="h-6 w-14 rounded-full bg-white/[0.05]" />
+                <div className="h-6 w-20 rounded-full bg-white/[0.05]" />
               </div>
-              <div className="mt-4 h-4 w-full rounded bg-white/5" />
+              <div className="mt-4 h-4 w-full rounded bg-white/[0.05]" />
             </div>
           </div>
         </div>
@@ -232,86 +234,88 @@ function Dashboard() {
   }, [gems]);
 
   return (
-    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
-      <Toast toast={toast} onClose={() => setToast(null)} />
+    <div className="min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+      <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+        <Toast toast={toast} onClose={() => setToast(null)} />
 
-      <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(7,18,36,0.78),rgba(4,14,30,0.72))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur sm:p-5 lg:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber-400/80 sm:text-xs">
-              Personal inventory
-            </p>
+        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md sm:p-5 lg:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-amber-300/72 sm:text-[11px]">
+                Personal inventory
+              </p>
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-amber-300 sm:text-4xl">
-              My Gem Collection
-            </h1>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                My Gem Collection
+              </h1>
 
-            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-400 sm:text-base">
-              Manage your stones, review details quickly, and keep your
-              collection organized in one place.
-            </p>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-white/50 sm:text-base">
+                Manage your stones, review details quickly, and keep your
+                collection organized in one place.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/admin/add")}
+              className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105 sm:self-start lg:self-auto"
+            >
+              Add New Gem
+            </button>
           </div>
+        </section>
 
-          <button
-            type="button"
-            onClick={() => navigate("/admin/add")}
-            className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-amber-300 sm:self-start lg:self-auto"
-          >
-            Add New Gem
-          </button>
-        </div>
-      </section>
-
-      {!isLoading && gems.length > 0 && (
-        <>
-          <MobileSummaryBar
-            totalEntries={totalEntries}
-            totalCarats={totalCarats}
-            totalValue={totalValue}
-          />
-
-          <section className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
-            <StatCard
-              label="Total Entries"
-              value={totalEntries.toLocaleString()}
-              hint="Across your current filtered view"
+        {!isLoading && gems.length > 0 && (
+          <>
+            <MobileSummaryBar
+              totalEntries={totalEntries}
+              totalCarats={totalCarats}
+              totalValue={totalValue}
             />
-            <StatCard
-              label="Total Carats"
-              value={formatCarat(totalCarats)}
-              hint="Combined carat weight"
-            />
-            <StatCard
-              label="Total Value"
-              value={formatPrice(totalValue)}
-              hint="Based on recorded price paid"
-            />
-          </section>
-        </>
-      )}
 
-      <FilterBar
-        filters={filters}
-        onFilterChange={setFilters}
-        totalCount={gems.length}
-        totalItems={gems.length}
-      />
+            <section className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
+              <StatCard
+                label="Total Entries"
+                value={totalEntries.toLocaleString()}
+                hint="Across your current filtered view"
+              />
+              <StatCard
+                label="Total Carats"
+                value={formatCarat(totalCarats)}
+                hint="Combined carat weight"
+              />
+              <StatCard
+                label="Total Value"
+                value={formatPrice(totalValue)}
+                hint="Based on recorded price paid"
+              />
+            </section>
+          </>
+        )}
 
-      {isLoading ? (
-        <LoadingSkeletons />
-      ) : gems.length === 0 ? (
-        <EmptyCollectionState onAddGem={() => navigate("/admin/add")} />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-          {gems.map((item) => (
-            <InventoryItemCard
-              key={item.id}
-              item={item}
-              onClick={() => navigate(`/admin/stone/${item.id}`)}
-            />
-          ))}
-        </div>
-      )}
+        <FilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          totalCount={gems.length}
+          totalItems={gems.length}
+        />
+
+        {isLoading ? (
+          <LoadingSkeletons />
+        ) : gems.length === 0 ? (
+          <EmptyCollectionState onAddGem={() => navigate("/admin/add")} />
+        ) : (
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {gems.map((item) => (
+              <InventoryItemCard
+                key={item.id}
+                item={item}
+                onClick={() => navigate(`/admin/stone/${item.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

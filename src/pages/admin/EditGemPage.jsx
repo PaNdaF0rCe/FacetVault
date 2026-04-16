@@ -62,12 +62,12 @@ function EditGemPage() {
     return (
       <div className="space-y-4">
         <Toast toast={toast} onClose={() => setToast(null)} />
-        <section className="rounded-3xl border border-white/10 bg-[#020617]/90 p-6">
-          <div className="h-6 w-40 rounded bg-white/5" />
-          <div className="mt-4 h-4 w-64 rounded bg-white/5" />
+        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-6">
+          <div className="h-6 w-40 rounded bg-white/[0.05]" />
+          <div className="mt-4 h-4 w-64 rounded bg-white/[0.05]" />
         </section>
-        <section className="rounded-3xl border border-white/10 bg-[#020617]/90 p-6">
-          <div className="h-64 rounded-3xl bg-white/5" />
+        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] p-6">
+          <div className="h-64 rounded-[26px] bg-white/[0.05]" />
         </section>
       </div>
     );
@@ -77,14 +77,14 @@ function EditGemPage() {
     return (
       <div className="space-y-4">
         <Toast toast={toast} onClose={() => setToast(null)} />
-        <section className="rounded-3xl border border-white/10 bg-[#020617]/90 p-6 text-center">
+        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] p-6 text-center">
           <p className="text-sm uppercase tracking-[0.2em] text-red-400/80">
             Edit unavailable
           </p>
           <h1 className="mt-2 text-2xl font-semibold text-white">
             Gem not found
           </h1>
-          <p className="mt-3 text-sm text-gray-400">
+          <p className="mt-3 text-sm text-white/45">
             This gem could not be loaded or you do not have access to it.
           </p>
         </section>
