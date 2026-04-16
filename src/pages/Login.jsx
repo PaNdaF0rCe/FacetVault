@@ -28,11 +28,6 @@ function Login() {
         setSubmitting(false);
         sessionStorage.removeItem("fv_google_redirect_pending");
       }
-      if (!loading && user) {
-        setSubmitting(false); // 🔥 add this
-        sessionStorage.removeItem("fv_google_redirect_pending");
-        navigate(getPostLoginRoute(), { replace: true });
-      }
     }
   }, [user, loading, isAdmin, navigate]);
 
@@ -52,21 +47,21 @@ function Login() {
 
       navigate(nextRoute, { replace: true });
     } catch (err) {
-        let message = "Something went wrong. Please try again.";
+      let message = "Something went wrong. Please try again.";
 
-        if (err.code === "auth/user-not-found") {
-          message = "No account found with this email.";
-        } else if (err.code === "auth/wrong-password") {
-          message = "Incorrect password. Please try again.";
-        } else if (err.code === "auth/invalid-email") {
-          message = "Please enter a valid email address.";
-        } else if (err.code === "auth/invalid-credential") {
-          message = "Invalid email or password.";
-        }
-
-        setError(message);
-        setSubmitting(false);
+      if (err.code === "auth/user-not-found") {
+        message = "No account found with this email.";
+      } else if (err.code === "auth/wrong-password") {
+        message = "Incorrect password. Please try again.";
+      } else if (err.code === "auth/invalid-email") {
+        message = "Please enter a valid email address.";
+      } else if (err.code === "auth/invalid-credential") {
+        message = "Invalid email or password.";
       }
+
+      setError(message);
+      setSubmitting(false);
+    }
   };
 
   const handleGoogle = async () => {
@@ -75,8 +70,6 @@ function Login() {
 
     try {
       await loginWithGoogle();
-      // ❌ DO NOT navigate here
-      // Let useEffect handle it when user updates
     } catch (err) {
       setError(err.message || "Google sign-in failed.");
       setSubmitting(false);
@@ -84,80 +77,87 @@ function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#13203f_0%,#0b1224_35%,#060b16_100%)] px-4 py-8">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950/70 p-8 shadow-2xl backdrop-blur">
-        <div className="mb-8 text-center">
-          <p className="text-sm uppercase tracking-[0.25em] text-amber-300">
-            FacetVault
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold text-white">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Sign in to continue.
-          </p>
-        </div>
+    <div className="relative flex min-h-[calc(100vh-2rem)] items-center justify-center overflow-x-hidden px-4 py-6 sm:px-6 sm:py-10">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-[-120px] h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-amber-400/8 blur-3xl" />
+        <div className="absolute bottom-[-80px] right-[-60px] h-[240px] w-[240px] rounded-full bg-blue-500/10 blur-3xl" />
+      </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
+      <div className="relative w-full max-w-md">
+        <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(5,12,24,0.94),rgba(4,10,20,0.88))] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.34)] backdrop-blur sm:p-7">
+          <div className="mb-6 text-center sm:mb-7">
+            <p className="text-[11px] uppercase tracking-[0.26em] text-amber-300/90">
+              FacetVault
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+              Welcome back
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Sign in to continue.
+            </p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            required
-            placeholder="Email address"
-            className="lux-input w-full"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          {error && (
+            <div className="mb-4 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              {error}
+            </div>
+          )}
 
-          <input
-            type="password"
-            required
-            placeholder="Password"
-            className="lux-input w-full"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <input
+              type="email"
+              required
+              placeholder="Email address"
+              className="lux-input w-full"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+              type="password"
+              required
+              placeholder="Password"
+              className="lux-input w-full"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="lux-button-primary mt-1 w-full"
+            >
+              {submitting ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          <div className="my-5 flex items-center gap-3 sm:my-6">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
+              or
+            </span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
 
           <button
-            type="submit"
+            type="button"
+            onClick={handleGoogle}
             disabled={submitting}
-            className="lux-button-primary w-full"
+            className="lux-button-secondary w-full"
           >
-            {submitting ? "Signing in..." : "Sign in"}
+            {submitting ? "Opening Google..." : "Continue with Google"}
           </button>
-        </form>
 
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="text-xs uppercase tracking-widest text-slate-500">
-            or
-          </span>
-          <div className="h-px flex-1 bg-white/10" />
+          <p className="mt-5 text-center text-sm text-slate-400 sm:mt-6">
+            Don&apos;t have an account?{" "}
+            <Link
+              to="/signup"
+              className="font-medium text-amber-300 transition hover:text-amber-200"
+            >
+              Create one
+            </Link>
+          </p>
         </div>
-
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={submitting}
-          className="lux-button-secondary w-full"
-        >
-          {submitting ? "Opening Google..." : "Continue with Google"}
-        </button>
-
-        <p className="mt-6 text-center text-sm text-slate-400">
-          Don&apos;t have an account?{" "}
-          <Link
-            to="/signup"
-            className="font-medium text-amber-300 hover:text-amber-200"
-          >
-            Create one
-          </Link>
-        </p>
       </div>
     </div>
   );

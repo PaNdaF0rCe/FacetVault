@@ -42,9 +42,13 @@ function DetailBlock({ label, value }) {
   if (!value && value !== 0) return null;
 
   return (
-    <div className="lux-card p-3">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="mt-1 text-sm text-white">{value}</p>
+    <div className="lux-card p-3 sm:p-4">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 text-sm leading-relaxed text-white sm:text-[15px]">
+        {value}
+      </p>
     </div>
   );
 }
@@ -112,9 +116,14 @@ function StoneDetail() {
 
   if (!item) {
     return (
-      <div className="p-6 text-white">
-        <button onClick={() => navigate(-1)}>← Back</button>
-        <p className="mt-4">Stone not found</p>
+      <div className="mx-auto max-w-6xl px-4 py-6 text-white sm:px-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-sm text-amber-300 transition hover:text-amber-200"
+        >
+          ← Back
+        </button>
+        <p className="mt-4 text-sm text-gray-300">Stone not found</p>
       </div>
     );
   }
@@ -143,41 +152,47 @@ function StoneDetail() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-6 text-white">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-5 text-white sm:space-y-8 sm:px-6 sm:py-6">
       <button
         onClick={() => navigate(-1)}
-        className="text-sm text-amber-300 hover:text-amber-200"
+        className="inline-flex text-sm text-amber-300 transition hover:text-amber-200"
       >
         ← Back
       </button>
 
-      <div>
-        <h1 className="text-3xl font-semibold text-white">{item.name}</h1>
+      <div className="space-y-3">
+        <div>
+          <h1 className="text-2xl font-semibold leading-tight text-white sm:text-3xl">
+            {item.name}
+          </h1>
 
-        {item.stoneCode && (
-          <p className="mt-1 text-xs text-gray-500">{item.stoneCode}</p>
-        )}
+          {item.stoneCode && (
+            <p className="mt-1 text-xs tracking-[0.14em] text-gray-500">
+              {item.stoneCode}
+            </p>
+          )}
+        </div>
 
-        <div className="mt-3 flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {item.isFeatured && (
-            <span className="rounded-full bg-amber-400/20 px-2 py-1 text-xs text-amber-300">
+            <span className="rounded-full bg-amber-400/20 px-2.5 py-1 text-xs text-amber-300">
               Featured
             </span>
           )}
           {item.isCollectorPiece && (
-            <span className="rounded-full bg-purple-400/20 px-2 py-1 text-xs text-purple-300">
+            <span className="rounded-full bg-purple-400/20 px-2.5 py-1 text-xs text-purple-300">
               Collector
             </span>
           )}
           {isNew(item) && (
-            <span className="rounded-full bg-blue-400/20 px-2 py-1 text-xs text-blue-300">
+            <span className="rounded-full bg-blue-400/20 px-2.5 py-1 text-xs text-blue-300">
               New
             </span>
           )}
         </div>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-8">
         <div className="lux-card overflow-hidden">
           <img
             src={item.imageUrl}
@@ -186,18 +201,20 @@ function StoneDetail() {
           />
         </div>
 
-        <div>
+        <div className="flex flex-col">
           <p className="text-sm text-gray-400">Price</p>
-          <p className="mt-1 text-3xl font-semibold text-amber-300">{primaryPrice}</p>
+          <p className="mt-1 text-2xl font-semibold leading-tight text-amber-300 sm:text-3xl">
+            {primaryPrice}
+          </p>
 
           {secondaryPrice ? (
             <p className="mt-2 text-sm text-gray-400">{secondaryPrice}</p>
           ) : null}
 
           {showDisclaimer ? (
-            <p className="mt-2 text-xs text-gray-500">
-              Converted from LKR using daily exchange rates. Final confirmed price may
-              vary slightly.
+            <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              Converted from LKR using daily exchange rates. Final confirmed
+              price may vary slightly.
             </p>
           ) : null}
 
@@ -205,12 +222,12 @@ function StoneDetail() {
             href={buildWhatsAppLink(item)}
             target="_blank"
             rel="noreferrer"
-            className="lux-button-primary mt-6 w-full"
+            className="lux-button-primary mt-5 w-full sm:mt-6"
           >
             Secure this stone
           </a>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2">
             <DetailBlock label="Stone Type" value={item.stoneType} />
             <DetailBlock label="Category" value={item.category} />
             <DetailBlock label="Carat" value={formatCarat(item.carat)} />
@@ -220,9 +237,11 @@ function StoneDetail() {
           </div>
 
           {item.notes && (
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <p className="mb-1 text-sm text-gray-400">Notes</p>
-              <p className="text-sm leading-relaxed text-white">{item.notes}</p>
+              <p className="text-sm leading-relaxed text-white/90">
+                {item.notes}
+              </p>
             </div>
           )}
         </div>
@@ -230,21 +249,30 @@ function StoneDetail() {
 
       {related.length > 0 && (
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-white">Related Stones</h2>
+          <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">
+            Related Stones
+          </h2>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((r) => (
               <Link
                 key={r.id}
                 to={`/stone/${r.id}`}
-                className="lux-card overflow-hidden"
+                className="lux-card overflow-hidden transition hover:-translate-y-0.5"
               >
                 <img
                   src={r.imageUrl}
                   className="aspect-square w-full object-cover"
                   alt={r.name}
                 />
-                <div className="p-3 text-sm text-white">{r.name}</div>
+                <div className="p-3">
+                  <p className="line-clamp-1 text-sm font-medium text-white">
+                    {r.name}
+                  </p>
+                  {r.stoneCode ? (
+                    <p className="mt-1 text-xs text-gray-500">{r.stoneCode}</p>
+                  ) : null}
+                </div>
               </Link>
             ))}
           </div>
