@@ -1,6 +1,52 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 
+const SUPPORTED_CURRENCIES = ["LKR", "USD", "CAD", "GBP", "EUR", "AUD"];
+
+const COUNTRY_TO_CURRENCY = {
+  LK: "LKR",
+  US: "USD",
+  CA: "CAD",
+  GB: "GBP",
+  AU: "AUD",
+  DE: "EUR",
+  FR: "EUR",
+  IT: "EUR",
+  ES: "EUR",
+  NL: "EUR",
+  BE: "EUR",
+  IE: "EUR",
+  PT: "EUR",
+  AT: "EUR",
+  FI: "EUR",
+  GR: "EUR",
+};
+
+const TIMEZONE_TO_CURRENCY = {
+  "Asia/Colombo": "LKR",
+  "America/Toronto": "CAD",
+  "America/Vancouver": "CAD",
+  "America/Halifax": "CAD",
+  "America/Winnipeg": "CAD",
+  "Europe/London": "GBP",
+  "Australia/Sydney": "AUD",
+  "Australia/Melbourne": "AUD",
+  "Australia/Perth": "AUD",
+  "America/New_York": "USD",
+  "America/Chicago": "USD",
+  "America/Denver": "USD",
+  "America/Los_Angeles": "USD",
+};
+
+const FORMAT_LOCALE_BY_CURRENCY = {
+  LKR: "en-LK",
+  USD: "en-US",
+  CAD: "en-CA",
+  GBP: "en-GB",
+  EUR: "en-IE",
+  AUD: "en-AU",
+};
+
 export async function getExchangeRates() {
   const ref = doc(db, "siteSettings", "exchangeRates");
   const snap = await getDoc(ref);
@@ -9,22 +55,63 @@ export async function getExchangeRates() {
   return snap.data();
 }
 
-export function detectCurrency() {
-  try {
-    const locale = Intl.NumberFormat().resolvedOptions().locale?.toUpperCase() || "";
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+function getRegionFromLocale(locale) {
+  if (!locale || typeof locale !== "string") return null;
 
-    if (
-      locale.includes("LK") ||
-      timeZone === "Asia/Colombo"
-    ) {
-      return "LKR";
+  const parts = locale.replace("_", "-").split("-");
+  const region = parts[1]?.toUpperCase();
+
+  return region && region.length === 2 ? region : null;
+}
+
+function getBestRegionFromBrowser() {
+  try {
+    const candidates = [
+      Intl.NumberFormat().resolvedOptions().locale,
+      ...(navigator.languages || []),
+      navigator.language,
+      navigator.userLanguage,
+    ].filter(Boolean);
+
+    for (const locale of candidates) {
+      const region = getRegionFromLocale(locale);
+      if (region) return region;
     }
 
-    if (locale.includes("CA")) return "CAD";
-    if (locale.includes("GB")) return "GBP";
-    if (locale.includes("AU")) return "AUD";
-    if (locale.includes("US")) return "USD";
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getBrowserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+export function detectCurrency() {
+  try {
+    const savedCurrency =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("preferredCurrency")
+        : null;
+
+    if (savedCurrency && SUPPORTED_CURRENCIES.includes(savedCurrency)) {
+      return savedCurrency;
+    }
+
+    const region = getBestRegionFromBrowser();
+    if (region && COUNTRY_TO_CURRENCY[region]) {
+      return COUNTRY_TO_CURRENCY[region];
+    }
+
+    const timeZone = getBrowserTimeZone();
+    if (timeZone && TIMEZONE_TO_CURRENCY[timeZone]) {
+      return TIMEZONE_TO_CURRENCY[timeZone];
+    }
 
     return "LKR";
   } catch {
@@ -32,21 +119,47 @@ export function detectCurrency() {
   }
 }
 
+export function setPreferredCurrency(currency) {
+  if (
+    typeof window !== "undefined" &&
+    SUPPORTED_CURRENCIES.includes(currency)
+  ) {
+    window.localStorage.setItem("preferredCurrency", currency);
+  }
+}
+
+export function clearPreferredCurrency() {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem("preferredCurrency");
+  }
+}
+
+export function getPreferredCurrency() {
+  return detectCurrency();
+}
+
 export function convertFromLkr(amount, currency, rates) {
-  if (!amount || currency === "LKR") return amount;
+  if (amount == null) return null;
+  if (!currency || currency === "LKR") return amount;
 
   const rate = rates?.[currency];
-  if (!rate) return null;
+  if (typeof rate !== "number") return null;
 
   return amount * rate;
 }
 
 export function formatCurrency(amount, currency) {
-  if (!amount) return null;
+  if (amount == null) return null;
 
-  return new Intl.NumberFormat(undefined, {
+  const safeCurrency = SUPPORTED_CURRENCIES.includes(currency)
+    ? currency
+    : "LKR";
+
+  const locale = FORMAT_LOCALE_BY_CURRENCY[safeCurrency] || "en-LK";
+
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency,
-    maximumFractionDigits: amount < 100 ? 2 : 0,
+    currency: safeCurrency,
+    maximumFractionDigits: safeCurrency === "LKR" ? 0 : amount < 100 ? 2 : 0,
   }).format(amount);
 }
