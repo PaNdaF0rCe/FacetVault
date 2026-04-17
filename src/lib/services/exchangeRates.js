@@ -94,24 +94,20 @@ function getBrowserTimeZone() {
 
 export function detectCurrency() {
   try {
-    const savedCurrency =
+    const saved =
       typeof window !== "undefined"
-        ? window.localStorage.getItem("preferredCurrency")
+        ? localStorage.getItem("preferredCurrency")
         : null;
 
-    if (savedCurrency && SUPPORTED_CURRENCIES.includes(savedCurrency)) {
-      return savedCurrency;
-    }
+    if (saved) return saved;
 
-    const region = getBestRegionFromBrowser();
-    if (region && COUNTRY_TO_CURRENCY[region]) {
-      return COUNTRY_TO_CURRENCY[region];
-    }
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    const timeZone = getBrowserTimeZone();
-    if (timeZone && TIMEZONE_TO_CURRENCY[timeZone]) {
-      return TIMEZONE_TO_CURRENCY[timeZone];
-    }
+    if (timeZone === "Asia/Colombo") return "LKR";
+    if (timeZone.includes("Toronto") || timeZone.includes("Vancouver")) return "CAD";
+    if (timeZone.includes("London")) return "GBP";
+    if (timeZone.includes("Sydney") || timeZone.includes("Melbourne")) return "AUD";
+    if (timeZone.includes("New_York") || timeZone.includes("Chicago") || timeZone.includes("Los_Angeles")) return "USD";
 
     return "LKR";
   } catch {
