@@ -16,8 +16,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    console.log("Frankfurter response:", data);
-
     if (!response.ok) {
       return res.status(response.status).json({
         error: "Rate API request failed",
@@ -25,28 +23,45 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!data || typeof data !== "object" || !data.rates) {
+    if (!Array.isArray(data) || data.length === 0) {
       return res.status(500).json({
         error: "Rate API returned unexpected data",
         details: data,
       });
     }
 
+    const rates = {};
+    for (const item of data) {
+      if (item?.quote && typeof item.rate === "number") {
+        rates[item.quote] = item.rate;
+      }
+    }
+
+    if (Object.keys(rates).length === 0) {
+      return res.status(500).json({
+        error: "No valid rates found in API response",
+        details: data,
+      });
+    }
+
+    const sourceDate = data[0]?.date || null;
+    const base = data[0]?.base || "LKR";
+
     const db = admin.firestore();
 
     await db.collection("siteSettings").doc("exchangeRates").set({
-      base: "LKR",
-      rates: data.rates,
-      sourceDate: data.date || null,
+      base,
+      rates,
+      sourceDate,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return res.status(200).json({
       success: true,
       saved: {
-        base: "LKR",
-        rates: data.rates,
-        sourceDate: data.date || null,
+        base,
+        rates,
+        sourceDate,
       },
     });
   } catch (err) {
