@@ -8,13 +8,12 @@ if (!admin.apps.length) {
   });
 }
 
-export async function GET(req) {
+export default async function handler(req, res) {
   try {
-    const res = await fetch(
+    const response = await fetch(
       "https://api.frankfurter.app/latest?from=LKR&to=USD,CAD,GBP,EUR,AUD"
     );
-
-    const data = await res.json();
+    const data = await response.json();
 
     const db = admin.firestore();
 
@@ -25,8 +24,8 @@ export async function GET(req) {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return res.status(200).json({ success: true });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return res.status(500).json({ error: err.message });
   }
 }
