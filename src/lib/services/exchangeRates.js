@@ -1,7 +1,15 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-const SUPPORTED_CURRENCIES = ["LKR", "USD", "CAD", "GBP", "EUR", "AUD"];
+const SUPPORTED_CURRENCIES = [
+  "LKR",
+  "USD",
+  "CAD",
+  "GBP",
+  "EUR",
+  "AUD",
+  "AED",
+];
 
 const COUNTRY_TO_CURRENCY = {
   LK: "LKR",
@@ -45,6 +53,7 @@ const FORMAT_LOCALE_BY_CURRENCY = {
   GBP: "en-GB",
   EUR: "en-IE",
   AUD: "en-AU",
+  AED: "en-AE",
 };
 
 export async function getExchangeRates() {
@@ -103,15 +112,47 @@ export function detectCurrency() {
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+    // Sri Lanka (always priority)
     if (timeZone === "Asia/Colombo") return "LKR";
-    if (timeZone.includes("Toronto") || timeZone.includes("Vancouver")) return "CAD";
-    if (timeZone.includes("London")) return "GBP";
-    if (timeZone.includes("Sydney") || timeZone.includes("Melbourne")) return "AUD";
-    if (timeZone.includes("New_York") || timeZone.includes("Chicago") || timeZone.includes("Los_Angeles")) return "USD";
 
-    return "LKR";
+    // Major currency regions
+    if (timeZone.startsWith("America/")) {
+      // Canada (check first)
+      if (
+        timeZone.includes("Toronto") ||
+        timeZone.includes("Vancouver") ||
+        timeZone.includes("Winnipeg") ||
+        timeZone.includes("Halifax")
+      ) return "CAD";
+
+      return "USD"; // rest of Americas → USD
+    }
+
+    if (timeZone.startsWith("Europe/")) {
+      if (timeZone === "Europe/London") return "GBP";
+      return "EUR"; // rest of Europe → EUR
+    }
+
+    if (timeZone.startsWith("Australia/")) {
+      return "AUD";
+    }
+
+    if (timeZone === "Asia/Dubai") return "AED";
+
+    // Asia fallback (India, SEA, etc.)
+    if (timeZone.startsWith("Asia/")) {
+      return "USD";
+    }
+
+    // Africa fallback
+    if (timeZone.startsWith("Africa/")) {
+      return "USD";
+    }
+
+    // Default fallback
+    return "USD";
   } catch {
-    return "LKR";
+    return "USD";
   }
 }
 
