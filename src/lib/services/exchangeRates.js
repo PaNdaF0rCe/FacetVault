@@ -137,7 +137,7 @@ export function detectCurrency() {
       return "AUD";
     }
 
-    if (timeZone === "Asia/Dubai") return "AED";
+    if (timeZone.includes("Dubai")) return "AED";
 
     // Asia fallback (India, SEA, etc.)
     if (timeZone.startsWith("Asia/")) {
