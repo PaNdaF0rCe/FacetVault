@@ -68,9 +68,9 @@ function getBestRegionFromBrowser() {
   try {
     const candidates = [
       Intl.NumberFormat().resolvedOptions().locale,
-      ...(navigator.languages || []),
-      navigator.language,
-      navigator.userLanguage,
+      ...(typeof navigator !== "undefined" ? navigator.languages || [] : []),
+      typeof navigator !== "undefined" ? navigator.language : null,
+      typeof navigator !== "undefined" ? navigator.userLanguage : null,
     ].filter(Boolean);
 
     for (const locale of candidates) {
@@ -162,4 +162,54 @@ export function formatCurrency(amount, currency) {
     currency: safeCurrency,
     maximumFractionDigits: safeCurrency === "LKR" ? 0 : amount < 100 ? 2 : 0,
   }).format(amount);
+}
+
+/**
+ * Main helper for UI:
+ * - If user is in LKR, only show LKR
+ * - If user is in another currency, show converted value
+ * - Symbol changes automatically with currency
+ */
+export function getDisplayPrice(amountLkr, rates) {
+  if (amountLkr == null) {
+    return {
+      currency: "LKR",
+      amount: null,
+      formatted: null,
+      isConverted: false,
+      showConverted: false,
+    };
+  }
+
+  const currency = getPreferredCurrency();
+
+  if (currency === "LKR") {
+    return {
+      currency: "LKR",
+      amount: amountLkr,
+      formatted: formatCurrency(amountLkr, "LKR"),
+      isConverted: false,
+      showConverted: false,
+    };
+  }
+
+  const converted = convertFromLkr(amountLkr, currency, rates);
+
+  if (converted == null) {
+    return {
+      currency: "LKR",
+      amount: amountLkr,
+      formatted: formatCurrency(amountLkr, "LKR"),
+      isConverted: false,
+      showConverted: false,
+    };
+  }
+
+  return {
+    currency,
+    amount: converted,
+    formatted: formatCurrency(converted, currency),
+    isConverted: true,
+    showConverted: true,
+  };
 }
