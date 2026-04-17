@@ -11,7 +11,7 @@ if (!admin.apps.length) {
 export default async function handler(req, res) {
   try {
     const response = await fetch(
-      "https://api.frankfurter.app/latest?from=LKR&to=USD,CAD,GBP,EUR,AUD"
+      "https://api.frankfurter.dev/v2/rates?base=LKR&quotes=USD,CAD,GBP,EUR,AUD"
     );
 
     const data = await response.json();
