@@ -136,7 +136,7 @@ function MobileSummaryBar({ totalEntries, totalCarats, totalValue }) {
 
 function LoadingSkeletons() {
   return (
-    <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
@@ -235,7 +235,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
-      <div className="space-y-4 sm:space-y-5 lg:space-y-6">
+      <div className="mx-auto w-full max-w-[1600px] space-y-4 sm:space-y-5 lg:space-y-6 2xl:px-2">
         <Toast toast={toast} onClose={() => setToast(null)} />
 
         <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md sm:p-5 lg:p-6">
@@ -273,7 +273,7 @@ function Dashboard() {
               totalValue={totalValue}
             />
 
-            <section className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
+            <section className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-3 xl:gap-5">
               <StatCard
                 label="Total Entries"
                 value={totalEntries.toLocaleString()}
@@ -305,7 +305,7 @@ function Dashboard() {
         ) : gems.length === 0 ? (
           <EmptyCollectionState onAddGem={() => navigate("/admin/add")} />
         ) : (
-          <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
             {gems.map((item) => (
               <InventoryItemCard
                 key={item.id}

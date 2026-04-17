@@ -69,7 +69,7 @@ function CardImage({ item }) {
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        className={`h-full w-full object-cover transition-[transform,opacity] duration-300 group-hover:scale-[1.03] ${
+        className={`h-full w-full object-cover transition-[transform,opacity] duration-300 group-hover:scale-[1.018] ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -90,7 +90,7 @@ function InventoryItemCard({ item, onClick }) {
       <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
         <CardImage item={item} />
 
-        <div className="absolute left-2 top-2 flex max-w-[78%] flex-wrap gap-1">
+        <div className="absolute left-2.5 top-2.5 flex max-w-[78%] flex-wrap gap-1">
           {item.isSold ? (
             <StatusBadge className="bg-red-500 text-white">Sold</StatusBadge>
           ) : (
@@ -111,14 +111,14 @@ function InventoryItemCard({ item, onClick }) {
         </div>
 
         {caratText && (
-          <div className="absolute right-2 top-2 rounded-full border border-amber-300/18 bg-[rgba(9,16,28,0.82)] px-2 py-1 text-[10px] font-medium text-amber-300 backdrop-blur">
+          <div className="absolute right-2.5 top-2.5 rounded-full border border-amber-300/18 bg-[rgba(9,16,28,0.82)] px-2 py-1 text-[10px] font-medium text-amber-300 backdrop-blur">
             {caratText}
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-3">
-        <div className="min-h-[38px]">
+      <div className="flex flex-1 flex-col p-3 lg:p-3.5">
+        <div className="min-h-[36px]">
           <h3
             className="line-clamp-2 text-[13px] font-semibold leading-[1.3] text-white"
             title={item.name || "Untitled Gem"}
@@ -127,28 +127,43 @@ function InventoryItemCard({ item, onClick }) {
           </h3>
         </div>
 
-        <div className="mt-1 min-h-[16px]">
+        <div className="mt-1 h-[16px]">
           <p
-            className="truncate text-[11px] text-white/45"
+            className="truncate text-[11px] text-white/42"
             title={item.stoneType || item.category || "Uncategorized"}
           >
             {item.stoneType || item.category || "Uncategorized"}
           </p>
         </div>
 
-        {item.stoneCode && (
-          <p className="mt-1 text-[10px] tracking-[0.04em] text-white/32">
-            {item.stoneCode}
-          </p>
-        )}
+        <div className="mt-1 h-[14px]">
+          {item.stoneCode ? (
+            <p className="truncate text-[10px] tracking-[0.04em] text-white/32">
+              {item.stoneCode}
+            </p>
+          ) : null}
+        </div>
 
-        {priceText && (
-          <p className="mt-2 text-[13px] font-semibold text-amber-300">
-            {priceText}
-          </p>
-        )}
+        <div className="mt-2 min-h-[18px]">
+          {priceText ? (
+            <p className="truncate text-[13px] font-semibold text-amber-300">
+              {priceText}
+            </p>
+          ) : (
+            <p className="text-[11px] font-medium text-white/38">—</p>
+          )}
+        </div>
 
-        <div className="mt-2 flex min-h-[52px] flex-wrap gap-1.5">
+        <div className="mt-2 hidden min-h-[30px] lg:block">
+          <p
+            className="line-clamp-2 text-[11px] leading-[1.4] text-white/52"
+            title={[item.color, item.cut, item.origin].filter(Boolean).join(" • ") || "—"}
+          >
+            {[item.color, item.cut, item.origin].filter(Boolean).join(" • ") || "—"}
+          </p>
+        </div>
+
+        <div className="mt-2 flex min-h-[52px] flex-wrap gap-1.5 lg:hidden">
           <DetailPill>{item.color}</DetailPill>
           <DetailPill>{item.cut}</DetailPill>
           <DetailPill>{item.origin}</DetailPill>

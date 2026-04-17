@@ -81,7 +81,7 @@ export async function getFilteredInventory(userId, filters = {}) {
   const q = query(
     collection(db, "inventory"),
     where("userId", "==", userId),
-    orderBy("updatedAt", "desc")
+    orderBy("createdAt", "desc")
   );
 
   const snapshot = await getDocs(q);
@@ -205,7 +205,9 @@ export async function getPublicSaleInventory() {
 
   const items = snapshot.docs.map(mapDoc).filter(isVisiblePublicItem);
 
-  return sortByUpdatedDesc(items);
+  return [...items].sort(
+    (a, b) => normalizeDateValue(b.createdAt) - normalizeDateValue(a.createdAt)
+  );
 }
 
 /* ---------------- PUBLIC SINGLE ITEM ---------------- */

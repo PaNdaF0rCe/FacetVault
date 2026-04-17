@@ -81,9 +81,9 @@ function getPrimaryBadge(item) {
   }
 
   const salePrice = Number(item?.salePrice ?? item?.pricePaid);
-  if (!Number.isNaN(salePrice) && salePrice <= PRICE_THRESHOLD) {
+  if (!Number.isNaN(salePrice) && salePrice > 0 && salePrice <= PRICE_THRESHOLD) {
     return {
-      label: "Under 5K",
+      label: "Value",
       className: "border-emerald-300/16 bg-emerald-300/8 text-emerald-200",
     };
   }
@@ -121,7 +121,7 @@ function MarketplaceImage({ item }) {
         }`}
         loading="lazy"
         decoding="async"
-        sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1536px) 25vw, 20vw"
         onLoad={() => setLoaded(true)}
       />
     </>
@@ -135,20 +135,26 @@ function MarketplaceCard({ item, rates, currency }) {
   let secondaryPrice = null;
   let isSmall = true;
 
-  if (!Number.isNaN(salePrice) && salePrice > 0) {
-    if (currency === "LKR" || !rates?.rates) {
-      primaryPrice = `LKR ${salePrice.toLocaleString()}`;
-      isSmall = false;
-    } else {
-      const converted = convertFromLkr(salePrice, currency, rates.rates);
-
-      if (converted) {
-        primaryPrice = `Approx. ${formatCurrency(converted, currency)}`;
-        secondaryPrice = `LKR ${salePrice.toLocaleString()}`;
-        isSmall = false;
-      } else {
+  if (!Number.isNaN(salePrice)) {
+    if (salePrice === 0 || salePrice > 5000) {
+      primaryPrice = "View price";
+      secondaryPrice = null;
+      isSmall = true;
+    } else if (salePrice > 0) {
+      if (currency === "LKR" || !rates?.rates) {
         primaryPrice = `LKR ${salePrice.toLocaleString()}`;
         isSmall = false;
+      } else {
+        const converted = convertFromLkr(salePrice, currency, rates.rates);
+
+        if (converted) {
+          primaryPrice = `Approx. ${formatCurrency(converted, currency)}`;
+          secondaryPrice = `LKR ${salePrice.toLocaleString()}`;
+          isSmall = false;
+        } else {
+          primaryPrice = `LKR ${salePrice.toLocaleString()}`;
+          isSmall = false;
+        }
       }
     }
   }
@@ -177,7 +183,7 @@ function MarketplaceCard({ item, rates, currency }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-3">
+      <div className="flex flex-1 flex-col p-3 lg:p-3.5">
         <div className="min-h-[36px]">
           <h2
             className="line-clamp-2 text-[13px] font-semibold leading-[1.3] text-white"
@@ -307,10 +313,16 @@ function Marketplace() {
       case "collector":
         result = result.filter((item) => item.isCollectorPiece === true);
         break;
+      case "premium":
+        result = result.filter((item) => {
+          const price = Number(item?.salePrice ?? item?.pricePaid);
+          return !Number.isNaN(price) && (price === 0 || price > PRICE_THRESHOLD);
+        });
+        break;
       case "under5k":
         result = result.filter((item) => {
           const price = Number(item?.salePrice ?? item?.pricePaid);
-          return !Number.isNaN(price) && price <= PRICE_THRESHOLD;
+          return !Number.isNaN(price) && price > 0 && price <= PRICE_THRESHOLD;
         });
         break;
       case "featured":
@@ -348,8 +360,10 @@ function Marketplace() {
         return "No featured stones found";
       case "collector":
         return "No collector pieces found";
+      case "premium":
+        return "No premium stones found";
       case "under5k":
-        return "No stones under LKR 5,000 found";
+        return "No value stones found";
       case "new":
         return "No new arrivals found";
       case "precious":
@@ -369,7 +383,8 @@ function Marketplace() {
     { key: "all", label: "All" },
     { key: "featured", label: "Featured" },
     { key: "new", label: "New" },
-    { key: "under5k", label: "Under 5K" },
+    { key: "premium", label: "Premium" },
+    { key: "under5k", label: "Value" },
     { key: "precious", label: "Precious" },
     { key: "semi", label: "Semi-Precious" },
     { key: "collector", label: "Collector" },
@@ -385,7 +400,7 @@ function Marketplace() {
         />
       </Helmet>
 
-      <div className="space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 2xl:px-10">
         <section className="relative pb-3 sm:pb-4">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_18%_0%,rgba(251,191,36,0.035),transparent_55%)]" />
 
@@ -418,16 +433,20 @@ function Marketplace() {
                   <button
                     key={f.key}
                     onClick={() => setActiveCollection(f.key)}
-                    className={`relative text-[11px] uppercase tracking-[0.2em] transition-colors duration-200 ${
+                    className={`group relative pb-1 text-[11px] uppercase tracking-[0.2em] transition-colors duration-200 ${
                       active
                         ? "text-amber-300"
                         : "text-white/38 hover:text-white/72"
                     }`}
                   >
-                    {active ? (
-                      <span className="absolute -left-2 top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full bg-amber-300" />
-                    ) : null}
                     {f.label}
+                    <span
+                      className={`absolute bottom-0 left-0 h-[2px] rounded-full transition-all duration-200 ${
+                        active
+                          ? "w-full bg-amber-300 opacity-100"
+                          : "w-0 bg-white/30 opacity-0 group-hover:w-full group-hover:opacity-100"
+                      }`}
+                    />
                   </button>
                 );
               })}
@@ -436,7 +455,7 @@ function Marketplace() {
         </section>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
             {Array.from({ length: 6 }).map((_, index) => (
               <LoadingCard key={index} />
             ))}
@@ -454,7 +473,7 @@ function Marketplace() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 items-stretch gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-2 items-stretch gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
               {filteredItems.map((item) => (
                 <MarketplaceCard
                   key={item.id}
