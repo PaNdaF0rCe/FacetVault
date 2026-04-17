@@ -9,7 +9,7 @@
       "destination": "https://gfacetvault.firebaseapp.com/__/firebase/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api).*)",
       "destination": "/index.html"
     }
   ],
