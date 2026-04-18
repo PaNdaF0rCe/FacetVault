@@ -15,6 +15,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <App />
+        <Analytics />
+        <SpeedInsights />
       </QueryClientProvider>
     </HelmetProvider>
   </React.StrictMode>
