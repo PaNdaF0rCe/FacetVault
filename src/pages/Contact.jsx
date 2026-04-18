@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { MessageCircle, Phone } from "lucide-react";
+import { CONTACT_PHONE, WHATSAPP_NUMBER } from "../config/appConfig";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -51,7 +52,7 @@ function ContactCard({ icon, title, text, action, link }) {
 
 export default function Contact() {
   const whatsappLink =
-    "https://wa.me/94774126030?text=Hi%20I%27m%20interested%20in%20a%20stone%20from%20FacetVault";
+    `https://wa.me/${WHATSAPP_NUMBER}?text=Hi%20I%27m%20interested%20in%20a%20stone%20from%20FacetVault`
 
   return (
     <>
@@ -115,7 +116,7 @@ export default function Contact() {
             title="Direct Contact"
             text="Prefer a more direct approach? Reach out via phone for immediate assistance and discussion."
             action="Call now"
-            link="tel:+94774126030"
+            link="tel:${CONTACT_PHONE}"
           />
         </motion.section>
 

@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, MessageCircle } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
+import { WHATSAPP_NUMBER } from "../config/appConfig";
 
 function formatMoney(value) {
   if (value === null || value === undefined || value === "") return null;
@@ -125,7 +126,7 @@ ${stone.name || stone.stoneType || "Gemstone"}
 ${stone.stoneCode ? `Code: ${stone.stoneCode}` : ""}
 ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
 
-    return `https://wa.me/94774126030?text=${encodeURIComponent(msg)}`;
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   }, [stone]);
 
   if (isLoading) {
