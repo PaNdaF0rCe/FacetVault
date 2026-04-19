@@ -1,262 +1,337 @@
-# StockSmart AI: AI-Powered Inventory Management and Recipe Generation
+import {
+collection,
+query,
+where,
+orderBy,
+getDocs,
+getDoc,
+doc,
+deleteDoc,
+updateDoc,
+limit,
+} from "firebase/firestore";
+import { ref, deleteObject } from "firebase/storage";
+import { db, storage } from "./config";
+import { createDocument, getDocument } from "./db-operations";
+import { uploadImageWithThumbnail } from "./storage-utils";
+import { UnauthorizedError } from "./errors";
 
-StockSmart AI is a React-based web application that combines intelligent inventory management with AI-driven recipe generation. It helps users track their food inventory and create recipes based on available ingredients.
+/* ---------------- HELPERS ---------------- */
 
-This application leverages Firebase for backend services and Google's Generative AI for recipe creation. It offers a user-friendly interface for managing inventory items, generating recipes, and maintaining a collection of saved recipes.
+function generateStoneCode() {
+const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+let code = "FV-";
+for (let i = 0; i < 5; i++) {
+code += chars.charAt(Math.floor(Math.random() * chars.length));
+}
+return code;
+}
 
-## Repository Structure
+function normalizeDateValue(value) {
+if (!value) return 0;
+if (typeof value?.toDate === "function") return value.toDate().getTime();
+if (value instanceof Date) return value.getTime();
+const parsed = new Date(value).getTime();
+return Number.isNaN(parsed) ? 0 : parsed;
+}
 
-The project follows a standard React application structure with additional directories for Firebase configuration and custom components:
+function mapDoc(docSnap) {
+return {
+id: docSnap.id,
+...docSnap.data(),
+};
+}
 
-```
-.
-├── src/
-│   ├── components/
-│   ├── contexts/
-│   ├── lib/
-│   │   ├── firebase/
-│   │   ├── gemini/
-│   │   └── services/
-│   ├── pages/
-│   ├── App.jsx
-│   └── main.jsx
-├── .env
-├── eslint.config.js
-├── index.html
-├── package.json
-├── postcss.config.js
-├── tailwind.config.js
-└── vite.config.js
-```
+function sortByUpdatedDesc(items) {
+return [...items].sort(
+(a, b) => normalizeDateValue(b.updatedAt) - normalizeDateValue(a.updatedAt)
+);
+}
 
-Key Files:
-- `src/App.jsx`: Main application component and routing setup
-- `src/pages/Dashboard.jsx`: Inventory management interface
-- `src/pages/RecipeGenerator.jsx`: AI-powered recipe generation page
-- `src/lib/firebase/config.js`: Firebase configuration and initialization
-- `package.json`: Project dependencies and scripts
+/* ---------------- NEW VISIBILITY LOGIC ---------------- */
 
-## Usage Instructions
+function isVisiblePublicItem(item) {
+if (!item?.isForSale) return false;
 
-### Installation
+// AVAILABLE
+if (!item?.isSold) return true;
 
-1. Ensure you have Node.js (v14 or later) and npm installed.
-2. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd stockSmart AI
-   ```
-3. Install dependencies:
-   ```
-   npm install
-   ```
-4. Create a `.env` file in the project root and add your Firebase and Google AI configuration:
-   ```
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_GOOGLE_AI_API_KEY=your_google_ai_api_key
-   ```
+// SOLD → still visible if within 7 days
+if (item?.deleteAfter) {
+return normalizeDateValue(item.deleteAfter) > Date.now();
+}
 
-### Running the Application
+return false;
+}
 
-To start the development server:
+/* ---------------- BACKFILL FUNCTION ---------------- */
 
-```
-npm run dev
-```
+export async function backfillStoneCodes(userId) {
+const q = query(collection(db, "inventory"), where("userId", "==", userId));
+const snapshot = await getDocs(q);
 
-The application will be available at `http://localhost:5173` (or another port if 5173 is in use).
+const updates = [];
 
-### Building for Production
+snapshot.docs.forEach((docSnap) => {
+const data = docSnap.data();
 
-To create a production build:
+    if (!data.stoneCode) {
+      updates.push(
+        updateDoc(doc(db, "inventory", docSnap.id), {
+          stoneCode: generateStoneCode(),
+        })
+      );
+    }
+});
 
-```
-npm run build
-```
+await Promise.all(updates);
+}
 
-The built files will be in the `dist/` directory.
+/* ---------------- INVENTORY FETCH ---------------- */
 
-### Linting
+export async function getFilteredInventory(userId, filters = {}) {
+const q = query(
+collection(db, "inventory"),
+where("userId", "==", userId),
+orderBy("createdAt", "desc")
+);
 
-To run the linter:
+const snapshot = await getDocs(q);
 
-```
-npm run lint
-```
+let items = snapshot.docs.map(mapDoc);
 
-### Testing
+if (filters.search?.trim()) {
+const term = filters.search.toLowerCase();
+items = items.filter(
+(i) =>
+(i.name || "").toLowerCase().includes(term) ||
+(i.stoneCode || "").toLowerCase().includes(term)
+);
+}
 
-Currently, there are no specified test scripts in the `package.json`. It's recommended to add testing configurations and scripts for maintaining code quality.
+return items;
+}
 
-## Data Flow
+/* ---------------- CREATE ---------------- */
 
-1. User Authentication:
-   - Users sign up or log in through the Firebase Authentication service.
-   - The `AuthContext` manages the user's authentication state throughout the application.
+export async function uploadInventoryItem(filePayload, metadata, userId) {
+let uploadResult = null;
 
-2. Inventory Management:
-   - Users can add, view, update, and delete inventory items.
-   - Inventory data is stored in Firebase Firestore.
-   - The `Dashboard` component fetches and displays inventory items.
-   - `InventoryUploadModal` allows users to add new items, including image uploads to Firebase Storage.
+if (filePayload?.original) {
+uploadResult = await uploadImageWithThumbnail(filePayload, userId);
+}
 
-3. Recipe Generation:
-   - Users input available ingredients and dietary restrictions in the `RecipeGenerator` component.
-   - The application sends a request to the Google Generative AI model via the `geminiModel`.
-   - The AI generates a recipe based on the input, which is then parsed and displayed to the user.
-   - Users can save generated recipes, which are stored in Firestore.
+const now = new Date();
 
-4. Data Persistence:
-   - All user data, including inventory items and saved recipes, are stored in Firebase Firestore.
-   - Images are stored in Firebase Storage.
+const itemData = {
+...metadata,
+userId,
+stoneCode: metadata.stoneCode || generateStoneCode(),
 
-```
-[User] <-> [React Frontend] <-> [Firebase Auth]
-                            <-> [Firebase Firestore]
-                            <-> [Firebase Storage]
-                            <-> [Google Generative AI]
-```
+    isSold: false,
+    soldAt: null,
+    deleteAfter: null,
 
-## Deployment
+    imageUrl: uploadResult?.imageUrl || null,
+    imagePath: uploadResult?.imagePath || null,
+    thumbnailUrl: uploadResult?.thumbnailUrl || null,
+    thumbnailPath: uploadResult?.thumbnailPath || null,
 
-The application is built using Vite, which provides an optimized build for deployment. After running `npm run build`, the `dist/` directory can be deployed to any static hosting service that supports single-page applications.
-
-Recommended deployment platforms include Firebase Hosting, Vercel, or Netlify. Ensure that you configure your deployment platform to handle client-side routing properly.
-
-## Infrastructure
-
-The application relies on the following Firebase services:
-
-- Firebase Authentication: User authentication and management
-- Firebase Firestore: Database for storing inventory items and recipes
-- Firebase Storage: File storage for inventory item images
-
-The Firebase configuration is centralized in `src/lib/firebase/config.js`:
-
-```javascript
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+    createdAt: now,
+    updatedAt: now,
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-```
+return createDocument("inventory", itemData);
+}
 
-Ensure that your Firebase project is set up with the necessary services and that the configuration in your `.env` file matches your Firebase project settings.
+/* ---------------- UPDATE ---------------- */
 
-## Future Iterations
+export async function updateInventoryItem(
+itemId,
+updatedData,
+userId,
+newImageFile = null
+) {
+const existing = await getDocument("inventory", itemId);
 
-### Planned Features and Enhancements
+if (!existing) throw new Error("Item not found");
+if (existing.userId !== userId) throw new UnauthorizedError();
 
-#### Recipe Management Enhancements
-- [ ] Advanced recipe filtering and categorization
-  - Filter by meal type (breakfast, lunch, dinner, dessert)
-  - Filter by dietary restrictions (vegetarian, vegan, gluten-free)
-  - Custom category tags
-- [ ] Recipe scaling functionality
-- [ ] Cooking time and difficulty level indicators
+const refDoc = doc(db, "inventory", itemId);
 
-#### Shopping List Generator
-- [ ] Automatic ingredient aggregation from multiple recipes
-- [ ] Smart quantity combining and unit conversion
-- [ ] Customizable shopping categories
-- [ ] Export shopping list to PDF/email
-- [ ] Integration with popular grocery delivery services
+let imageUpdate = {};
 
-#### Meal Planning Calendar
-- [ ] Drag-and-drop weekly meal planner
-- [ ] Automatic shopping list generation based on meal plan
-- [ ] Meal prep instructions and timelines
-- [ ] Nutritional balance tracking across meals
-- [ ] Calendar integration (Google Calendar, iCal)
+if (newImageFile?.original) {
+const upload = await uploadImageWithThumbnail(newImageFile, userId);
 
-#### Recipe Sharing and Social Features
-- [ ] Public/private recipe sharing options
-- [ ] Shareable recipe links
-- [ ] Social media integration
-- [ ] Recipe collections and favorites
-- [ ] Follow other users and their recipe collections
+    imageUpdate = {
+      imageUrl: upload.imageUrl,
+      imagePath: upload.imagePath,
+      thumbnailUrl: upload.thumbnailUrl,
+      thumbnailPath: upload.thumbnailPath,
+    };
+}
 
-#### Recipe Rating and Comments
-- [ ] 5-star rating system
-- [ ] User reviews and comments
-- [ ] Photo upload for recipe results
-- [ ] Recipe modification suggestions
-- [ ] Most popular recipes showcase
+await updateDoc(refDoc, {
+...updatedData,
+...imageUpdate,
+stoneCode: existing.stoneCode || generateStoneCode(),
+isSold: !!updatedData.isSold,
+updatedAt: new Date(),
+});
 
-#### Nutritional Information Analysis
-- [ ] Detailed nutritional breakdown
-- [ ] Dietary goal tracking
-- [ ] Allergen warnings
-- [ ] Macro and micronutrient analysis
-- [ ] Custom dietary restriction warnings
+return true;
+}
 
-#### Additional Planned Improvements
-- [ ] Mobile app development
-- [ ] Print-friendly recipe cards
-- [ ] Voice command integration
-- [ ] Recipe version control (track modifications)
-- [ ] Ingredient price tracking and budget planning
-- [ ] Integration with smart kitchen appliances
-- [ ] Meal prep video tutorials
-- [ ] Seasonal recipe recommendations
-- [ ] Inventory management integration
-- [ ] Recipe scaling calculator
+/* ---------------- NEW: MARK AS SOLD ---------------- */
 
-### Technical Enhancements
-- [ ] Performance optimization
-- [ ] Offline functionality
-- [ ] Enhanced search capabilities
-- [ ] API integrations with nutrition databases
-- [ ] Mobile responsive design improvements
-- [ ] Accessibility improvements
-- [ ] Enhanced data analytics
-- [ ] User preference learning
+export async function markItemAsSold(
+itemId,
+{ sellingPrice, expenses = 0, notes = "" },
+userId
+) {
+const item = await getDocument("inventory", itemId);
 
-### Infrastructure Updates
-- [ ] Automated testing implementation
-- [ ] CI/CD pipeline improvements
-- [ ] Database optimization
-- [ ] Caching implementation
-- [ ] Security enhancements
-- [ ] Backup and recovery improvements
-- [ ] Monitoring and logging enhancements
+if (!item) throw new Error("Item not found");
+if (item.userId !== userId) throw new UnauthorizedError();
 
-### User Experience Improvements
-- [ ] Enhanced onboarding process
-- [ ] Improved navigation
-- [ ] Dark mode support
-- [ ] Customizable user dashboard
-- [ ] Interactive tutorials
-- [ ] Enhanced error handling and user feedback
-- [ ] Accessibility compliance (WCAG 2.1)
-- [ ] Expiration Date Reminder/Notification
+const now = new Date();
 
-### Integration Possibilities
-- [ ] Smart device integration
-- [ ] Social media sharing
-- [ ] Email notification system
-- [ ] Calendar integration
-- [ ] Shopping platform integration
-- [ ] Nutrition tracking apps integration
+// 7 days later
+const deleteAfter = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-This roadmap represents our vision for future development. Features will be prioritized based on user feedback and resource availability. We welcome community suggestions and contributions to help make these improvements possible.
+const costPrice = item.pricePaid || 0;
+const profit = sellingPrice - costPrice - expenses;
 
-Note: This is a living document and will be updated as new ideas and needs are identified.
+/* -------- CREATE SALES RECORD -------- */
+await createDocument("sales", {
+userId,
+inventoryId: itemId,
+
+    stoneName: item.name || "",
+    stoneCode: item.stoneCode || "",
+    category: item.category || "",
+    stoneType: item.stoneType || "",
+    color: item.color || "",
+    cut: item.cut || "",
+    origin: item.origin || "",
+    carat: item.carat || 0,
+    quantitySold: item.quantity || 1,
+
+    costPrice,
+    sellingPrice,
+    expenses,
+    profit,
+    currency: item.currency || "LKR",
+
+    soldAt: now,
+    notes,
+});
+
+/* -------- UPDATE INVENTORY -------- */
+await updateDoc(doc(db, "inventory", itemId), {
+isSold: true,
+soldAt: now,
+deleteAfter,
+updatedAt: now,
+});
+
+return true;
+}
+
+/* ---------------- DELETE ---------------- */
+
+export async function deleteInventoryItem(itemId, userId) {
+const item = await getDocument("inventory", itemId);
+
+if (!item) throw new Error("Item not found");
+if (item.userId !== userId) throw new UnauthorizedError();
+
+await deleteDoc(doc(db, "inventory", itemId));
+
+if (item.imagePath) {
+try {
+await deleteObject(ref(storage, item.imagePath));
+} catch {}
+}
+
+if (item.thumbnailPath) {
+try {
+await deleteObject(ref(storage, item.thumbnailPath));
+} catch {}
+}
+
+return true;
+}
+
+/* ---------------- PUBLIC LIST ---------------- */
+
+export async function getPublicSaleInventory() {
+const q = query(
+collection(db, "inventory"),
+where("isForSale", "==", true)
+);
+
+const snapshot = await getDocs(q);
+
+const items = snapshot.docs.map(mapDoc).filter(isVisiblePublicItem);
+
+return [...items].sort(
+(a, b) => normalizeDateValue(b.createdAt) - normalizeDateValue(a.createdAt)
+);
+}
+
+/* ---------------- PUBLIC SINGLE ITEM ---------------- */
+
+export async function getPublicStoneById(itemId) {
+const docRef = doc(db, "inventory", itemId);
+const snapshot = await getDoc(docRef);
+
+if (!snapshot.exists()) return null;
+
+const item = mapDoc(snapshot);
+
+if (!isVisiblePublicItem(item)) return null;
+
+return item;
+}
+
+/* ---------------- RELATED ITEMS ---------------- */
+
+export async function getRelatedPublicStones(item, maxItems = 4) {
+if (!item) return [];
+
+const results = [];
+const seen = new Set([item.id]);
+
+const runQuery = async (field, value) => {
+if (!value || results.length >= maxItems) return;
+
+    const q = query(
+      collection(db, "inventory"),
+      where("isForSale", "==", true),
+      where(field, "==", value),
+      orderBy("updatedAt", "desc"),
+      limit(Math.max(maxItems * 2, 8))
+    );
+
+    const snapshot = await getDocs(q);
+
+    for (const docSnap of snapshot.docs) {
+      const candidate = mapDoc(docSnap);
+
+      if (!isVisiblePublicItem(candidate)) continue;
+      if (seen.has(candidate.id)) continue;
+
+      seen.add(candidate.id);
+      results.push(candidate);
+
+      if (results.length >= maxItems) break;
+    }
+};
+
+await runQuery("stoneType", item.stoneType);
+await runQuery("category", item.category);
+
+return results.slice(0, maxItems);
+}

@@ -6,6 +6,7 @@ import { getDocument } from "../../lib/firebase/db-operations";
 import {
   deleteInventoryItem,
   updateInventoryItem,
+  markItemAsSold,
 } from "../../lib/firebase/inventory-operations";
 import { updateUserStats } from "../../lib/firebase/users";
 
@@ -75,6 +76,11 @@ function AdminStoneDetailPage() {
   const [isTogglingSold, setIsTogglingSold] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showSoldModal, setShowSoldModal] = useState(false);
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [expenses, setExpenses] = useState("");
+  const [notes, setNotes] = useState("");
+  const [sellingLoading, setSellingLoading] = useState(false);
 
   const loadGem = useCallback(async () => {
     if (!id || !user?.uid) return;
@@ -84,7 +90,17 @@ function AdminStoneDetailPage() {
     try {
       const item = await getDocument("inventory", id);
 
-      if (item.userId !== user.uid) {
+      if (!item) {
+        setToast({
+          type: "error",
+          title: "Not found",
+          message: "This gem could not be found.",
+        });
+        setGem(null);
+        return;
+      }
+
+      if (item.userId !== user?.uid) {
         setToast({
           type: "error",
           title: "Access denied",
@@ -94,19 +110,23 @@ function AdminStoneDetailPage() {
         return;
       }
 
+      // 🔥 THIS WAS MISSING — CRITICAL
       setGem(item);
+
     } catch (error) {
       console.error("Error loading gem:", error);
+
       setToast({
         type: "error",
         title: "Load failed",
-        message: "Could not load this gem.",
+        message: "Failed to load this gem.",
       });
+
       setGem(null);
     } finally {
       setIsLoading(false);
     }
-  }, [id, user?.uid]);
+  }, [id, user]);
 
   useEffect(() => {
     loadGem();
@@ -117,24 +137,23 @@ function AdminStoneDetailPage() {
 
     try {
       setIsDeleting(true);
+
       await deleteInventoryItem(gem.id, user.uid);
-      await updateUserStats(user.uid);
 
       setToast({
         type: "success",
-        title: "Gem deleted",
-        message: "The gem was removed from your collection.",
+        title: "Deleted",
+        message: "Gem deleted successfully.",
       });
 
-      window.setTimeout(() => {
-        navigate("/admin");
-      }, 300);
+      navigate("/admin");
     } catch (error) {
       console.error("Error deleting gem:", error);
+
       setToast({
         type: "error",
         title: "Delete failed",
-        message: "Failed to delete gem.",
+        message: "Could not delete this gem.",
       });
     } finally {
       setIsDeleting(false);
@@ -177,6 +196,54 @@ function AdminStoneDetailPage() {
       setIsTogglingSold(false);
     }
   };
+
+    const handleMarkAsSold = async () => {
+      if (!gem?.id || !user?.uid || sellingLoading) return;
+      if (!sellingPrice) {
+        setToast({
+          type: "error",
+          title: "Missing price",
+          message: "Enter the selling price first.",
+        });
+        return;
+      }
+
+      try {
+        setSellingLoading(true);
+
+        await markItemAsSold(
+          gem.id,
+          {
+            sellingPrice: Number(sellingPrice),
+            expenses: Number(expenses || 0),
+            notes,
+          },
+          user.uid
+        );
+
+        await loadGem();
+
+        setShowSoldModal(false);
+        setSellingPrice("");
+        setExpenses("");
+        setNotes("");
+
+        setToast({
+          type: "success",
+          title: "Marked as sold",
+          message: "This gem will stay visible as sold for 7 days.",
+        });
+      } catch (error) {
+        console.error("Error marking gem as sold:", error);
+        setToast({
+          type: "error",
+          title: "Sale failed",
+          message: "Could not mark this gem as sold.",
+        });
+      } finally {
+        setSellingLoading(false);
+      }
+    };
 
   if (isLoading) {
     return (
@@ -377,22 +444,25 @@ function AdminStoneDetailPage() {
                 Edit Gem
               </button>
 
-              <button
-                type="button"
-                onClick={handleToggleSold}
-                disabled={isDeleting || isTogglingSold}
-                className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:opacity-50 ${
-                  gem.isSold
-                    ? "bg-emerald-300 text-[#09101c] hover:brightness-105"
-                    : "bg-red-500 text-white hover:bg-red-400"
-                }`}
-              >
-                {isTogglingSold
-                  ? "Updating..."
-                  : gem.isSold
-                  ? "Mark Available"
-                  : "Mark Sold"}
-              </button>
+              {!gem.isSold ? (
+                <button
+                  type="button"
+                  onClick={() => setShowSoldModal(true)}
+                  disabled={isDeleting || isTogglingSold}
+                  className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
+                >
+                  Mark as Sold
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleToggleSold}
+                  disabled={isDeleting || isTogglingSold}
+                  className="w-full rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:opacity-50"
+                >
+                  {isTogglingSold ? "Updating..." : "Mark Available"}
+                </button>
+              )}
 
               <button
                 type="button"
@@ -446,6 +516,59 @@ function AdminStoneDetailPage() {
           </section>
         </div>
       </div>
+      {showSoldModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#020617] p-5 shadow-2xl">
+            <h2 className="mb-4 text-lg font-semibold text-white">Mark as Sold</h2>
+
+            <div className="space-y-3">
+              <input
+                type="number"
+                placeholder="Selling Price"
+                value={sellingPrice}
+                onChange={(e) => setSellingPrice(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none"
+              />
+
+              <input
+                type="number"
+                placeholder="Expenses (optional)"
+                value={expenses}
+                onChange={(e) => setExpenses(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none"
+              />
+
+              <textarea
+                placeholder="Notes (optional)"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none"
+              />
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowSoldModal(false)}
+                disabled={sellingLoading}
+                className="flex-1 rounded-xl border border-white/10 py-2 text-sm text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleMarkAsSold}
+                disabled={sellingLoading}
+                className="flex-1 rounded-xl bg-emerald-500 py-2 text-sm font-medium text-white"
+              >
+                {sellingLoading ? "Saving..." : "Confirm Sale"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

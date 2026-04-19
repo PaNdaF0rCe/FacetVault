@@ -80,6 +80,7 @@ function getPrimaryBadge(item) {
     };
   }
 
+  const isSold = item?.isSold === true;
   const salePrice = Number(item?.salePrice ?? item?.pricePaid);
   if (!Number.isNaN(salePrice) && salePrice > 0 && salePrice <= PRICE_THRESHOLD) {
     return {
@@ -129,13 +130,18 @@ function MarketplaceImage({ item }) {
 }
 
 function MarketplaceCard({ item, rates, currency }) {
+  const isSold = item?.isSold === true;
   const salePrice = Number(item?.salePrice ?? item?.pricePaid);
 
   let primaryPrice = "View price";
   let secondaryPrice = null;
   let isSmall = true;
 
-  if (!Number.isNaN(salePrice)) {
+  if (isSold) {
+    primaryPrice = "Recently sold";
+    secondaryPrice = null;
+    isSmall = false;
+  } else if (!Number.isNaN(salePrice)) {
     if (salePrice === 0 || salePrice > 5000) {
       primaryPrice = "View price";
       secondaryPrice = null;
@@ -172,6 +178,12 @@ function MarketplaceCard({ item, rates, currency }) {
           <MarketplaceImage item={item} />
 
           <div className="absolute right-2.5 top-2.5 flex flex-col items-end gap-1.5">
+            {item?.isSold ? (
+              <span className="inline-flex rounded-full border border-rose-300/20 bg-rose-300/12 px-2 py-0.5 text-[10px] font-medium text-rose-200 backdrop-blur">
+                Sold
+              </span>
+            ) : null}
+
             {badge ? (
               <span
                 className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium backdrop-blur ${badge.className}`}
@@ -230,9 +242,13 @@ function MarketplaceCard({ item, rates, currency }) {
 
         <Link
           to={`/stone/${item.id}`}
-          className="mt-3 block w-full rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2.5 text-center text-[13px] font-medium text-white transition-[transform,border-color,background-color,color] duration-200 hover:border-amber-300/18 hover:bg-amber-300/8 hover:text-amber-200 active:scale-[0.98]"
+          className={`mt-3 block w-full rounded-xl px-3 py-2.5 text-center text-[13px] font-medium transition-[transform,border-color,background-color,color] duration-200 active:scale-[0.98] ${
+            item?.isSold
+              ? "border border-rose-300/12 bg-rose-300/8 text-rose-200 hover:border-rose-300/20 hover:bg-rose-300/12"
+              : "border border-white/8 bg-white/[0.025] text-white hover:border-amber-300/18 hover:bg-amber-300/8 hover:text-amber-200"
+          }`}
         >
-          View Stone
+          {item?.isSold ? "View Sold Stone" : "View Stone"}
         </Link>
       </div>
     </article>
@@ -269,10 +285,7 @@ function Marketplace() {
         const data = await getPublicSaleInventory();
 
         if (mounted) {
-          const safeItems = Array.isArray(data)
-            ? data.filter((item) => item?.isSold !== true)
-            : [];
-
+          const safeItems = Array.isArray(data) ? data : [];
           setItems(safeItems);
         }
       } catch (error) {
@@ -469,7 +482,7 @@ function Marketplace() {
           <>
             <div className="mt-1 flex items-center justify-between px-0.5">
               <p className="text-[13px] text-white/42">
-                {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"} available
+                {filteredItems.length} item{filteredItems.length === 1 ? "" : "s"} shown
               </p>
             </div>
 

@@ -256,12 +256,21 @@ function Dashboard() {
             </div>
 
             <button
+                          type="button"
+                          onClick={() => navigate("/admin/add")}
+                          className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105 sm:self-start lg:self-auto"
+                        >
+                          Add New Gem
+                        </button>
+
+            <button
               type="button"
-              onClick={() => navigate("/admin/add")}
-              className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105 sm:self-start lg:self-auto"
+              onClick={() => navigate("/admin/reports")}
+              className="mt-3 inline-flex items-center justify-center rounded-2xl bg-white/10 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white/20"
             >
-              Add New Gem
+              Reports & Profit
             </button>
+
           </div>
         </section>
 

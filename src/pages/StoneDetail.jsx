@@ -32,13 +32,14 @@ function DetailRow({ label, value }) {
 
 function RelatedCard({ stone }) {
   const salePrice = Number(stone?.salePrice ?? stone?.pricePaid);
+  const isSold = stone?.isSold === true;
 
   return (
     <Link
       to={`/stone/${stone.id}`}
       className="group overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-amber-300/18 hover:shadow-[0_18px_42px_rgba(0,0,0,0.22)]"
     >
-      <div className="aspect-[4/3] overflow-hidden bg-[#04101f]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#04101f]">
         <img
           src={stone.thumbnailUrl || stone.imageUrl}
           alt={stone.name || stone.stoneType || "Gemstone"}
@@ -46,6 +47,12 @@ function RelatedCard({ stone }) {
           loading="lazy"
           decoding="async"
         />
+
+        {isSold && (
+          <div className="absolute right-3 top-3 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
+            Sold
+          </div>
+        )}
       </div>
 
       <div className="space-y-1.5 p-4">
@@ -57,7 +64,11 @@ function RelatedCard({ stone }) {
           {stone.stoneType || stone.category || "Gem"}
         </p>
 
-        {!Number.isNaN(salePrice) && salePrice > 0 ? (
+        {isSold ? (
+          <p className="text-[13px] font-semibold text-rose-200">
+            Recently sold
+          </p>
+        ) : !Number.isNaN(salePrice) && salePrice > 0 ? (
           <p className="text-[13px] font-semibold text-amber-300">
             {formatMoney(salePrice)}
           </p>
@@ -117,9 +128,10 @@ export default function StoneDetail() {
   }, [inventory, stone]);
 
   const salePrice = Number(stone?.salePrice ?? stone?.pricePaid);
+  const isSold = stone?.isSold === true;
 
   const whatsappLink = useMemo(() => {
-    if (!stone) return "#";
+    if (!stone || isSold) return "#";
 
     const msg = `Hi, I'm interested in this stone from FacetVault:
 ${stone.name || stone.stoneType || "Gemstone"}
@@ -127,7 +139,7 @@ ${stone.stoneCode ? `Code: ${stone.stoneCode}` : ""}
 ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
 
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-  }, [stone]);
+  }, [stone, isSold]);
 
   if (isLoading) {
     return (
@@ -177,13 +189,19 @@ ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
         </Link>
 
         <div className="grid items-start gap-10 lg:grid-cols-[1.16fr_0.84fr]">
-          <div className="overflow-hidden rounded-[32px] border border-white/8 bg-[#04101f] shadow-[0_22px_50px_rgba(0,0,0,0.18)]">
+          <div className="relative overflow-hidden rounded-[32px] border border-white/8 bg-[#04101f] shadow-[0_22px_50px_rgba(0,0,0,0.18)]">
             <img
               src={stone.imageUrl || stone.thumbnailUrl}
               alt={stone.name || stone.stoneType || "Gemstone"}
               className="h-full w-full object-cover"
               decoding="async"
             />
+
+            {isSold && (
+              <div className="absolute right-4 top-4 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
+                Sold
+              </div>
+            )}
           </div>
 
           <div className="pt-1">
@@ -201,7 +219,11 @@ ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
               </p>
             )}
 
-            {!Number.isNaN(salePrice) && salePrice > 0 ? (
+            {isSold ? (
+              <p className="mt-5 text-2xl font-semibold text-rose-200">
+                Recently sold
+              </p>
+            ) : !Number.isNaN(salePrice) && salePrice > 0 ? (
               <p className="mt-5 text-2xl font-semibold text-amber-300">
                 {formatMoney(salePrice)}
               </p>
@@ -226,15 +248,21 @@ ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
               </p>
             ) : null}
 
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98]"
-            >
-              <MessageCircle size={18} />
-              Inquire on WhatsApp
-            </a>
+            {isSold ? (
+              <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-rose-300/18 bg-rose-300/8 px-5 py-3 text-sm font-semibold text-rose-200">
+                This gemstone has been sold
+              </div>
+            ) : (
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98]"
+              >
+                <MessageCircle size={18} />
+                Inquire on WhatsApp
+              </a>
+            )}
           </div>
         </div>
 

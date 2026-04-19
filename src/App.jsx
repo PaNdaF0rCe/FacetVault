@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import AdminRoute from "./components/AdminRoute";
+import Reports from "./pages/admin/Reports";
 
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -13,6 +14,7 @@ const About = lazy(() => import("./pages/About"));
 const HowToBuy = lazy(() => import("./pages/HowToBuy"));
 const Contact = lazy(() => import("./pages/Contact"));
 const StoneDetail = lazy(() => import("./pages/StoneDetail"));
+
 
 const AddGemPage = lazy(() => import("./pages/admin/AddGemPage"));
 const EditGemPage = lazy(() => import("./pages/admin/EditGemPage"));
@@ -79,6 +81,16 @@ function App() {
                   </AdminRoute>
                 }
               />
+
+              <Route
+                path="/admin/reports"
+                element={
+                  <AdminRoute>
+                    <Reports />
+                  </AdminRoute>
+                }
+              />
+
             </Route>
           </Routes>
         </Suspense>

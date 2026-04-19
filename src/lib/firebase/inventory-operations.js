@@ -49,7 +49,15 @@ function sortByUpdatedDesc(items) {
 }
 
 function isVisiblePublicItem(item) {
-  return !!item?.isForSale && !item?.isSold;
+  if (!item?.isForSale) return false;
+
+  if (!item?.isSold) return true;
+
+  if (item?.deleteAfter) {
+    return normalizeDateValue(item.deleteAfter) > Date.now();
+  }
+
+  return false;
 }
 
 /* ---------------- BACKFILL FUNCTION ---------------- */
@@ -263,4 +271,61 @@ export async function getRelatedPublicStones(item, maxItems = 4) {
   await runQuery("category", item.category);
 
   return results.slice(0, maxItems);
+}
+
+/* ---------------- MARK AS SOLD ---------------- */
+
+export async function markItemAsSold(
+  itemId,
+  { sellingPrice, expenses = 0, notes = "" },
+  userId
+) {
+  const item = await getDocument("inventory", itemId);
+
+  if (!item) throw new Error("Item not found");
+  if (item.userId !== userId) throw new UnauthorizedError();
+
+  const now = new Date();
+
+  const deleteAfter = new Date(
+    now.getTime() + 7 * 24 * 60 * 60 * 1000
+  );
+
+  const costPrice = item.pricePaid || 0;
+  const profit = sellingPrice - costPrice - expenses;
+
+  // Create sales record
+  await createDocument("sales", {
+    userId,
+    inventoryId: itemId,
+
+    stoneName: item.name || "",
+    stoneCode: item.stoneCode || "",
+    category: item.category || "",
+    stoneType: item.stoneType || "",
+    color: item.color || "",
+    cut: item.cut || "",
+    origin: item.origin || "",
+    carat: item.carat || 0,
+    quantitySold: item.quantity || 1,
+
+    costPrice,
+    sellingPrice,
+    expenses,
+    profit,
+    currency: item.currency || "LKR",
+
+    soldAt: now,
+    notes,
+  });
+
+  // Update inventory
+  await updateDoc(doc(db, "inventory", itemId), {
+    isSold: true,
+    soldAt: now,
+    deleteAfter,
+    updatedAt: now,
+  });
+
+  return true;
 }
