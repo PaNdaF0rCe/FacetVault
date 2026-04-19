@@ -605,7 +605,6 @@ export function GemFormPage({
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={handleFileChange}
                     disabled={saving}
                     className="block w-full text-sm text-white/42 file:mr-3 file:rounded-2xl file:border-0 file:bg-amber-300 file:px-3.5 file:py-2.5 file:text-sm file:font-semibold file:text-[#09101c] hover:file:brightness-105"
