@@ -142,7 +142,7 @@ function MarketplaceCard({ item, rates, currency }) {
     secondaryPrice = null;
     isSmall = false;
   } else if (!Number.isNaN(salePrice)) {
-    if (salePrice === 0 || salePrice > 5000) {
+    if (salePrice === 0 || salePrice > 15000) {
       primaryPrice = "View price";
       secondaryPrice = null;
       isSmall = true;
