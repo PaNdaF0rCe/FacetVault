@@ -10,8 +10,8 @@ import {
   formatCurrency,
 } from "../lib/services/exchangeRates";
 
-const PRICE_THRESHOLD = 5000;
-const NEW_DAYS = 14;
+const PRICE_THRESHOLD = 15000;
+const NEW_DAYS = 7;
 
 function getJsDate(value) {
   if (!value) return null;
