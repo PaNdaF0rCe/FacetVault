@@ -14,6 +14,7 @@ const About = lazy(() => import("./pages/About"));
 const HowToBuy = lazy(() => import("./pages/HowToBuy"));
 const Contact = lazy(() => import("./pages/Contact"));
 const StoneDetail = lazy(() => import("./pages/StoneDetail"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 
 
 const AddGemPage = lazy(() => import("./pages/admin/AddGemPage"));
@@ -44,6 +45,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/privacy" element={<Privacy />} />
 
               <Route
                 path="/admin"
