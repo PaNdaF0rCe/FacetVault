@@ -195,13 +195,22 @@ function Navbar() {
             ))}
 
             {isAdmin && (
-              <DesktopNavLink
-                to="/admin"
-                label="Admin"
-                currentPath={location.pathname}
-                index={navLinks.length}
-              />
-            )}
+  <>
+    <DesktopNavLink
+      to="/admin"
+      label="Admin"
+      currentPath={location.pathname}
+      index={navLinks.length}
+    />
+
+    <DesktopNavLink
+      to="/admin/leads"
+      label="Leads"
+      currentPath={location.pathname}
+      index={navLinks.length + 1}
+    />
+  </>
+)}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -359,13 +368,22 @@ function Navbar() {
                 ))}
 
                 {isAdmin && (
-                  <MobileMenuButton
-                    label="Admin"
-                    active={location.pathname === "/admin"}
-                    index={navLinks.length}
-                    onClick={() => handleMobileNavigate("/admin")}
-                  />
-                )}
+  <>
+    <MobileMenuButton
+      label="Admin"
+      active={location.pathname === "/admin"}
+      index={navLinks.length}
+      onClick={() => handleMobileNavigate("/admin")}
+    />
+
+    <MobileMenuButton
+      label="Leads"
+      active={location.pathname.startsWith("/admin/leads")}
+      index={navLinks.length + 1}
+      onClick={() => handleMobileNavigate("/admin/leads")}
+    />
+  </>
+)}
 
                 {!user ? (
                   <motion.div

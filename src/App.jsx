@@ -18,9 +18,8 @@ const StoneDetail = lazy(() => import("./pages/StoneDetail"));
 
 const AddGemPage = lazy(() => import("./pages/admin/AddGemPage"));
 const EditGemPage = lazy(() => import("./pages/admin/EditGemPage"));
-const AdminStoneDetailPage = lazy(() =>
-  import("./pages/admin/AdminStoneDetailPage")
-);
+const AdminStoneDetailPage = lazy(() =>import("./pages/admin/AdminStoneDetailPage"));
+const LeadsDashboard = lazy(() => import("./pages/admin/LeadsDashboard"));
 
 function PageLoader() {
   return (
@@ -90,6 +89,15 @@ function App() {
                   </AdminRoute>
                 }
               />
+
+              <Route
+  path="/admin/leads"
+  element={
+    <AdminRoute>
+      <LeadsDashboard />
+    </AdminRoute>
+  }
+/>
 
             </Route>
           </Routes>
