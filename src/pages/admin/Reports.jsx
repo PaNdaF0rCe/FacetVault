@@ -137,6 +137,7 @@ export default function Reports() {
 
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [range, setRange] = useState("all");
 
   useEffect(() => {
@@ -161,6 +162,7 @@ export default function Reports() {
         setSales(data);
       } catch (error) {
         console.error("Error loading sales:", error);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -316,9 +318,15 @@ export default function Reports() {
             </div>
           </div>
 
+          {loadError && (
+            <div className="mt-4 rounded-2xl border border-rose-300/20 bg-rose-300/8 p-4 text-sm text-rose-200">
+              Could not load sales data. Please refresh the page.
+            </div>
+          )}
+
           {loading ? (
             <p className="mt-4 text-sm text-white/50">Loading...</p>
-          ) : last10.length === 0 ? (
+          ) : last10.length === 0 && !loadError ? (
             <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] p-5 text-sm text-white/50">
               No sales yet.
             </div>

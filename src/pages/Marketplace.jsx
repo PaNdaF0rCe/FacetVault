@@ -272,10 +272,11 @@ function LoadingCard() {
 function Marketplace() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCollection, setActiveCollection] = useState("all");
   const [rates, setRates] = useState(null);
-  const currency = detectCurrency();
+  const currency = useMemo(() => detectCurrency(), []);
 
   useEffect(() => {
     let mounted = true;
@@ -283,14 +284,15 @@ function Marketplace() {
     const loadItems = async () => {
       try {
         const data = await getPublicSaleInventory();
-
         if (mounted) {
-          const safeItems = Array.isArray(data) ? data : [];
-          setItems(safeItems);
+          setItems(Array.isArray(data) ? data : []);
         }
-      } catch (error) {
-        console.error("Failed to load public sale inventory:", error);
-        if (mounted) setItems([]);
+      } catch (err) {
+        console.error("Failed to load public sale inventory:", err);
+        if (mounted) {
+          setItems([]);
+          setError(true);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -300,8 +302,8 @@ function Marketplace() {
       try {
         const data = await getExchangeRates();
         if (mounted) setRates(data);
-      } catch (error) {
-        console.error("Failed to load exchange rates:", error);
+      } catch {
+        // rates are non-critical; silent fail is fine
       }
     };
 
@@ -467,13 +469,21 @@ function Marketplace() {
           </div>
         </section>
 
+        {error && (
+          <section className="rounded-[28px] border border-rose-300/20 bg-rose-300/8 p-5 text-center">
+            <p className="text-sm font-medium text-rose-200">
+              Could not load the collection right now. Please refresh the page.
+            </p>
+          </section>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-2 gap-3.5 sm:gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-5">
             {Array.from({ length: 6 }).map((_, index) => (
               <LoadingCard key={index} />
             ))}
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : filteredItems.length === 0 && !error ? (
           <section className="rounded-[28px] border border-white/8 bg-white/[0.03] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.2)]">
             <h2 className="text-xl font-semibold text-white">{emptyStateTitle}</h2>
             <p className="mt-2 text-sm text-white/45">{emptyStateText}</p>

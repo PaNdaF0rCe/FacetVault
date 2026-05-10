@@ -6,6 +6,14 @@ import InventoryItemCard from "../components/InventoryItemCard";
 import Toast from "../components/Toast";
 import { getFilteredInventory } from "../lib/firebase/inventory-operations";
 
+function normalizeDateMs(value) {
+  if (!value) return 0;
+  if (typeof value?.toDate === "function") return value.toDate().getTime();
+  if (value instanceof Date) return value.getTime();
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
 function formatCarat(value) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
@@ -165,7 +173,7 @@ function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [gems, setGems] = useState([]);
+  const [allGems, setAllGems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
@@ -177,19 +185,15 @@ function Dashboard() {
 
   const showToast = useCallback((nextToast) => {
     setToast(null);
-    window.setTimeout(() => {
-      setToast(nextToast);
-    }, 10);
+    window.setTimeout(() => setToast(nextToast), 10);
   }, []);
 
   const fetchGems = useCallback(async () => {
     if (!user?.uid) return;
-
     setIsLoading(true);
-
     try {
-      const items = await getFilteredInventory(user.uid, filters);
-      setGems(items);
+      const items = await getFilteredInventory(user.uid);
+      setAllGems(items);
     } catch (error) {
       console.error("Error fetching gems:", error);
       showToast({
@@ -200,11 +204,49 @@ function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.uid, filters, showToast]);
+  }, [user?.uid, showToast]);
 
   useEffect(() => {
     fetchGems();
   }, [fetchGems]);
+
+  // All filtering and sorting happens client-side — no redundant Firestore fetches.
+  const gems = useMemo(() => {
+    let result = [...allGems];
+
+    const term = filters.search?.trim().toLowerCase();
+    if (term) {
+      result = result.filter(
+        (i) =>
+          (i.name || "").toLowerCase().includes(term) ||
+          (i.stoneCode || "").toLowerCase().includes(term)
+      );
+    }
+
+    if (filters.category) {
+      result = result.filter((i) => i.category === filters.category);
+    }
+
+    switch (filters.sortBy) {
+      case "updatedAt":
+        result.sort((a, b) => normalizeDateMs(b.updatedAt) - normalizeDateMs(a.updatedAt));
+        break;
+      case "name":
+        result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        break;
+      case "carat":
+        result.sort((a, b) => Number(b.carat || 0) - Number(a.carat || 0));
+        break;
+      case "pricePaid":
+        result.sort((a, b) => Number(b.pricePaid || 0) - Number(a.pricePaid || 0));
+        break;
+      default:
+        // "createdAt" — already sorted descending by Firestore
+        break;
+    }
+
+    return result;
+  }, [allGems, filters]);
 
   const totalEntries = useMemo(() => {
     return gems.reduce((sum, item) => {
@@ -255,21 +297,23 @@ function Dashboard() {
               </p>
             </div>
 
-            <button
-                          type="button"
-                          onClick={() => navigate("/admin/add")}
-                          className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105 sm:self-start lg:self-auto"
-                        >
-                          Add New Gem
-                        </button>
+              <div className="flex flex-wrap items-center gap-3 sm:self-start lg:self-auto">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/add")}
+                className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105"
+              >
+                Add New Gem
+              </button>
 
-            <button
-              type="button"
-              onClick={() => navigate("/admin/reports")}
-              className="mt-3 inline-flex items-center justify-center rounded-2xl bg-white/10 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white/20"
-            >
-              Reports & Profit
-            </button>
+              <button
+                type="button"
+                onClick={() => navigate("/admin/reports")}
+                className="inline-flex items-center justify-center rounded-2xl bg-white/10 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-white/20"
+              >
+                Reports & Profit
+              </button>
+            </div>
 
           </div>
         </section>
@@ -306,7 +350,7 @@ function Dashboard() {
           filters={filters}
           onFilterChange={setFilters}
           totalCount={gems.length}
-          totalItems={gems.length}
+          totalItems={allGems.length}
         />
 
         {isLoading ? (

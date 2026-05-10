@@ -3,7 +3,6 @@ import { lazy, Suspense } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import AdminRoute from "./components/AdminRoute";
-import Reports from "./pages/admin/Reports";
 
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -17,6 +16,7 @@ const StoneDetail = lazy(() => import("./pages/StoneDetail"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 
 
+const Reports = lazy(() => import("./pages/admin/Reports"));
 const AddGemPage = lazy(() => import("./pages/admin/AddGemPage"));
 const EditGemPage = lazy(() => import("./pages/admin/EditGemPage"));
 const AdminStoneDetailPage = lazy(() =>import("./pages/admin/AdminStoneDetailPage"));
