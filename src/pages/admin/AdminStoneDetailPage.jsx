@@ -517,42 +517,63 @@ function AdminStoneDetailPage() {
         </div>
       </div>
       {showSoldModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#020617] p-5 shadow-2xl">
-            <h2 className="mb-4 text-lg font-semibold text-white">Mark as Sold</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(5,12,24,0.97),rgba(4,10,20,0.95))] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300/72">
+              Sale record
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-white">Mark as Sold</h2>
+            <p className="mt-1.5 text-sm text-white/45">
+              Enter the final sale details to record the transaction.
+            </p>
 
-            <div className="space-y-3">
-              <input
-                type="number"
-                placeholder="Selling Price"
-                value={sellingPrice}
-                onChange={(e) => setSellingPrice(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none"
-              />
+            <div className="mt-5 space-y-3">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-white/38">
+                  Selling Price (LKR) *
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 125000"
+                  value={sellingPrice}
+                  onChange={(e) => setSellingPrice(e.target.value)}
+                  className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
+                />
+              </div>
 
-              <input
-                type="number"
-                placeholder="Expenses (optional)"
-                value={expenses}
-                onChange={(e) => setExpenses(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none"
-              />
+              <div>
+                <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-white/38">
+                  Expenses (optional)
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 2000"
+                  value={expenses}
+                  onChange={(e) => setExpenses(e.target.value)}
+                  className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
+                />
+              </div>
 
-              <textarea
-                placeholder="Notes (optional)"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-white outline-none"
-              />
+              <div>
+                <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-white/38">
+                  Notes (optional)
+                </label>
+                <textarea
+                  placeholder="Buyer details, special terms..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)] resize-none"
+                />
+              </div>
             </div>
 
-            <div className="mt-5 flex gap-2">
+            <div className="mt-5 flex gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowSoldModal(false)}
                 disabled={sellingLoading}
-                className="flex-1 rounded-xl border border-white/10 py-2 text-sm text-white"
+                className="flex-1 rounded-2xl border border-white/8 bg-white/[0.025] py-3 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -561,7 +582,7 @@ function AdminStoneDetailPage() {
                 type="button"
                 onClick={handleMarkAsSold}
                 disabled={sellingLoading}
-                className="flex-1 rounded-xl bg-emerald-500 py-2 text-sm font-medium text-white"
+                className="flex-1 rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
               >
                 {sellingLoading ? "Saving..." : "Confirm Sale"}
               </button>

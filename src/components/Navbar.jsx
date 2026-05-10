@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import logo from "../assets/logo-diamond.png";
+import { getActiveCampaign } from "../lib/services/holidayCampaign";
 
-function DesktopNavLink({ to, label, currentPath, index = 0 }) {
+function DesktopNavLink({ to, label, currentPath, index = 0, saleDot = false }) {
   const active = currentPath === to || (to !== "/" && currentPath.startsWith(to));
 
   return (
@@ -17,11 +18,14 @@ function DesktopNavLink({ to, label, currentPath, index = 0 }) {
       <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
         <Link
           to={to}
-          className={`text-[11px] uppercase tracking-[0.28em] transition-colors duration-200 ${
+          className={`relative text-[11px] uppercase tracking-[0.28em] transition-colors duration-200 ${
             active ? "text-amber-300" : "text-white/42 hover:text-white/80"
           }`}
         >
           {label}
+          {saleDot && (
+            <span className="absolute -right-2 -top-0.5 h-1.5 w-1.5 rounded-full bg-amber-300" />
+          )}
         </Link>
       </motion.div>
     </motion.div>
@@ -58,6 +62,7 @@ function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
+  const activeCampaign = useMemo(() => getActiveCampaign(), []);
 
   const reopenBlockUntilRef = useRef(0);
   const routeLockTimerRef = useRef(null);
@@ -191,6 +196,7 @@ function Navbar() {
                 label={link.label}
                 currentPath={location.pathname}
                 index={index}
+                saleDot={link.to === "/collection" && !!activeCampaign}
               />
             ))}
 

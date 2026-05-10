@@ -110,18 +110,25 @@ export default function LeadsDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#020617] px-4 py-10 text-white">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm uppercase tracking-[0.24em] text-amber-300">
-            Loading leads...
-          </p>
+      <div className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl animate-pulse space-y-5">
+          <div className="h-8 w-48 rounded-2xl bg-white/[0.05]" />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-20 rounded-2xl border border-white/8 bg-white/[0.04]" />
+            ))}
+          </div>
+          <div className="h-14 rounded-2xl border border-white/8 bg-white/[0.04]" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 rounded-2xl border border-white/8 bg-white/[0.04]" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] px-4 py-6 text-white sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

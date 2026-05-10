@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import {
   getExchangeRates,
@@ -479,8 +479,19 @@ function Marketplace() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search gemstones..."
-                  className="w-full border-0 border-b border-white/8 bg-transparent py-2.5 pl-6 pr-2 text-sm text-white placeholder:text-white/24 outline-none transition-[border-color,color] duration-200 focus:border-amber-300/30"
+                  className="w-full border-0 border-b border-white/8 bg-transparent py-2.5 pl-6 pr-7 text-sm text-white placeholder:text-white/24 outline-none transition-[border-color,color] duration-200 focus:border-amber-300/30"
                 />
+
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-white/30 transition-colors duration-150 hover:text-white/70"
+                    aria-label="Clear search"
+                  >
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                )}
               </div>
             </div>
 

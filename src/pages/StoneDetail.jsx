@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, MessageCircle, Share2, Check } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
+import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
 
 function formatMoney(value) {
   if (value === null || value === undefined || value === "") return null;
@@ -30,9 +31,14 @@ function DetailRow({ label, value }) {
   );
 }
 
-function RelatedCard({ stone }) {
-  const salePrice = Number(stone?.salePrice ?? stone?.pricePaid);
+function RelatedCard({ stone, campaign }) {
+  const rawPrice = Number(stone?.salePrice ?? stone?.pricePaid);
   const isSold = stone?.isSold === true;
+  const discountedPrice =
+    campaign && !isSold && !Number.isNaN(rawPrice) && rawPrice > 0
+      ? applyDiscount(rawPrice)
+      : null;
+  const hasDiscount = discountedPrice !== null && discountedPrice !== rawPrice;
 
   return (
     <Link
@@ -55,7 +61,7 @@ function RelatedCard({ stone }) {
         )}
       </div>
 
-      <div className="space-y-1.5 p-4">
+      <div className="space-y-1 p-4">
         <h3 className="line-clamp-1 text-sm font-semibold text-white">
           {stone.name || stone.stoneType || "Untitled Stone"}
         </h3>
@@ -65,13 +71,14 @@ function RelatedCard({ stone }) {
         </p>
 
         {isSold ? (
-          <p className="text-[13px] font-semibold text-rose-200">
-            Recently sold
-          </p>
-        ) : !Number.isNaN(salePrice) && salePrice > 0 ? (
-          <p className="text-[13px] font-semibold text-amber-300">
-            {formatMoney(salePrice)}
-          </p>
+          <p className="text-[13px] font-semibold text-rose-200">Recently sold</p>
+        ) : hasDiscount ? (
+          <div>
+            <p className="text-[11px] text-white/36 line-through">{formatMoney(rawPrice)}</p>
+            <p className="text-[13px] font-semibold text-amber-300">{formatMoney(discountedPrice)}</p>
+          </div>
+        ) : !Number.isNaN(rawPrice) && rawPrice > 0 ? (
+          <p className="text-[13px] font-semibold text-amber-300">{formatMoney(rawPrice)}</p>
         ) : null}
       </div>
     </Link>
@@ -127,8 +134,14 @@ export default function StoneDetail() {
       .slice(0, 4);
   }, [inventory, stone]);
 
-  const salePrice = Number(stone?.salePrice ?? stone?.pricePaid);
+  const rawSalePrice = Number(stone?.salePrice ?? stone?.pricePaid);
   const isSold = stone?.isSold === true;
+  const campaign = useMemo(() => getActiveCampaign(), []);
+  const discountedPrice =
+    campaign && !isSold && !Number.isNaN(rawSalePrice) && rawSalePrice > 0
+      ? applyDiscount(rawSalePrice)
+      : null;
+  const hasDiscount = discountedPrice !== null && discountedPrice !== rawSalePrice;
 
   const [copied, setCopied] = useState(false);
 
@@ -161,13 +174,22 @@ export default function StoneDetail() {
   const whatsappLink = useMemo(() => {
     if (!stone || isSold) return "#";
 
-    const msg = `Hi, I'm interested in this stone from FacetVault:
-${stone.name || stone.stoneType || "Gemstone"}
-${stone.stoneCode ? `Code: ${stone.stoneCode}` : ""}
-${typeof window !== "undefined" ? window.location.href : ""}`.trim();
+    const priceNote = hasDiscount
+      ? `Price: ${formatMoney(discountedPrice)} (${campaign.label})`
+      : "";
+
+    const msg = [
+      `Hi, I'm interested in this stone from FacetVault:`,
+      stone.name || stone.stoneType || "Gemstone",
+      stone.stoneCode ? `Code: ${stone.stoneCode}` : "",
+      priceNote,
+      typeof window !== "undefined" ? window.location.href : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-  }, [stone, isSold]);
+  }, [stone, isSold, hasDiscount, discountedPrice, campaign]);
 
   if (isLoading) {
     return (
@@ -251,14 +273,37 @@ ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
               <p className="mt-5 text-2xl font-semibold text-rose-200">
                 Recently sold
               </p>
-            ) : !Number.isNaN(salePrice) && salePrice > 0 ? (
-              <p className="mt-5 text-2xl font-semibold text-amber-300">
-                {formatMoney(salePrice)}
-              </p>
+            ) : !Number.isNaN(rawSalePrice) && rawSalePrice > 0 ? (
+              <div className="mt-5">
+                {hasDiscount ? (
+                  <>
+                    <p className="text-sm text-white/38 line-through">
+                      {formatMoney(rawSalePrice)}
+                    </p>
+                    <p className="mt-0.5 text-2xl font-semibold text-amber-300">
+                      {formatMoney(discountedPrice)}
+                    </p>
+                    <p className="mt-1.5 inline-flex items-center rounded-full border border-amber-300/18 bg-amber-300/8 px-2.5 py-0.5 text-[10px] font-medium text-amber-200">
+                      {campaign.label}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-2xl font-semibold text-amber-300">
+                    {formatMoney(rawSalePrice)}
+                  </p>
+                )}
+              </div>
             ) : null}
 
             <div className="mt-7">
-              <DetailRow label="Stone Code" value={stone.stoneCode} />
+              <DetailRow
+                label="Stone Code"
+                value={
+                  stone.stoneCode ? (
+                    <span className="font-mono tracking-wider">{stone.stoneCode}</span>
+                  ) : null
+                }
+              />
               <DetailRow
                 label="Carat"
                 value={stone.carat ? `${stone.carat} ct` : null}
@@ -317,7 +362,7 @@ ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
 
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {related.map((item) => (
-                <RelatedCard key={item.id} stone={item} />
+                <RelatedCard key={item.id} stone={item} campaign={campaign} />
               ))}
             </div>
           </div>

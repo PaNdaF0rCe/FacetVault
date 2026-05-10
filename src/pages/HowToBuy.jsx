@@ -1,5 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { MessageCircle } from "lucide-react";
+import { WHATSAPP_NUMBER } from "../config/appConfig";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -124,7 +127,7 @@ export default function HowToBuy() {
           </p>
         </motion.section>
 
-        {/* CLOSING */}
+        {/* CLOSING CTA */}
         <motion.section
           initial="hidden"
           whileInView="show"
@@ -137,6 +140,27 @@ export default function HowToBuy() {
             <br />
             Just clarity, simplicity, and direct access.
           </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/collection"
+              className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-6 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105"
+            >
+              Browse Collection
+            </Link>
+
+            {WHATSAPP_NUMBER && (
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%27m%20interested%20in%20a%20gemstone%20from%20FacetVault.`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-3 text-sm font-medium text-white/80 transition duration-200 hover:border-amber-300/20 hover:text-white"
+              >
+                <MessageCircle size={16} />
+                Ask on WhatsApp
+              </a>
+            )}
+          </div>
         </motion.section>
       </div>
     </>

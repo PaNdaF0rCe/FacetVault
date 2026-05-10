@@ -116,7 +116,7 @@ export default function Contact() {
             title="Direct Contact"
             text="Prefer a more direct approach? Reach out via phone for immediate assistance and discussion."
             action="Call now"
-            link="tel:${CONTACT_PHONE}"
+            link={`tel:${CONTACT_PHONE}`}
           />
         </motion.section>
 
