@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
 
-  <link rel="icon" type="image/png" sizes="48x48" href="/StockSmart-AI.png" />
-  <link rel="icon" type="image/png" sizes="96x96" href="/StockSmart-AI.png" />
-  <link rel="apple-touch-icon" href="/StockSmart-AI.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="/logo.png" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/logo.png" />
+  <link rel="apple-touch-icon" href="/logo.png" />
   <link rel="manifest" href="/manifest.json" />
 
   <meta name="theme-color" content="#060b16" />
@@ -15,45 +15,54 @@
   <meta name="robots" content="index, follow" />
   <meta name="author" content="FacetVault" />
   <meta
-          name="description"
-          content="Browse natural Ceylon sapphires and curated gemstones directly from Sri Lanka. Each stone is individually documented and available for direct inquiry."
+    name="description"
+    content="Browse natural Ceylon sapphires and curated gemstones directly from Sri Lanka. Each stone is individually documented and available for direct inquiry."
   />
+
+  <!-- Structured Data — Organization -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "FacetVault",
-      "url": "https://www.facetvault.store",
-      "logo": "https://www.facetvault.store/logo.png"
+      "url": "https://facetvault.store",
+      "logo": "https://facetvault.store/logo.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["English", "Sinhala"]
+      }
     }
   </script>
 
-  <!-- Canonical -->
+  <!-- Canonical (default — overridden per page by react-helmet-async) -->
   <link rel="canonical" href="https://facetvault.store/" />
 
-  <!-- Open Graph -->
+  <!-- Open Graph (default — overridden per page) -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="FacetVault" />
   <meta property="og:url" content="https://facetvault.store/" />
   <meta property="og:title" content="FacetVault | Ceylon Sapphires & Curated Gemstones" />
   <meta
-          property="og:description"
-          content="Explore curated natural gemstones and Ceylon sapphires sourced directly from Sri Lanka."
+    property="og:description"
+    content="Explore curated natural gemstones and Ceylon sapphires sourced directly from Sri Lanka. Clear details, direct inquiry, no clutter."
   />
-  <meta property="og:image" content="https://facetvault.store/StockSmart-AI.png" />
+  <meta property="og:image" content="https://facetvault.store/logo.png" />
 
-  <!-- Twitter -->
+  <!-- Twitter Card (default — overridden per page) -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@facetvault" />
   <meta name="twitter:title" content="FacetVault | Ceylon Sapphires & Curated Gemstones" />
   <meta
-          name="twitter:description"
-          content="Explore curated natural gemstones and Ceylon sapphires sourced directly from Sri Lanka."
+    name="twitter:description"
+    content="Explore curated natural gemstones and Ceylon sapphires sourced directly from Sri Lanka. Clear details, direct inquiry, no clutter."
   />
-  <meta name="twitter:image" content="https://facetvault.store/StockSmart-AI.png" />
+  <meta name="twitter:image" content="https://facetvault.store/logo.png" />
 
   <!-- Google Verification -->
   <meta name="google-site-verification" content="qmpawpM-HX-7CzCNLMynmw8ErqJrlB2zJP7ErezYUY0" />
 
-  <title>FacetVault | Ceylon Sapphires & Curated Gemstones</title>
+  <title>FacetVault | Ceylon Sapphires & Curated Gemstones from Sri Lanka</title>
 </head>
 
 <body>

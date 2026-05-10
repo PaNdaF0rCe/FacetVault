@@ -37,11 +37,21 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About | FacetVault</title>
+        <title>About FacetVault | Curated Ceylon Gemstones from Sri Lanka</title>
         <meta
           name="description"
-          content="Learn more about FacetVault and its curated gemstone collection."
+          content="FacetVault is a curated gemstone brand from Sri Lanka — presenting individually selected Ceylon sapphires and natural gems with clarity, intention, and direct inquiry."
         />
+        <link rel="canonical" href="https://facetvault.store/about" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://facetvault.store/about" />
+        <meta property="og:title" content="About FacetVault | Curated Ceylon Gemstones from Sri Lanka" />
+        <meta property="og:description" content="FacetVault presents individually selected Ceylon sapphires and natural gems with clarity and intention. Learn the story behind the collection." />
+        <meta property="og:image" content="https://facetvault.store/logo.png" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="About FacetVault | Curated Ceylon Gemstones" />
+        <meta name="twitter:description" content="FacetVault presents individually selected Ceylon sapphires and natural gems with clarity and intention." />
+        <meta name="twitter:image" content="https://facetvault.store/logo.png" />
       </Helmet>
 
       <div className="px-4 py-10 sm:px-6 lg:px-8">

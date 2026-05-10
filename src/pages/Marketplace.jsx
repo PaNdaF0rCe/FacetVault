@@ -450,11 +450,21 @@ function Marketplace() {
   return (
     <>
       <Helmet>
-        <title>Collection | FacetVault</title>
+        <title>Ceylon Sapphires & Gemstones for Sale | FacetVault Collection</title>
         <meta
           name="description"
-          content="Browse the public gemstone collection on FacetVault."
+          content="Browse individually curated Ceylon sapphires, rubies, and natural gemstones sourced from Sri Lanka. Clear details, transparent pricing, direct WhatsApp inquiry."
         />
+        <link rel="canonical" href="https://facetvault.store/collection" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://facetvault.store/collection" />
+        <meta property="og:title" content="Ceylon Sapphires & Gemstones for Sale | FacetVault" />
+        <meta property="og:description" content="Browse individually curated Ceylon sapphires, rubies, and natural gemstones from Sri Lanka. Transparent pricing, direct inquiry." />
+        <meta property="og:image" content="https://facetvault.store/logo.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Ceylon Sapphires & Gemstones for Sale | FacetVault" />
+        <meta name="twitter:description" content="Browse individually curated Ceylon sapphires and natural gemstones from Sri Lanka." />
+        <meta name="twitter:image" content="https://facetvault.store/logo.png" />
       </Helmet>
 
       <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 2xl:px-10">

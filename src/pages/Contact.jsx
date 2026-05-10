@@ -57,11 +57,21 @@ export default function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact | FacetVault</title>
+        <title>Contact FacetVault | Inquire About Gemstones via WhatsApp</title>
         <meta
           name="description"
-          content="Get in touch with FacetVault to inquire about gemstones."
+          content="Reach FacetVault directly via WhatsApp or phone to inquire about Ceylon sapphires and gemstones. Fast, personal responses — no forms or waiting."
         />
+        <link rel="canonical" href="https://facetvault.store/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://facetvault.store/contact" />
+        <meta property="og:title" content="Contact FacetVault | Inquire About Gemstones" />
+        <meta property="og:description" content="Reach FacetVault via WhatsApp or phone. Fast, personal responses about Ceylon sapphires and natural gemstones." />
+        <meta property="og:image" content="https://facetvault.store/logo.png" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Contact FacetVault | Inquire About Gemstones" />
+        <meta name="twitter:description" content="Reach FacetVault via WhatsApp or phone. Personal, direct responses." />
+        <meta name="twitter:image" content="https://facetvault.store/logo.png" />
       </Helmet>
 
       <div className="px-4 py-10 sm:px-6 lg:px-8">

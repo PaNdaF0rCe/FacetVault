@@ -1,6 +1,15 @@
+import { Helmet } from "react-helmet-async";
+
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white px-6 py-10">
+    <>
+    <Helmet>
+      <title>Privacy Policy | FacetVault</title>
+      <meta name="description" content="FacetVault privacy policy — how we collect, use, and protect your information when you contact us or use our gemstone browsing service." />
+      <link rel="canonical" href="https://facetvault.store/privacy" />
+      <meta name="robots" content="noindex, follow" />
+    </Helmet>
+    <div className="px-6 py-10 text-white">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
 
@@ -40,5 +49,6 @@ export default function Privacy() {
         </p>
       </div>
     </div>
+    </>
   );
 }

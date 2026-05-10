@@ -43,11 +43,59 @@ export default function HowToBuy() {
   return (
     <>
       <Helmet>
-        <title>How to Buy | FacetVault</title>
+        <title>How to Buy Gemstones | FacetVault — Simple Direct Process</title>
         <meta
           name="description"
-          content="Learn how to purchase gemstones from FacetVault."
+          content="Buying a gemstone from FacetVault is simple: browse the collection, review stone details and pricing, then inquire directly via WhatsApp. No checkout, no clutter."
         />
+        <link rel="canonical" href="https://facetvault.store/how-to-buy" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://facetvault.store/how-to-buy" />
+        <meta property="og:title" content="How to Buy Gemstones | FacetVault" />
+        <meta property="og:description" content="Browse, review, and inquire directly via WhatsApp. Simple, personal, and transparent — no checkout systems." />
+        <meta property="og:image" content="https://facetvault.store/logo.png" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="How to Buy Gemstones | FacetVault" />
+        <meta name="twitter:description" content="Browse, review, and inquire directly via WhatsApp. Simple, personal, transparent." />
+        <meta name="twitter:image" content="https://facetvault.store/logo.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How do I buy a gemstone from FacetVault?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Browse the collection, open the stone you are interested in to review its details and pricing, then tap the WhatsApp button to inquire directly. No checkout or account required."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are the gemstones natural and from Sri Lanka?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. All stones in the FacetVault collection are natural and sourced from Sri Lanka, including Ceylon sapphires, rubies, and other curated gems."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I get additional photos before buying?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. When you inquire via WhatsApp, you can request additional photos, videos, or any further details about the stone before making a decision."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How are prices determined?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Each stone is priced individually based on its type, carat weight, colour, and quality. Prices are listed on each stone's detail page in LKR."
+              }
+            }
+          ]
+        })}</script>
       </Helmet>
 
       <div className="px-4 py-10 sm:px-6 lg:px-8">

@@ -222,11 +222,64 @@ export default function StoneDetail() {
   return (
     <>
       <Helmet>
-        <title>{stone.name || stone.stoneType || "Stone"} | FacetVault</title>
+        <title>{stone.name || stone.stoneType || "Gemstone"} {stone.carat ? `— ${stone.carat}ct` : ""} | FacetVault</title>
         <meta
           name="description"
-          content={`Explore ${stone.name || stone.stoneType || "this gemstone"} on FacetVault.`}
+          content={[
+            stone.name || stone.stoneType || "Natural gemstone",
+            stone.carat ? `${stone.carat}ct` : null,
+            stone.color || null,
+            stone.origin ? `from ${stone.origin}` : "from Sri Lanka",
+            "available on FacetVault. Inquire directly via WhatsApp.",
+          ].filter(Boolean).join(", ")}
         />
+        <link rel="canonical" href={`https://facetvault.store/stone/${stone.id}`} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={`https://facetvault.store/stone/${stone.id}`} />
+        <meta property="og:title" content={`${stone.name || stone.stoneType || "Gemstone"} | FacetVault`} />
+        <meta property="og:description" content={[stone.stoneType, stone.carat ? `${stone.carat}ct` : null, stone.color, stone.origin ? `Origin: ${stone.origin}` : null].filter(Boolean).join(" · ")} />
+        <meta property="og:image" content={stone.imageUrl || stone.thumbnailUrl || "https://facetvault.store/logo.png"} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${stone.name || stone.stoneType || "Gemstone"} | FacetVault`} />
+        <meta name="twitter:description" content={[stone.stoneType, stone.carat ? `${stone.carat}ct` : null, stone.color].filter(Boolean).join(" · ")} />
+        <meta name="twitter:image" content={stone.imageUrl || stone.thumbnailUrl || "https://facetvault.store/logo.png"} />
+        {!isSold && rawSalePrice > 0 && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": stone.name || stone.stoneType || "Gemstone",
+            "description": [stone.stoneType, stone.carat ? `${stone.carat}ct` : null, stone.color, stone.cut, stone.origin ? `Origin: ${stone.origin}` : null, stone.treatment ? `Treatment: ${stone.treatment}` : null].filter(Boolean).join(". "),
+            "image": stone.imageUrl || stone.thumbnailUrl || "https://facetvault.store/logo.png",
+            "sku": stone.stoneCode || stone.id,
+            "brand": { "@type": "Brand", "name": "FacetVault" },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://facetvault.store/stone/${stone.id}`,
+              "priceCurrency": "LKR",
+              "price": hasDiscount ? discountedPrice : rawSalePrice,
+              "availability": "https://schema.org/InStock",
+              "seller": { "@type": "Organization", "name": "FacetVault" }
+            }
+          })}</script>
+        )}
+        {isSold && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": stone.name || stone.stoneType || "Gemstone",
+            "image": stone.imageUrl || stone.thumbnailUrl || "https://facetvault.store/logo.png",
+            "sku": stone.stoneCode || stone.id,
+            "brand": { "@type": "Brand", "name": "FacetVault" },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://facetvault.store/stone/${stone.id}`,
+              "priceCurrency": "LKR",
+              "price": rawSalePrice || 0,
+              "availability": "https://schema.org/SoldOut",
+              "seller": { "@type": "Organization", "name": "FacetVault" }
+            }
+          })}</script>
+        )}
       </Helmet>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

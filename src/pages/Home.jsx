@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 26 },
@@ -72,6 +73,36 @@ function ProcessCard({ step, title, text }) {
 
 function Home() {
   return (
+    <>
+    <Helmet>
+      <title>FacetVault | Ceylon Sapphires & Curated Gemstones from Sri Lanka</title>
+      <meta
+        name="description"
+        content="Browse natural Ceylon sapphires and individually curated gemstones sourced directly from Sri Lanka. Clear details, transparent pricing, direct WhatsApp inquiry."
+      />
+      <link rel="canonical" href="https://facetvault.store/" />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://facetvault.store/" />
+      <meta property="og:title" content="FacetVault | Ceylon Sapphires & Curated Gemstones from Sri Lanka" />
+      <meta property="og:description" content="Browse natural Ceylon sapphires and individually curated gemstones sourced directly from Sri Lanka. Clear details, transparent pricing, direct WhatsApp inquiry." />
+      <meta property="og:image" content="https://facetvault.store/logo.png" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="FacetVault | Ceylon Sapphires & Curated Gemstones from Sri Lanka" />
+      <meta name="twitter:description" content="Browse natural Ceylon sapphires and individually curated gemstones sourced directly from Sri Lanka." />
+      <meta name="twitter:image" content="https://facetvault.store/logo.png" />
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "FacetVault",
+        "url": "https://facetvault.store",
+        "description": "Curated natural gemstones and Ceylon sapphires sourced directly from Sri Lanka.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://facetvault.store/collection",
+          "query-input": "required name=search_term_string"
+        }
+      })}</script>
+    </Helmet>
     <div className="flex flex-col">
       {/* HERO */}
       <section className="relative px-4 pb-20 pt-16 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8 lg:pt-24">
@@ -291,6 +322,7 @@ function Home() {
         </motion.div>
       </section>
     </div>
+    </>
   );
 }
 
