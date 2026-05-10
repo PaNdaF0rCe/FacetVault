@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, MessageCircle } from "lucide-react";
+import { ChevronLeft, MessageCircle, Share2, Check } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 
@@ -130,6 +130,34 @@ export default function StoneDetail() {
   const salePrice = Number(stone?.salePrice ?? stone?.pricePaid);
   const isSold = stone?.isSold === true;
 
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = useCallback(async () => {
+    const url = window.location.href;
+    const shareData = {
+      title: stone?.name || stone?.stoneType || "FacetVault Stone",
+      text: `Check out this gemstone on FacetVault${stone?.stoneCode ? ` (${stone.stoneCode})` : ""}.`,
+      url,
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // user cancelled — fall through to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard blocked — ignore
+    }
+  }, [stone]);
+
   const whatsappLink = useMemo(() => {
     if (!stone || isSold) return "#";
 
@@ -248,21 +276,33 @@ ${typeof window !== "undefined" ? window.location.href : ""}`.trim();
               </p>
             ) : null}
 
-            {isSold ? (
-              <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-rose-300/18 bg-rose-300/8 px-5 py-3 text-sm font-semibold text-rose-200">
-                This gemstone has been sold
-              </div>
-            ) : (
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98]"
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              {isSold ? (
+                <div className="inline-flex items-center gap-2 rounded-full border border-rose-300/18 bg-rose-300/8 px-5 py-3 text-sm font-semibold text-rose-200">
+                  This gemstone has been sold
+                </div>
+              ) : (
+                <a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98]"
+                >
+                  <MessageCircle size={18} />
+                  Inquire on WhatsApp
+                </a>
+              )}
+
+              <button
+                type="button"
+                onClick={handleShare}
+                title="Copy link"
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white/70 transition-[transform,border-color,color] duration-200 hover:border-white/20 hover:text-white active:scale-[0.98]"
               >
-                <MessageCircle size={18} />
-                Inquire on WhatsApp
-              </a>
-            )}
+                {copied ? <Check size={16} /> : <Share2 size={16} />}
+                {copied ? "Copied" : "Share"}
+              </button>
+            </div>
           </div>
         </div>
 

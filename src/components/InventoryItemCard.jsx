@@ -14,10 +14,15 @@ function formatCarat(value) {
 
 function formatPrice(value) {
   if (value === null || value === undefined || value === "") return null;
-
   const num = Number(value);
   if (Number.isNaN(num)) return null;
+  return `LKR ${num.toLocaleString()}`;
+}
 
+function formatSalePrice(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const num = Number(value);
+  if (Number.isNaN(num) || num <= 0) return null;
   return `LKR ${num.toLocaleString()}`;
 }
 
@@ -80,6 +85,7 @@ function CardImage({ item }) {
 function InventoryItemCard({ item, onClick }) {
   const caratText = formatCarat(item.carat);
   const priceText = formatPrice(item.pricePaid);
+  const salePriceText = formatSalePrice(item.salePrice);
 
   return (
     <button
@@ -146,12 +152,17 @@ function InventoryItemCard({ item, onClick }) {
 
         <div className="mt-2 min-h-[18px]">
           {priceText ? (
-            <p className="truncate text-[13px] font-semibold text-amber-300">
+            <p className="truncate text-[13px] font-semibold text-amber-300/70" title="Cost paid">
               {priceText}
             </p>
           ) : (
             <p className="text-[11px] font-medium text-white/38">—</p>
           )}
+          {salePriceText ? (
+            <p className="truncate text-[12px] font-semibold text-emerald-300" title="Sale price">
+              {salePriceText}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-2 hidden min-h-[30px] lg:block">

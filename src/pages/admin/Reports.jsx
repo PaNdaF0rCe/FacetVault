@@ -206,7 +206,8 @@ export default function Reports() {
     };
   }, [filteredSales]);
 
-  const last10 = filteredSales.slice(0, 10);
+  const [showAll, setShowAll] = useState(false);
+  const visibleSales = showAll ? filteredSales : filteredSales.slice(0, 10);
 
   const exportCSV = () => {
     const rows = [
@@ -310,12 +311,21 @@ export default function Reports() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white sm:text-xl">
-                Recent Sales
+                Sales
               </h2>
               <p className="mt-1 text-sm text-white/45">
-                Last 10 transactions for the selected range.
+                {filteredSales.length} transaction{filteredSales.length === 1 ? "" : "s"} in selected range.
               </p>
             </div>
+            {filteredSales.length > 10 && (
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className="shrink-0 rounded-full border border-white/8 bg-white/[0.03] px-4 py-2 text-sm font-medium text-white/70 transition hover:border-white/14 hover:text-white"
+              >
+                {showAll ? "Show less" : `Show all ${filteredSales.length}`}
+              </button>
+            )}
           </div>
 
           {loadError && (
@@ -326,14 +336,14 @@ export default function Reports() {
 
           {loading ? (
             <p className="mt-4 text-sm text-white/50">Loading...</p>
-          ) : last10.length === 0 && !loadError ? (
+          ) : filteredSales.length === 0 && !loadError ? (
             <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] p-5 text-sm text-white/50">
               No sales yet.
             </div>
           ) : (
             <>
               <div className="mt-4 space-y-3 md:hidden">
-                {last10.map((sale) => (
+                {visibleSales.map((sale) => (
                   <MobileSaleCard key={sale.id} sale={sale} />
                 ))}
               </div>
@@ -351,7 +361,7 @@ export default function Reports() {
                     </tr>
                   </thead>
                   <tbody>
-                    {last10.map((s) => (
+                    {visibleSales.map((s) => (
                       <tr
                         key={s.id}
                         className="border-b border-white/8 last:border-b-0"

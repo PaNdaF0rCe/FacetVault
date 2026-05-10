@@ -9,6 +9,7 @@ import {
   convertFromLkr,
   formatCurrency,
 } from "../lib/services/exchangeRates";
+import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
 
 const PRICE_THRESHOLD = 15000;
 const NEW_DAYS = 7;
@@ -129,9 +130,12 @@ function MarketplaceImage({ item }) {
   );
 }
 
-function MarketplaceCard({ item, rates, currency }) {
+function MarketplaceCard({ item, rates, currency, campaign }) {
   const isSold = item?.isSold === true;
-  const salePrice = Number(item?.salePrice ?? item?.pricePaid);
+  const rawPrice = Number(item?.salePrice ?? item?.pricePaid);
+  const salePrice = campaign && !isSold && !Number.isNaN(rawPrice) && rawPrice > 0
+    ? applyDiscount(rawPrice)
+    : rawPrice;
 
   let primaryPrice = "View price";
   let secondaryPrice = null;
@@ -142,23 +146,31 @@ function MarketplaceCard({ item, rates, currency }) {
     secondaryPrice = null;
     isSmall = false;
   } else if (!Number.isNaN(salePrice)) {
-    if (salePrice === 0 || salePrice > 15000) {
+    if (salePrice === 0 || rawPrice > 15000) {
       primaryPrice = "View price";
       secondaryPrice = null;
       isSmall = true;
     } else if (salePrice > 0) {
       if (currency === "LKR" || !rates?.rates) {
         primaryPrice = `LKR ${salePrice.toLocaleString()}`;
+        if (campaign && rawPrice !== salePrice) {
+          secondaryPrice = `Was LKR ${rawPrice.toLocaleString()}`;
+        }
         isSmall = false;
       } else {
         const converted = convertFromLkr(salePrice, currency, rates.rates);
 
         if (converted) {
           primaryPrice = `Approx. ${formatCurrency(converted, currency)}`;
-          secondaryPrice = `LKR ${salePrice.toLocaleString()}`;
+          secondaryPrice = campaign && rawPrice !== salePrice
+            ? `Was LKR ${rawPrice.toLocaleString()}`
+            : `LKR ${salePrice.toLocaleString()}`;
           isSmall = false;
         } else {
           primaryPrice = `LKR ${salePrice.toLocaleString()}`;
+          if (campaign && rawPrice !== salePrice) {
+            secondaryPrice = `Was LKR ${rawPrice.toLocaleString()}`;
+          }
           isSmall = false;
         }
       }
@@ -227,7 +239,9 @@ function MarketplaceCard({ item, rates, currency }) {
           </p>
 
           {secondaryPrice ? (
-            <p className="mt-0.5 text-[10px] text-white/30">{secondaryPrice}</p>
+            <p className={`mt-0.5 text-[10px] ${secondaryPrice.startsWith("Was") ? "text-white/38 line-through" : "text-white/30"}`}>
+              {secondaryPrice}
+            </p>
           ) : null}
         </div>
 
@@ -255,6 +269,33 @@ function MarketplaceCard({ item, rates, currency }) {
   );
 }
 
+function CampaignBanner({ campaign }) {
+  if (!campaign) return null;
+
+  const endLabel =
+    campaign.daysUntil > 0
+      ? `Ends ${campaign.holidayDate.toLocaleDateString("en-LK", { month: "long", day: "numeric" })}`
+      : "Sale ends today";
+
+  return (
+    <div className="rounded-[22px] border border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,191,36,0.04))] px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.26em] text-amber-300/70">
+            Limited time
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-white">
+            {campaign.label} — {campaign.discountSummary}
+          </p>
+        </div>
+        <span className="rounded-full border border-amber-300/18 bg-amber-300/8 px-3 py-1 text-[11px] font-medium text-amber-200">
+          {endLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function LoadingCard() {
   return (
     <div className="animate-pulse overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))]">
@@ -277,6 +318,7 @@ function Marketplace() {
   const [activeCollection, setActiveCollection] = useState("all");
   const [rates, setRates] = useState(null);
   const currency = useMemo(() => detectCurrency(), []);
+  const campaign = useMemo(() => getActiveCampaign(), []);
 
   useEffect(() => {
     let mounted = true;
@@ -416,6 +458,8 @@ function Marketplace() {
       </Helmet>
 
       <div className="mx-auto w-full max-w-[1600px] space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 2xl:px-10">
+        <CampaignBanner campaign={campaign} />
+
         <section className="relative pb-3 sm:pb-4">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_18%_0%,rgba(251,191,36,0.035),transparent_55%)]" />
 
@@ -503,6 +547,7 @@ function Marketplace() {
                   item={item}
                   rates={rates}
                   currency={currency}
+                  campaign={campaign}
                 />
               ))}
             </div>
