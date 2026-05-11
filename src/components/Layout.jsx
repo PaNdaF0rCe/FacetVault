@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 import { useState } from "react";
 
 const pageVariants = {
@@ -17,12 +18,19 @@ const pageVariants = {
   },
 };
 
+// Routes where the footer should be hidden (auth, focused flows).
+const NO_FOOTER_ROUTES = new Set(["/login", "/signup"]);
+
 function Layout() {
   const location = useLocation();
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const hideFooter =
+    NO_FOOTER_ROUTES.has(location.pathname) ||
+    location.pathname.startsWith("/admin");
+
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="flex min-h-screen flex-col bg-[#020617] text-white">
       <Navbar />
 
       <AnimatePresence
@@ -37,13 +45,13 @@ function Layout() {
           exit="exit"
           onAnimationStart={() => setIsAnimating(true)}
           onAnimationComplete={() => setIsAnimating(false)}
-          className={`${
-            isAnimating ? "pointer-events-none" : ""
-          }`}
+          className={`flex-1 ${isAnimating ? "pointer-events-none" : ""}`}
         >
           <Outlet />
         </motion.main>
       </AnimatePresence>
+
+      {!hideFooter && <Footer />}
     </div>
   );
 }

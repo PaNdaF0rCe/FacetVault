@@ -25,7 +25,7 @@ function ValueCard({ title, text }) {
     <motion.div
       variants={fadeUp}
       whileHover={{ y: -2 }}
-      className="rounded-[26px] border border-white/8 bg-white/[0.03] p-6 backdrop-blur-md"
+      className="lux-card-elevated p-7"
     >
       <h3 className="text-lg font-semibold text-white">{title}</h3>
       <p className="mt-3 text-sm leading-relaxed text-white/60">{text}</p>
@@ -61,19 +61,23 @@ export default function About() {
           variants={stagger}
           className="mx-auto max-w-5xl text-center"
         >
-          <motion.p
-            variants={fadeUp}
-            className="text-[11px] uppercase tracking-[0.42em] text-amber-300/70"
-          >
+          <motion.p variants={fadeUp} className="lux-eyebrow">
             About FacetVault
           </motion.p>
 
           <motion.h1
             variants={fadeUp}
-            className="mt-5 text-3xl font-semibold leading-tight text-white sm:text-5xl"
+            className="lux-display mt-6 text-[2.2rem] text-white sm:text-[3.6rem]"
           >
-            A quieter way to explore gemstones.
+            A{" "}
+            <span className="lux-display-italic text-amber-200/95">quieter</span>{" "}
+            way to explore gemstones.
           </motion.h1>
+
+          <motion.div
+            variants={fadeUp}
+            className="mx-auto mt-7 h-px w-12 bg-gradient-to-r from-transparent via-amber-300/55 to-transparent"
+          />
 
           <motion.p
             variants={fadeUp}

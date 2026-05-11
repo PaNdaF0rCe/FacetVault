@@ -280,18 +280,18 @@ function Dashboard() {
       <div className="mx-auto w-full max-w-[1600px] space-y-4 sm:space-y-5 lg:space-y-6 2xl:px-2">
         <Toast toast={toast} onClose={() => setToast(null)} />
 
-        <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(7,18,36,0.76),rgba(4,12,26,0.74))] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-md sm:p-5 lg:p-6">
+        <section className="lux-card-elevated p-5 sm:p-6 lg:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-amber-300/72 sm:text-[11px]">
+              <p className="lux-eyebrow-rule text-[10px]">
                 Personal inventory
               </p>
 
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h1 className="lux-display mt-3 text-[2rem] text-white sm:text-[2.6rem]">
                 My Gem Collection
               </h1>
 
-              <p className="mt-2 max-w-xl text-sm leading-6 text-white/50 sm:text-base">
+              <p className="mt-3 max-w-xl text-[14px] leading-6 text-white/55 sm:text-[15px]">
                 Manage your stones, review details quickly, and keep your
                 collection organized in one place.
               </p>
@@ -301,7 +301,7 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() => navigate("/admin/add")}
-                className="inline-flex items-center justify-center rounded-2xl bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] shadow-sm transition duration-200 hover:brightness-105"
+                className="lux-button-primary"
               >
                 Add New Gem
               </button>

@@ -48,7 +48,7 @@ function DetailPill({ children }) {
 
 function CardImage({ item }) {
   const [loaded, setLoaded] = useState(false);
-  const src = item.thumbnailUrl || item.imageUrl;
+  const src = item.thumbnailUrl || item.mediumUrl || item.imageUrl;
 
   if (!src) {
     return (
@@ -57,6 +57,13 @@ function CardImage({ item }) {
       </div>
     );
   }
+
+  const candidates = [
+    item.thumbnailUrl ? `${item.thumbnailUrl} 600w` : null,
+    item.mediumUrl ? `${item.mediumUrl} 1000w` : null,
+    item.imageUrl ? `${item.imageUrl} 1600w` : null,
+  ].filter(Boolean);
+  const srcSet = candidates.length > 1 ? candidates.join(", ") : undefined;
 
   return (
     <>
@@ -70,6 +77,8 @@ function CardImage({ item }) {
 
       <img
         src={src}
+        srcSet={srcSet}
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         alt={item.name || "Gem"}
         loading="lazy"
         decoding="async"
@@ -91,7 +100,7 @@ function InventoryItemCard({ item, onClick }) {
     <button
       type="button"
       onClick={() => onClick(item)}
-      className="group flex w-full flex-col overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] text-left shadow-[0_14px_36px_rgba(0,0,0,0.16)] transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-amber-300/18 hover:shadow-[0_18px_42px_rgba(0,0,0,0.22)]"
+      className="lux-card-elevated group flex w-full flex-col overflow-hidden text-left"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
         <CardImage item={item} />
@@ -150,16 +159,22 @@ function InventoryItemCard({ item, onClick }) {
           ) : null}
         </div>
 
-        <div className="mt-2 min-h-[18px]">
+        <div className="mt-2.5 min-h-[18px]">
           {priceText ? (
-            <p className="truncate text-[13px] font-semibold text-amber-300/70" title="Cost paid">
+            <p
+              className="truncate font-display text-[15px] font-semibold tracking-tight text-amber-300/85"
+              title="Cost paid"
+            >
               {priceText}
             </p>
           ) : (
             <p className="text-[11px] font-medium text-white/38">—</p>
           )}
           {salePriceText ? (
-            <p className="truncate text-[12px] font-semibold text-emerald-300" title="Sale price">
+            <p
+              className="truncate text-[12px] font-semibold text-emerald-300"
+              title="Sale price"
+            >
               {salePriceText}
             </p>
           ) : null}

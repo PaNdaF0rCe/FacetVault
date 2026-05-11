@@ -91,14 +91,13 @@ function Signup() {
 
       <div className="relative w-full max-w-md">
         <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(5,12,24,0.94),rgba(4,10,20,0.88))] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.34)] backdrop-blur sm:p-7">
-          <div className="mb-6 text-center sm:mb-7">
-            <p className="text-[11px] uppercase tracking-[0.26em] text-amber-300/90">
-              FacetVault
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+          <div className="mb-7 text-center sm:mb-8">
+            <p className="lux-eyebrow text-[10px]">FacetVault</p>
+            <h1 className="lux-display mt-3 text-[1.85rem] text-white sm:text-[2.2rem]">
               Create account
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            <div className="mx-auto mt-3 h-px w-10 bg-gradient-to-r from-transparent via-amber-300/55 to-transparent" />
+            <p className="mt-3 text-[13.5px] leading-relaxed text-slate-400">
               Create an account to browse the public collection and contact for
               listed stones.
             </p>

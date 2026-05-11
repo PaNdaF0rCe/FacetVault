@@ -27,7 +27,7 @@ function SelectField({ label, value, onChange, options }) {
         <select
           value={value}
           onChange={onChange}
-          className="w-full appearance-none rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 pr-10 text-sm text-white outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
+          className="w-full appearance-none rounded-full border border-white/10 bg-[rgba(2,6,23,0.85)] px-4 py-2.5 pr-10 text-sm text-white outline-none transition-[border-color,background-color,box-shadow] duration-200 hover:border-white/15 focus:border-amber-300/45 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.10)]"
         >
           {options.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -91,7 +91,7 @@ function FilterBar({
 
   return (
     <>
-      <section className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.94),rgba(4,12,26,0.96))] p-3.5 shadow-[0_14px_36px_rgba(0,0,0,0.16)] sm:p-4">
+      <section className="lux-card-elevated p-4 sm:p-5">
         <div className="hidden items-end gap-3 md:grid md:grid-cols-[1.2fr_0.8fr_0.8fr_auto]">
           <div>
             <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-white/38">
@@ -108,7 +108,7 @@ function FilterBar({
                 value={filters.search || ""}
                 onChange={(e) => updateField("search", e.target.value)}
                 placeholder="Search name, stone type, code..."
-                className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 pl-10 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
+                className="w-full rounded-full border border-white/10 bg-[rgba(2,6,23,0.85)] px-4 py-2.5 pl-10 text-sm text-white placeholder:text-white/30 outline-none transition-[border-color,background-color,box-shadow] duration-200 hover:border-white/15 focus:border-amber-300/45 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.10)]"
               />
             </div>
           </div>
@@ -140,7 +140,7 @@ function FilterBar({
             <button
               type="button"
               onClick={resetFilters}
-              className="rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white"
+              className="rounded-full border border-white/10 bg-white/[0.025] px-5 py-2.5 text-sm font-medium text-white/72 transition hover:border-amber-300/35 hover:bg-amber-300/8 hover:text-amber-200"
             >
               Reset
             </button>
@@ -159,14 +159,14 @@ function FilterBar({
                 value={filters.search || ""}
                 onChange={(e) => updateField("search", e.target.value)}
                 placeholder="Search collection..."
-                className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 pl-10 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
+                className="w-full rounded-full border border-white/10 bg-[rgba(2,6,23,0.85)] px-4 py-2.5 pl-10 text-sm text-white placeholder:text-white/30 outline-none transition-[border-color,background-color,box-shadow] duration-200 hover:border-white/15 focus:border-amber-300/45 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.10)]"
               />
             </div>
 
             <button
               type="button"
               onClick={() => setMobileOpen((prev) => !prev)}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.025] px-3.5 py-2.5 text-sm font-medium text-white/78 transition hover:border-white/14 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/78 transition hover:border-amber-300/35 hover:text-amber-200"
             >
               <SlidersHorizontal size={15} strokeWidth={1.6} />
               Filters

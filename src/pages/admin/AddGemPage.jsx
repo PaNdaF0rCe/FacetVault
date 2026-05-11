@@ -116,62 +116,67 @@ function getInitialFormData(initialData, mode) {
   };
 }
 
-async function createThumbnail(file, maxWidth = 900, quality = 0.72) {
+/* ------------------------------------------------------------------
+   IMAGE PROCESSING — produces three webp variants for any uploaded
+   JPG / PNG / HEIC. Matches the pipeline in InventoryUploadModal.
+   ------------------------------------------------------------------ */
+
+const IMAGE_VARIANTS = [
+  { key: "thumb", maxWidth: 600, quality: 0.72, suffix: "thumb" },
+  { key: "medium", maxWidth: 1000, quality: 0.78, suffix: "medium" },
+  { key: "full", maxWidth: 1600, quality: 0.82, suffix: "full" },
+];
+
+async function decodeImageFile(file) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result);
+    reader.onerror = () => reject(new Error("Failed to read image file."));
+    reader.readAsDataURL(file);
+  });
+
   return new Promise((resolve, reject) => {
     const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      img.src = e.target?.result;
-    };
-
-    reader.onerror = () => {
-      reject(new Error("Failed to read image file."));
-    };
-
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement("canvas");
-
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Failed to create image canvas."));
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error("Failed to generate compressed image."));
-              return;
-            }
-
-            const baseName = file.name.replace(/\.[^/.]+$/, "");
-            const thumbnailFile = new File([blob], `${baseName}-thumb.webp`, {
-              type: "image/webp",
-            });
-
-            resolve(thumbnailFile);
-          },
-          "image/webp",
-          quality
-        );
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    img.onerror = () => {
+    img.onload = () => resolve(img);
+    img.onerror = () =>
       reject(new Error("Selected file is not a valid image."));
-    };
+    img.src = dataUrl;
+  });
+}
 
-    reader.readAsDataURL(file);
+async function renderWebpVariant(img, baseName, variant) {
+  const scale = Math.min(1, variant.maxWidth / img.width);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.width * scale));
+  canvas.height = Math.max(1, Math.round(img.height * scale));
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to create image canvas.");
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("webp encode failed"))),
+      "image/webp",
+      variant.quality
+    );
+  });
+
+  return new File([blob], `${baseName}-${variant.suffix}.webp`, {
+    type: "image/webp",
+  });
+}
+
+async function processImage(file) {
+  let img;
+  try {
+    img = await decodeImageFile(file);
+  } catch (err) {
+    console.warn("Image decode failed, will fall back to raw upload:", err);
+    return null;
   });
 }
 

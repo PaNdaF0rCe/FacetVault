@@ -127,6 +127,8 @@ export async function uploadInventoryItem(filePayload, metadata, userId) {
 
     imageUrl: uploadResult?.imageUrl || null,
     imagePath: uploadResult?.imagePath || null,
+    mediumUrl: uploadResult?.mediumUrl || null,
+    mediumPath: uploadResult?.mediumPath || null,
     thumbnailUrl: uploadResult?.thumbnailUrl || null,
     thumbnailPath: uploadResult?.thumbnailPath || null,
 
@@ -160,6 +162,8 @@ export async function updateInventoryItem(
     imageUpdate = {
       imageUrl: upload.imageUrl,
       imagePath: upload.imagePath,
+      mediumUrl: upload.mediumUrl,
+      mediumPath: upload.mediumPath,
       thumbnailUrl: upload.thumbnailUrl,
       thumbnailPath: upload.thumbnailPath,
     };
@@ -186,17 +190,21 @@ export async function deleteInventoryItem(itemId, userId) {
 
   await deleteDoc(doc(db, "inventory", itemId));
 
-  if (item.imagePath) {
-    try {
-      await deleteObject(ref(storage, item.imagePath));
-    } catch {}
-  }
+  const cleanupPaths = [
+    item.imagePath,
+    item.mediumPath,
+    item.thumbnailPath,
+  ].filter(Boolean);
 
-  if (item.thumbnailPath) {
-    try {
-      await deleteObject(ref(storage, item.thumbnailPath));
-    } catch {}
-  }
+  await Promise.all(
+    cleanupPaths.map(async (path) => {
+      try {
+        await deleteObject(ref(storage, path));
+      } catch {
+        // best-effort cleanup; missing files are fine
+      }
+    })
+  );
 
   return true;
 }

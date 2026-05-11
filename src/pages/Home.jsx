@@ -117,24 +117,29 @@ function Home() {
           className="mx-auto max-w-6xl"
         >
           <div className="mx-auto max-w-4xl text-center">
-            <motion.p
-              variants={fadeUp}
-              className="text-[11px] uppercase tracking-[0.42em] text-amber-300/72"
-            >
-              FacetVault
+            <motion.p variants={fadeUp} className="lux-eyebrow">
+              FacetVault — Sri Lanka
             </motion.p>
 
             <motion.h1
               variants={fadeUp}
-              className="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-[1.03] tracking-tight text-white sm:text-6xl lg:text-7xl"
+              className="lux-display mx-auto mt-7 max-w-4xl text-[2.6rem] text-white sm:text-[4.4rem] lg:text-[5.2rem]"
             >
               Curated gemstones,
-              <br className="hidden sm:block" /> presented with intention.
+              <br className="hidden sm:block" />{" "}
+              <span className="lux-display-italic text-amber-200/95">
+                presented with intention.
+              </span>
             </motion.h1>
+
+            <motion.div
+              variants={fadeUp}
+              className="mx-auto mt-7 h-px w-16 bg-gradient-to-r from-transparent via-amber-300/55 to-transparent"
+            />
 
             <motion.p
               variants={fadeUp}
-              className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg"
+              className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-[17px]"
             >
               A refined way to explore individually selected gemstones with
               clear details, direct inquiry, and a browsing experience designed
@@ -221,11 +226,9 @@ function Home() {
         >
           <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.34em] text-amber-300/72">
-                The Collection
-              </p>
+              <p className="lux-eyebrow-rule">The Collection</p>
 
-              <h2 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              <h2 className="lux-display mt-5 max-w-2xl text-[2rem] text-white sm:text-[2.6rem]">
                 Built for people who prefer a more thoughtful way to browse
                 gemstones.
               </h2>
@@ -288,11 +291,9 @@ function Home() {
             <div className="absolute left-1/2 top-0 h-[220px] w-[480px] -translate-x-1/2 rounded-full bg-amber-400/8 blur-3xl" />
           </div>
 
-          <p className="text-[11px] uppercase tracking-[0.34em] text-amber-300/74">
-            Begin Browsing
-          </p>
+          <p className="lux-eyebrow">Begin Browsing</p>
 
-          <h2 className="mt-4 text-2xl font-semibold text-white sm:text-4xl">
+          <h2 className="lux-display mt-5 text-[1.85rem] text-white sm:text-[2.6rem]">
             Start with the collection.
           </h2>
 

@@ -95,7 +95,7 @@ function getPrimaryBadge(item) {
 
 function MarketplaceImage({ item }) {
   const [loaded, setLoaded] = useState(false);
-  const imageSrc = item.thumbnailUrl || item.imageUrl;
+  const imageSrc = item.thumbnailUrl || item.mediumUrl || item.imageUrl;
 
   if (!imageSrc) {
     return (
@@ -104,6 +104,15 @@ function MarketplaceImage({ item }) {
       </div>
     );
   }
+
+  // Build a srcset from whichever variants exist. The browser will
+  // pick the smallest sufficient one for the rendered card width.
+  const candidates = [
+    item.thumbnailUrl ? `${item.thumbnailUrl} 600w` : null,
+    item.mediumUrl ? `${item.mediumUrl} 1000w` : null,
+    item.imageUrl ? `${item.imageUrl} 1600w` : null,
+  ].filter(Boolean);
+  const srcSet = candidates.length > 1 ? candidates.join(", ") : undefined;
 
   return (
     <>
@@ -117,6 +126,7 @@ function MarketplaceImage({ item }) {
 
       <img
         src={imageSrc}
+        srcSet={srcSet}
         alt={item.name || "Gemstone"}
         className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.018] ${
           loaded ? "opacity-100" : "opacity-0"
@@ -184,7 +194,7 @@ function MarketplaceCard({ item, rates, currency, campaign }) {
     .join(" • ");
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] shadow-[0_14px_36px_rgba(0,0,0,0.16)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-amber-300/18 hover:shadow-[0_18px_42px_rgba(0,0,0,0.22)]">
+    <article className="lux-card-elevated group flex h-full flex-col overflow-hidden">
       <Link to={`/stone/${item.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
           <MarketplaceImage item={item} />
@@ -230,8 +240,8 @@ function MarketplaceCard({ item, rates, currency, campaign }) {
           <p
             className={`truncate leading-tight ${
               isSmall
-                ? "text-[11px] font-medium text-white/38"
-                : "text-[13px] font-semibold text-amber-300"
+                ? "text-[11px] font-medium text-white/45"
+                : "font-display text-[16px] font-semibold tracking-tight text-amber-300"
             }`}
             title={primaryPrice}
           >
@@ -474,11 +484,15 @@ function Marketplace() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_18%_0%,rgba(251,191,36,0.035),transparent_55%)]" />
 
           <div className="relative z-10">
-            <p className="text-[10px] font-medium uppercase tracking-[0.34em] text-amber-300/65">
+            <p className="lux-eyebrow-rule text-[10px] text-amber-300/75">
               Curated Collection
             </p>
 
-            <div className="mt-4">
+            <h1 className="lux-display mt-4 text-[2rem] text-white sm:text-[2.4rem]">
+              The Vault
+            </h1>
+
+            <div className="mt-5">
               <div className="relative max-w-xl">
                 <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-white/28">
                   <Search size={14} strokeWidth={1.4} />

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where } from 'firebase/firestore';
-import { db } from '../lib/firebase/config';
-import { getDocs } from 'firebase/firestore';
+import { useState, useEffect } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { AlertCircle } from "lucide-react";
+import { db } from "../lib/firebase/config";
 
 function LowStockAlert({ userId, threshold = 3 }) {
   const [lowStockItems, setLowStockItems] = useState([]);
@@ -9,17 +9,17 @@ function LowStockAlert({ userId, threshold = 3 }) {
   useEffect(() => {
     const fetchLowStockItems = async () => {
       const q = query(
-        collection(db, 'inventory'),
-        where('userId', '==', userId),
-        where('quantity', '<=', threshold)
+        collection(db, "inventory"),
+        where("userId", "==", userId),
+        where("quantity", "<=", threshold)
       );
 
       const querySnapshot = await getDocs(q);
-      const items = querySnapshot.docs.map(doc => ({
+      const items = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
-      
+
       setLowStockItems(items);
     };
 
@@ -27,21 +27,45 @@ function LowStockAlert({ userId, threshold = 3 }) {
   }, [userId, threshold]);
 
   return (
-    <div className="bg-yellow-50 p-4 rounded-lg">
-      <h3 className="text-lg font-semibold text-yellow-800">Low Stock Alert</h3>
+    <section
+      className="lux-card-elevated p-5"
+      aria-live="polite"
+    >
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-300/30 bg-amber-300/10 text-amber-300">
+          <AlertCircle size={16} strokeWidth={1.8} />
+        </span>
+        <div>
+          <p className="lux-eyebrow text-[10px] text-amber-300/75">
+            Inventory
+          </p>
+          <h3 className="text-[15px] font-semibold text-white">
+            Low Stock Alert
+          </h3>
+        </div>
+      </div>
+
       {lowStockItems.length > 0 ? (
-        <ul className="mt-2 space-y-2">
-          {lowStockItems.map(item => (
-            <li key={item.id} className="text-yellow-700">
-              {item.name} - Only {item.quantity} left
+        <ul className="mt-4 divide-y divide-white/5 overflow-hidden rounded-xl border border-white/8 bg-white/[0.02]">
+          {lowStockItems.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between px-4 py-3 text-[13px]"
+            >
+              <span className="truncate text-white/80">{item.name}</span>
+              <span className="ml-3 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-200">
+                {item.quantity} left
+              </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-yellow-700">No items running low</p>
+        <p className="mt-4 text-[13px] text-white/50">
+          Everything is well-stocked.
+        </p>
       )}
-    </div>
+    </section>
   );
 }
 
-export default LowStockAlert; 
+export default LowStockAlert;

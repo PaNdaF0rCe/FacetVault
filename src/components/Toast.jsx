@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Check, AlertTriangle, Info, X } from "lucide-react";
 
 function Toast({ toast, onClose }) {
   useEffect(() => {
@@ -16,43 +17,52 @@ function Toast({ toast, onClose }) {
   const isSuccess = toast.type === "success";
   const isError = toast.type === "error";
 
+  const Icon = isSuccess ? Check : isError ? AlertTriangle : Info;
+
   return (
     <div className="pointer-events-none fixed inset-x-0 top-4 z-[100] flex justify-center px-4">
       <div
-        className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur ${
+        role="status"
+        aria-live="polite"
+        className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border px-4 py-3.5 shadow-[0_22px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl animate-[lux-fade-up_0.35s_cubic-bezier(0.22,1,0.36,1)_both] ${
           isSuccess
-            ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
+            ? "border-emerald-300/22 bg-emerald-500/[0.10] text-emerald-50"
             : isError
-            ? "border-red-400/20 bg-red-500/10 text-red-100"
-            : "border-white/10 bg-[#091427]/95 text-white"
+            ? "border-rose-300/22 bg-rose-500/[0.10] text-rose-50"
+            : "border-white/10 bg-[rgba(8,14,26,0.92)] text-white"
         }`}
       >
-        <div
-          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+        <span
+          className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
             isSuccess
-              ? "bg-emerald-400/15 text-emerald-300"
+              ? "bg-emerald-400/15 text-emerald-200"
               : isError
-              ? "bg-red-400/15 text-red-300"
-              : "bg-white/10 text-white"
+              ? "bg-rose-400/15 text-rose-200"
+              : "bg-amber-300/12 text-amber-200"
           }`}
         >
-          {isSuccess ? "✓" : isError ? "!" : "•"}
-        </div>
+          <Icon size={15} strokeWidth={1.9} />
+        </span>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">
-            {toast.title || (isSuccess ? "Success" : isError ? "Something went wrong" : "Notice")}
+          <p className="text-[13.5px] font-semibold tracking-tight">
+            {toast.title ||
+              (isSuccess ? "Success" : isError ? "Something went wrong" : "Notice")}
           </p>
-          <p className="mt-1 text-sm opacity-90">{toast.message}</p>
+          {toast.message && (
+            <p className="mt-1 text-[13px] leading-snug opacity-85">
+              {toast.message}
+            </p>
+          )}
         </div>
 
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg px-2 py-1 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="-m-1 rounded-lg p-1.5 text-current/70 transition hover:bg-white/10"
           aria-label="Close notification"
         >
-          ✕
+          <X size={14} strokeWidth={1.9} />
         </button>
       </div>
     </div>

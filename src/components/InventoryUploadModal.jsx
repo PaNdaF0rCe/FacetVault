@@ -115,63 +115,115 @@ function getInitialFormData(initialData, mode) {
   };
 }
 
-async function createThumbnail(file, maxWidth = 900, quality = 0.72) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
+/* ------------------------------------------------------------------
+   IMAGE PROCESSING
+   ------------------------------------------------------------------
+   Goal: every image stored in Firebase Storage is webp at three sizes
+   so the marketplace, related-stones grid, and the detail hero can
+   each pull the smallest-sufficient version.
+
+   Sizes (matched to where they're rendered):
+     - thumb  — 600px wide  · q 0.72 · grid cards on mobile + desktop
+     - medium — 1000px wide · q 0.78 · related-stones, large cards, retina
+     - full   — 1600px wide · q 0.82 · StoneDetail hero on large displays
+
+   Browser handles JPG/PNG decoding natively. Modern Safari decodes
+   HEIC. Anything that fails to decode falls through to the original.
+   ------------------------------------------------------------------ */
+
+const IMAGE_VARIANTS = [
+  { key: "thumb", maxWidth: 600, quality: 0.72, suffix: "thumb" },
+  { key: "medium", maxWidth: 1000, quality: 0.78, suffix: "medium" },
+  { key: "full", maxWidth: 1600, quality: 0.82, suffix: "full" },
+];
+
+async function decodeImage(file) {
+  const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
-
-    reader.onload = (e) => {
-      img.src = e.target?.result;
-    };
-
-    reader.onerror = () => {
-      reject(new Error("Failed to read image file."));
-    };
-
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement("canvas");
-
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Failed to create image canvas."));
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error("Failed to generate compressed image."));
-              return;
-            }
-
-            const baseName = file.name.replace(/\.[^/.]+$/, "");
-            const thumbnailFile = new File([blob], `${baseName}-thumb.webp`, {
-              type: "image/webp",
-            });
-
-            resolve(thumbnailFile);
-          },
-          "image/webp",
-          quality
-        );
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    img.onerror = () => {
-      reject(new Error("Selected file is not a valid image."));
-    };
-
+    reader.onload = (e) => resolve(e.target?.result);
+    reader.onerror = () => reject(new Error("Failed to read image file."));
     reader.readAsDataURL(file);
   });
+
+  const img = await new Promise((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () =>
+      reject(new Error("Selected file is not a valid image."));
+    el.src = dataUrl;
+  });
+
+  return img;
+}
+
+function encodeCanvasToWebp(canvas, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Failed to encode image as webp."));
+          return;
+        }
+        resolve(blob);
+      },
+      "image/webp",
+      quality
+    );
+  });
+}
+
+async function renderVariant(img, baseName, variant) {
+  const scale = Math.min(1, variant.maxWidth / img.width);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.width * scale));
+  canvas.height = Math.max(1, Math.round(img.height * scale));
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to create image canvas.");
+
+  // Better resampling for downscale.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const blob = await encodeCanvasToWebp(canvas, variant.quality);
+
+  return new File([blob], `${baseName}-${variant.suffix}.webp`, {
+    type: "image/webp",
+  });
+}
+
+/**
+ * Decode the source file once, then render thumb / medium / full webp variants.
+ * Returns { thumb, medium, full } — each a `File` with image/webp MIME.
+ * If the browser can't decode the file at all, returns null and the caller
+ * falls back to uploading the raw original.
+ */
+async function processImage(file) {
+  let img;
+  try {
+    img = await decodeImage(file);
+  } catch (err) {
+    console.warn("Image decode failed, will fall back to raw upload:", err);
+    return null;
+  }
+
+  const baseName = (file.name || "gem").replace(/\.[^/.]+$/, "");
+  const out = {};
+
+  for (const variant of IMAGE_VARIANTS) {
+    try {
+      out[variant.key] = await renderVariant(img, baseName, variant);
+    } catch (err) {
+      console.warn(`Failed to encode ${variant.key} variant:`, err);
+    }
+  }
+
+  // We need at least one variant to consider the pipeline successful.
+  if (!out.thumb && !out.medium && !out.full) return null;
+
+  return out;
 }
 
 function InventoryUploadModal({
@@ -333,21 +385,25 @@ function InventoryUploadModal({
       let imagePayload = null;
 
       if (imageFile) {
-        let thumbnailFile = null;
+        const variants = await processImage(imageFile);
 
-        try {
-          thumbnailFile = await createThumbnail(imageFile);
-        } catch (thumbnailError) {
-          console.warn(
-            "Thumbnail generation failed, continuing with original image only:",
-            thumbnailError
-          );
+        if (variants) {
+          // Use the largest successfully-encoded webp as the canonical
+          // "original" (replaces the raw multi-MB JPEG / HEIC).
+          imagePayload = {
+            original: variants.full || variants.medium || variants.thumb,
+            medium: variants.medium || null,
+            thumbnail: variants.thumb || null,
+          };
+        } else {
+          // Decoder couldn't read the file at all (e.g. desktop browser
+          // looking at HEIC). Upload the raw file so the user isn't blocked.
+          imagePayload = {
+            original: imageFile,
+            medium: null,
+            thumbnail: null,
+          };
         }
-
-        imagePayload = {
-          original: imageFile,
-          thumbnail: thumbnailFile,
-        };
       }
 
       if (isEditMode) {

@@ -180,9 +180,12 @@ function Navbar() {
                 transition={{ duration: 0.2 }}
               />
 
-              <div className="min-w-0">
+              <div className="min-w-0 leading-none">
                 <div className="truncate text-[1rem] font-semibold tracking-[0.26em] text-amber-300 sm:text-[1.05rem]">
                   FACET VAULT
+                </div>
+                <div className="mt-0.5 hidden text-[9px] uppercase tracking-[0.32em] text-white/40 sm:block">
+                  Curated · Sri Lanka
                 </div>
               </div>
             </Link>
@@ -340,7 +343,7 @@ function Navbar() {
                     alt="FacetVault"
                     className="h-8 w-8 shrink-0 object-contain"
                   />
-                  <span className="text-[1rem] font-semibold tracking-[0.24em] text-amber-300">
+                  <span className="text-[1rem] font-semibold tracking-[0.26em] text-amber-300">
                     FACET VAULT
                   </span>
                 </button>

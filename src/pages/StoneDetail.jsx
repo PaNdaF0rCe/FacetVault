@@ -43,16 +43,32 @@ function RelatedCard({ stone, campaign }) {
   return (
     <Link
       to={`/stone/${stone.id}`}
-      className="group overflow-hidden rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-amber-300/18 hover:shadow-[0_18px_42px_rgba(0,0,0,0.22)]"
+      className="lux-card-elevated group block overflow-hidden"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[#04101f]">
-        <img
-          src={stone.thumbnailUrl || stone.imageUrl}
-          alt={stone.name || stone.stoneType || "Gemstone"}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-          loading="lazy"
-          decoding="async"
-        />
+        {(() => {
+          const relSrc =
+            stone.mediumUrl || stone.thumbnailUrl || stone.imageUrl;
+          const relCandidates = [
+            stone.thumbnailUrl ? `${stone.thumbnailUrl} 600w` : null,
+            stone.mediumUrl ? `${stone.mediumUrl} 1000w` : null,
+            stone.imageUrl ? `${stone.imageUrl} 1600w` : null,
+          ].filter(Boolean);
+          const relSrcSet =
+            relCandidates.length > 1 ? relCandidates.join(", ") : undefined;
+
+          return (
+            <img
+              src={relSrc}
+              srcSet={relSrcSet}
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+              alt={stone.name || stone.stoneType || "Gemstone"}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+              loading="lazy"
+              decoding="async"
+            />
+          );
+        })()}
 
         {isSold && (
           <div className="absolute right-3 top-3 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
@@ -74,11 +90,17 @@ function RelatedCard({ stone, campaign }) {
           <p className="text-[13px] font-semibold text-rose-200">Recently sold</p>
         ) : hasDiscount ? (
           <div>
-            <p className="text-[11px] text-white/36 line-through">{formatMoney(rawPrice)}</p>
-            <p className="text-[13px] font-semibold text-amber-300">{formatMoney(discountedPrice)}</p>
+            <p className="text-[11px] text-white/36 line-through">
+              {formatMoney(rawPrice)}
+            </p>
+            <p className="font-display text-[15px] font-semibold tracking-tight text-amber-300">
+              {formatMoney(discountedPrice)}
+            </p>
           </div>
         ) : !Number.isNaN(rawPrice) && rawPrice > 0 ? (
-          <p className="text-[13px] font-semibold text-amber-300">{formatMoney(rawPrice)}</p>
+          <p className="font-display text-[15px] font-semibold tracking-tight text-amber-300">
+            {formatMoney(rawPrice)}
+          </p>
         ) : null}
       </div>
     </Link>
@@ -293,12 +315,31 @@ export default function StoneDetail() {
 
         <div className="grid items-start gap-10 lg:grid-cols-[1.16fr_0.84fr]">
           <div className="relative overflow-hidden rounded-[32px] border border-white/8 bg-[#04101f] shadow-[0_22px_50px_rgba(0,0,0,0.18)]">
-            <img
-              src={stone.imageUrl || stone.thumbnailUrl}
-              alt={stone.name || stone.stoneType || "Gemstone"}
-              className="h-full w-full object-cover"
-              decoding="async"
-            />
+            {(() => {
+              const heroSrc =
+                stone.imageUrl || stone.mediumUrl || stone.thumbnailUrl;
+              const heroCandidates = [
+                stone.thumbnailUrl ? `${stone.thumbnailUrl} 600w` : null,
+                stone.mediumUrl ? `${stone.mediumUrl} 1000w` : null,
+                stone.imageUrl ? `${stone.imageUrl} 1600w` : null,
+              ].filter(Boolean);
+              const heroSrcSet =
+                heroCandidates.length > 1
+                  ? heroCandidates.join(", ")
+                  : undefined;
+
+              return (
+                <img
+                  src={heroSrc}
+                  srcSet={heroSrcSet}
+                  sizes="(max-width: 1024px) 100vw, 56vw"
+                  alt={stone.name || stone.stoneType || "Gemstone"}
+                  className="h-full w-full object-cover"
+                  decoding="async"
+                  fetchpriority="high"
+                />
+              );
+            })()}
 
             {isSold && (
               <div className="absolute right-4 top-4 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
@@ -308,40 +349,40 @@ export default function StoneDetail() {
           </div>
 
           <div className="pt-1">
-            <p className="text-[10px] uppercase tracking-[0.32em] text-amber-300/68">
+            <p className="lux-eyebrow-rule text-[10px] text-amber-300/75">
               FacetVault Collection
             </p>
 
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h1 className="lux-display mt-4 text-[2.1rem] text-white sm:text-[2.8rem]">
               {stone.name || stone.stoneType || "Untitled Stone"}
             </h1>
 
             {(stone.stoneType || stone.category) && (
-              <p className="mt-2 text-sm text-white/42">
+              <p className="mt-2 text-[13.5px] uppercase tracking-[0.18em] text-white/45">
                 {stone.stoneType || stone.category}
               </p>
             )}
 
             {isSold ? (
-              <p className="mt-5 text-2xl font-semibold text-rose-200">
+              <p className="lux-display mt-6 text-[1.6rem] text-rose-200/95">
                 Recently sold
               </p>
             ) : !Number.isNaN(rawSalePrice) && rawSalePrice > 0 ? (
-              <div className="mt-5">
+              <div className="mt-6">
                 {hasDiscount ? (
                   <>
-                    <p className="text-sm text-white/38 line-through">
+                    <p className="text-sm text-white/40 line-through">
                       {formatMoney(rawSalePrice)}
                     </p>
-                    <p className="mt-0.5 text-2xl font-semibold text-amber-300">
+                    <p className="lux-display mt-0.5 text-[2rem] text-amber-300">
                       {formatMoney(discountedPrice)}
                     </p>
-                    <p className="mt-1.5 inline-flex items-center rounded-full border border-amber-300/18 bg-amber-300/8 px-2.5 py-0.5 text-[10px] font-medium text-amber-200">
+                    <p className="lux-pill lux-pill-gold mt-2.5">
                       {campaign.label}
                     </p>
                   </>
                 ) : (
-                  <p className="text-2xl font-semibold text-amber-300">
+                  <p className="lux-display text-[2rem] text-amber-300">
                     {formatMoney(rawSalePrice)}
                   </p>
                 )}
@@ -384,9 +425,9 @@ export default function StoneDetail() {
                   href={whatsappLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-[#09101c] transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.98]"
+                  className="lux-button-primary"
                 >
-                  <MessageCircle size={18} />
+                  <MessageCircle size={17} className="mr-2" strokeWidth={1.8} />
                   Inquire on WhatsApp
                 </a>
               )}
@@ -405,15 +446,15 @@ export default function StoneDetail() {
         </div>
 
         {related.length > 0 && (
-          <div className="mt-16">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-amber-300/68">
+          <div className="mt-20">
+            <p className="lux-eyebrow-rule text-[10px] text-amber-300/75">
               You may also like
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-white">
+            <h2 className="lux-display mt-4 text-[1.85rem] text-white sm:text-[2.2rem]">
               Related Stones
             </h2>
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {related.map((item) => (
                 <RelatedCard key={item.id} stone={item} campaign={campaign} />
               ))}

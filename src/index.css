@@ -2,7 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------------- BASE ---------------- */
+/* ============================================================
+   FACETVAULT — DESIGN TOKENS
+   Premium / luxury system: obsidian + champagne gold + sapphire
+   ============================================================ */
+
+:root {
+  --fv-obsidian-900: #020617;
+  --fv-obsidian-800: #04101f;
+  --fv-obsidian-700: #0a1422;
+  --fv-obsidian-600: #0f1a2e;
+
+  --fv-champagne-50: #fff8e1;
+  --fv-champagne-100: #fceabb;
+  --fv-champagne-200: #f7d488;
+  --fv-champagne-300: #fbbf24;
+  --fv-champagne-400: #e7a812;
+  --fv-champagne-500: #d4a017;
+
+  --fv-sapphire-500: #3b6ed8;
+  --fv-sapphire-700: #0f2a64;
+
+  --fv-ivory: #f8f5ee;
+  --fv-mist: rgba(255, 255, 255, 0.06);
+  --fv-hairline: rgba(255, 255, 255, 0.08);
+  --fv-hairline-strong: rgba(255, 255, 255, 0.14);
+
+  --fv-shadow-soft: 0 12px 36px rgba(0, 0, 0, 0.16);
+  --fv-shadow-elevated: 0 22px 58px rgba(0, 0, 0, 0.32);
+  --fv-shadow-hero: 0 30px 80px rgba(0, 0, 0, 0.42);
+
+  --fv-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
 
 html,
 body,
@@ -16,19 +51,19 @@ html {
 
 body {
   margin: 0;
-  font-family: Inter, system-ui, sans-serif;
-  background:
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background-color: #050810;
+  background-image:
     radial-gradient(
-      circle at 20% 10%,
-      rgba(251, 191, 36, 0.04),
-      transparent 40%
+      circle at 18% 8%,
+      rgba(251, 191, 36, 0.05),
+      transparent 42%
     ),
     radial-gradient(
-      circle at 80% 90%,
-      rgba(59, 130, 246, 0.06),
+      circle at 82% 92%,
+      rgba(59, 110, 216, 0.07),
       transparent 50%
-    ),
-    #050810;
+    );
   color: #e5e7eb;
   letter-spacing: 0.2px;
   text-rendering: optimizeLegibility;
@@ -36,12 +71,36 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle film-grain noise — extremely faint, gives the dark BG depth */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
 img {
   display: block;
   max-width: 100%;
 }
 
-/* ---------------- TYPOGRAPHY ---------------- */
+::selection {
+  background: rgba(251, 191, 36, 0.28);
+  color: #fff;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
 
 h1,
 h2,
@@ -50,126 +109,351 @@ h4 {
   letter-spacing: -0.02em;
 }
 
-/* ---------------- INPUTS ---------------- */
+.lux-display {
+  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+}
+
+.lux-display-italic {
+  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.lux-eyebrow {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.34em;
+  color: rgba(251, 191, 36, 0.78);
+}
+
+.lux-eyebrow-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.34em;
+  color: rgba(251, 191, 36, 0.78);
+}
+
+.lux-eyebrow-rule::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: rgba(251, 191, 36, 0.55);
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
 
 .lux-input {
-  background: rgba(10, 18, 32, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 14, 26, 0.72);
+  border: 1px solid var(--fv-hairline);
   border-radius: 14px;
   padding: 12px 14px;
   color: #f8fafc;
+  font-size: 14px;
   transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease,
-    background-color 0.25s ease;
+    border-color 0.25s var(--fv-ease),
+    box-shadow 0.25s var(--fv-ease),
+    background-color 0.25s var(--fv-ease);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
 
 .lux-input::placeholder {
-  color: #94a3b8;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.lux-input:hover {
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .lux-input:focus {
   outline: none;
-  border-color: rgba(251, 191, 36, 0.6);
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.10);
+  background: rgba(10, 18, 32, 0.85);
 }
 
-/* ---------------- BUTTONS ---------------- */
+.input-dark {
+  background: var(--fv-obsidian-900);
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: #e5e7eb;
+  transition:
+    border-color 0.2s var(--fv-ease),
+    box-shadow 0.2s var(--fv-ease),
+    background-color 0.2s var(--fv-ease);
+}
+
+.input-dark:hover {
+  border-color: #334155;
+}
+
+.input-dark:focus {
+  outline: none;
+  border-color: var(--fv-champagne-300);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.10);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 
 .lux-button-primary {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #fbbf24, #d4a017);
-  color: #0f172a;
-  padding: 12px 18px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fbe488 0%, #fbbf24 48%, #d4a017 100%);
+  color: #0b101c;
+  padding: 12px 22px;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  text-transform: none;
   transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    filter 0.25s ease,
-    background 0.25s ease;
-  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.15);
+    transform 0.25s var(--fv-ease),
+    box-shadow 0.25s var(--fv-ease),
+    filter 0.25s var(--fv-ease);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 6px 20px rgba(251, 191, 36, 0.18);
   will-change: transform;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Subtle moving sheen on hover */
+.lux-button-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--fv-ease);
+  pointer-events: none;
 }
 
 .lux-button-primary:hover {
-  filter: brightness(1.05);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.2);
+  filter: brightness(1.04);
+  transform: translateY(-1.5px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.1) inset,
+    0 12px 30px rgba(251, 191, 36, 0.28);
+}
+
+.lux-button-primary:hover::after {
+  transform: translateX(120%);
+}
+
+.lux-button-primary:active {
+  transform: translateY(0);
+}
+
+.lux-button-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 0 0 3px rgba(251, 191, 36, 0.32);
+}
+
+.lux-button-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
 }
 
 .lux-button-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 18, 32, 0.6);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 18, 32, 0.55);
   color: #e5e7eb;
-  padding: 12px 18px;
-  font-weight: 600;
+  padding: 12px 22px;
+  font-weight: 500;
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
   transition:
-    border-color 0.25s ease,
-    color 0.25s ease,
-    background-color 0.25s ease,
-    transform 0.25s ease;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+    border-color 0.25s var(--fv-ease),
+    color 0.25s var(--fv-ease),
+    background-color 0.25s var(--fv-ease),
+    transform 0.25s var(--fv-ease),
+    box-shadow 0.25s var(--fv-ease);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .lux-button-secondary:hover {
-  border-color: rgba(251, 191, 36, 0.5);
+  border-color: rgba(251, 191, 36, 0.55);
   color: #fff;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.78);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-/* ---------------- CARD SYSTEM ---------------- */
+.lux-button-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18);
+}
+
+.lux-button-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    color 0.2s var(--fv-ease),
+    background-color 0.2s var(--fv-ease),
+    border-color 0.2s var(--fv-ease);
+}
+
+.lux-button-ghost:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
 
 .lux-card {
-  background: rgba(10, 18, 32, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 18, 32, 0.72);
+  border: 1px solid var(--fv-hairline);
   border-radius: 18px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition:
-    border-color 0.25s ease,
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background-color 0.25s ease;
+    border-color 0.3s var(--fv-ease),
+    transform 0.3s var(--fv-ease),
+    box-shadow 0.3s var(--fv-ease),
+    background-color 0.3s var(--fv-ease);
   will-change: transform;
 }
 
 .lux-card:hover {
-  border-color: rgba(251, 191, 36, 0.25);
+  border-color: rgba(251, 191, 36, 0.28);
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--fv-shadow-elevated);
 }
 
-/* ---------------- DIVIDERS ---------------- */
+/* Elevated card with a faint conic gold border on hover */
+.lux-card-elevated {
+  position: relative;
+  border-radius: 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 18, 32, 0.92),
+    rgba(4, 11, 22, 0.96)
+  );
+  border: 1px solid var(--fv-hairline);
+  box-shadow: var(--fv-shadow-soft);
+  transition:
+    transform 0.35s var(--fv-ease),
+    box-shadow 0.35s var(--fv-ease),
+    border-color 0.35s var(--fv-ease);
+  isolation: isolate;
+}
+
+.lux-card-elevated::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 140deg at 50% 50%,
+    rgba(251, 191, 36, 0) 0deg,
+    rgba(251, 191, 36, 0.55) 90deg,
+    rgba(251, 191, 36, 0) 180deg,
+    rgba(251, 191, 36, 0.4) 270deg,
+    rgba(251, 191, 36, 0) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s var(--fv-ease);
+  pointer-events: none;
+}
+
+.lux-card-elevated:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--fv-shadow-elevated);
+  border-color: rgba(251, 191, 36, 0.05);
+}
+
+.lux-card-elevated:hover::before {
+  opacity: 0.65;
+}
+
+/* ============================================================
+   DIVIDERS / RULES
+   ============================================================ */
 
 .lux-divider {
   height: 1px;
   background: linear-gradient(
     to right,
     transparent,
-    rgba(251, 191, 36, 0.3),
+    rgba(251, 191, 36, 0.32),
     transparent
   );
 }
 
-/* ---------------- SECTION WRAPPER ---------------- */
-
-.lux-section {
-  padding-top: 3rem;
-  padding-bottom: 3rem;
+.lux-hairline {
+  height: 1px;
+  background: var(--fv-hairline);
 }
 
-/* ---------------- GLOW EFFECT ---------------- */
+.lux-rule-vertical {
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(251, 191, 36, 0.28),
+    transparent
+  );
+}
+
+/* ============================================================
+   SECTION + GLOW
+   ============================================================ */
+
+.lux-section {
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
 
 .lux-glow {
   position: relative;
@@ -182,11 +466,11 @@ h4 {
   border-radius: inherit;
   background: radial-gradient(
     circle at center,
-    rgba(251, 191, 36, 0.15),
+    rgba(251, 191, 36, 0.16),
     transparent 70%
   );
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s var(--fv-ease);
   pointer-events: none;
 }
 
@@ -194,26 +478,127 @@ h4 {
   opacity: 1;
 }
 
-/* ---------------- SIMPLE INPUT ---------------- */
-
-.input-dark {
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: #e5e7eb;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+/* Soft amber halo behind a hero element */
+.lux-halo {
+  position: relative;
+  isolation: isolate;
 }
 
-.input-dark:focus {
-  outline: none;
-  border-color: #fbbf24;
+.lux-halo::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20%;
+  z-index: -1;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(251, 191, 36, 0.10),
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
-/* ---------------- UTILITIES ---------------- */
+/* ============================================================
+   SPINNERS
+   ============================================================ */
+
+.lux-spinner {
+  width: 38px;
+  height: 38px;
+  position: relative;
+}
+
+.lux-spinner::before,
+.lux-spinner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+}
+
+.lux-spinner::before {
+  border-top-color: rgba(251, 191, 36, 0.85);
+  border-right-color: rgba(251, 191, 36, 0.35);
+  animation: lux-spin 0.95s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+}
+
+.lux-spinner::after {
+  inset: 6px;
+  border-top-color: rgba(255, 255, 255, 0.45);
+  animation: lux-spin 1.6s linear infinite reverse;
+}
+
+@keyframes lux-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   PILLS / BADGES
+   ============================================================ */
+
+.lux-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--fv-hairline);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.lux-pill-gold {
+  border-color: rgba(251, 191, 36, 0.28);
+  background: rgba(251, 191, 36, 0.10);
+  color: #fde08a;
+}
+
+/* ============================================================
+   SHIMMER (skeleton)
+   ============================================================ */
+
+.lux-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: lux-shimmer-anim 1.6s ease-in-out infinite;
+}
+
+@keyframes lux-shimmer-anim {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+
+/* Used by Toast and other components via arbitrary animate-[lux-fade-up_...] */
+@keyframes lux-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
 
 .line-clamp-1 {
   display: -webkit-box;
@@ -238,7 +623,20 @@ h4 {
   display: none;
 }
 
-/* ---------------- REDUCED MOTION ---------------- */
+/* Smooth focus for keyboard users only — hides ugly default outline */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(251, 191, 36, 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   html {

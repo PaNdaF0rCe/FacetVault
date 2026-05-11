@@ -24,8 +24,11 @@ const LeadsDashboard = lazy(() => import("./pages/admin/LeadsDashboard"));
 
 function PageLoader() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+      <div className="lux-spinner" aria-hidden="true" />
+      <p className="lux-eyebrow text-[10px] text-amber-300/70">
+        Loading
+      </p>
     </div>
   );
 }

@@ -1,9 +1,18 @@
-function LoadingSpinner() {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-  
-  export default LoadingSpinner;
+function LoadingSpinner({ label }) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center gap-3 py-10"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="lux-spinner" aria-hidden="true" />
+      {label ? (
+        <p className="lux-eyebrow text-[10px] text-amber-300/70">{label}</p>
+      ) : (
+        <span className="sr-only">Loading</span>
+      )}
+    </div>
+  );
+}
+
+export default LoadingSpinner;
