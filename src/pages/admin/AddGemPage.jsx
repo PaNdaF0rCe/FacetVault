@@ -177,7 +177,7 @@ async function processImage(file) {
   } catch (err) {
     console.warn("Image decode failed, will fall back to raw upload:", err);
     return null;
-  });
+  }
 }
 
 function CompactToggle({ label, name, checked, onChange }) {
