@@ -1,8 +1,10 @@
 /**
- * Automatic holiday campaign system.
- * Campaigns activate 14 days before each holiday and expire the day after.
- * Discount tiers are sourced from the FacetVault pricing structure.
- * No admin action required — purely date-driven.
+ * Tier 1 approved sale campaign system.
+ * Only campaigns in the TIER1_* lists below can trigger discounts.
+ * All other holidays (Poya days, minor observances, etc.) are ignored.
+ * Campaigns activate 14 days before the anchor date and expire the day after.
+ * If multiple approved campaigns overlap, both names are shown but only one
+ * discount is applied — no stacking.
  */
 
 const LEAD_DAYS = 14;
@@ -24,38 +26,36 @@ export function applyDiscount(price) {
   return Math.round(p * (1 - getDiscountRate(p)));
 }
 
-// ── Fixed-date holidays (month 0-indexed) ─────────────────────────────────
-const FIXED_HOLIDAYS = [
-  { name: "New Year",                 month: 0,  day: 1  },
+// ── Tier 1 fixed-date campaigns (month 0-indexed) ─────────────────────────
+// Only these fixed dates are approved. Do not add other public/religious
+// holidays, Poya days, or minor observances.
+const TIER1_FIXED = [
   { name: "Valentine's Day",          month: 1,  day: 14 },
+  { name: "Women's Day",              month: 2,  day: 8  },
   { name: "Sinhala & Tamil New Year", month: 3,  day: 13 },
   { name: "Christmas",                month: 11, day: 25 },
-  { name: "New Year's Eve",           month: 11, day: 31 },
+  { name: "New Year",                 month: 0,  day: 1  },
 ];
 
-// ── Variable holidays by year (Diwali, Eid, Vesak) ────────────────────────
-const VARIABLE_HOLIDAYS = {
+// ── Tier 1 variable-date campaigns ────────────────────────────────────────
+// Only Eid al-Fitr (main Eid) and Deepavali are approved.
+// Eid al-Adha, Vesak Poya, and other Muslim/Buddhist observances are excluded.
+const TIER1_VARIABLE = {
   2025: [
-    { name: "Eid al-Fitr",  date: new Date(2025, 2, 30) },
-    { name: "Vesak Poya",   date: new Date(2025, 4, 12) },
-    { name: "Eid al-Adha",  date: new Date(2025, 5,  6) },
-    { name: "Diwali",       date: new Date(2025, 9, 20) },
+    { name: "Eid Sale",  date: new Date(2025, 2, 30) },
+    { name: "Deepavali", date: new Date(2025, 9, 20) },
   ],
   2026: [
-    { name: "Eid al-Fitr",  date: new Date(2026, 2, 20) },
-    { name: "Vesak Poya",   date: new Date(2026, 4,  1) },
-    { name: "Eid al-Adha",  date: new Date(2026, 4, 27) },
-    { name: "Diwali",       date: new Date(2026, 9,  9) },
+    { name: "Eid Sale",  date: new Date(2026, 2, 20) },
+    { name: "Deepavali", date: new Date(2026, 9,  9) },
   ],
   2027: [
-    { name: "Eid al-Fitr",  date: new Date(2027, 2,  9) },
-    { name: "Vesak Poya",   date: new Date(2027, 4, 20) },
-    { name: "Eid al-Adha",  date: new Date(2027, 4, 17) },
-    { name: "Diwali",       date: new Date(2027, 9, 29) },
+    { name: "Eid Sale",  date: new Date(2027, 2,  9) },
+    { name: "Deepavali", date: new Date(2027, 9, 29) },
   ],
 };
 
-// ── Computed holidays (nth weekday of month) ──────────────────────────────
+// ── Tier 1 computed campaigns (nth weekday of month) ──────────────────────
 function nthWeekday(year, month, weekday, n) {
   const d = new Date(year, month, 1);
   let count = 0;
@@ -69,55 +69,32 @@ function nthWeekday(year, month, weekday, n) {
   return null;
 }
 
-function getComputedHolidays(year) {
-  const holidays = [];
+function getTier1ComputedCampaigns(year) {
+  const campaigns = [];
 
   // Mother's Day — 2nd Sunday of May
   const mothersDay = nthWeekday(year, 4, 0, 2);
-  if (mothersDay) holidays.push({ name: "Mother's Day", date: mothersDay });
+  if (mothersDay) campaigns.push({ name: "Mother's Day", date: mothersDay });
 
   // Father's Day — 3rd Sunday of June
   const fathersDay = nthWeekday(year, 5, 0, 3);
-  if (fathersDay) holidays.push({ name: "Father's Day", date: fathersDay });
+  if (fathersDay) campaigns.push({ name: "Father's Day", date: fathersDay });
 
-  // Black Friday — day after 4th Thursday of November
-  const thanksgiving = nthWeekday(year, 10, 4, 4);
-  if (thanksgiving) {
-    const blackFriday = new Date(thanksgiving);
-    blackFriday.setDate(blackFriday.getDate() + 1);
-    holidays.push({ name: "Black Friday", date: blackFriday });
-  }
-
-  // Easter Sunday (Anonymous Gregorian algorithm)
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-  holidays.push({ name: "Easter", date: new Date(year, month, day) });
-
-  return holidays;
+  return campaigns;
 }
 
 // ── Main export ────────────────────────────────────────────────────────────
 
 /**
- * Returns the active campaign if today falls within the lead window of any
- * major holiday, or null otherwise. Checks the current year and adjacent
- * years so Dec/Jan boundary holidays are handled correctly.
+ * Returns the active campaign state if today falls within the lead window of
+ * any Tier 1 approved campaign, or null if no campaign is active.
+ *
+ * When multiple approved campaigns overlap (e.g. Christmas + New Year), their
+ * names are combined in the label — but only a single discount is applied.
  */
 export function getActiveCampaign(now = new Date()) {
   const year = now.getFullYear();
-  const candidates = [];
+  const active = [];
 
   const checkDate = (name, holidayDate) => {
     const start = new Date(holidayDate);
@@ -128,32 +105,30 @@ export function getActiveCampaign(now = new Date()) {
     if (now >= start && now <= end) {
       const msUntil = holidayDate.getTime() - now.getTime();
       const daysUntil = Math.ceil(msUntil / (1000 * 60 * 60 * 24));
-      candidates.push({ name, holidayDate, daysUntil });
+      active.push({ name, holidayDate, daysUntil });
     }
   };
 
-  // Fixed holidays — check previous, current, and next year to handle boundaries
-  for (const h of FIXED_HOLIDAYS) {
+  // Check previous, current, and next year so Dec/Jan boundary is handled
+  for (const c of TIER1_FIXED) {
     for (const y of [year - 1, year, year + 1]) {
-      checkDate(h.name, new Date(y, h.month, h.day));
+      checkDate(c.name, new Date(y, c.month, c.day));
     }
   }
 
-  // Variable holidays
   for (const y of [year - 1, year, year + 1]) {
-    const list = VARIABLE_HOLIDAYS[y] || [];
-    for (const h of list) checkDate(h.name, h.date);
+    const list = TIER1_VARIABLE[y] || [];
+    for (const c of list) checkDate(c.name, c.date);
   }
 
-  // Computed holidays
   for (const y of [year - 1, year, year + 1]) {
-    for (const h of getComputedHolidays(y)) checkDate(h.name, h.date);
+    for (const c of getTier1ComputedCampaigns(y)) checkDate(c.name, c.date);
   }
 
-  if (candidates.length === 0) return null;
+  if (active.length === 0) return null;
 
-  // When multiple overlap, prefer the nearest upcoming holiday; fall back to most recent
-  candidates.sort((a, b) => {
+  // Sort: nearest upcoming first, then most recent past
+  active.sort((a, b) => {
     const aUp = a.daysUntil >= 0;
     const bUp = b.daysUntil >= 0;
     if (aUp && !bUp) return -1;
@@ -161,13 +136,19 @@ export function getActiveCampaign(now = new Date()) {
     return Math.abs(a.daysUntil) - Math.abs(b.daysUntil);
   });
 
-  const winner = candidates[0];
+  const primary = active[0];
+
+  // Deduplicate and combine names when multiple campaigns overlap
+  const names = [...new Set(active.map(c => c.name))];
+  const label = names.length > 1
+    ? `${names.join(" + ")} Sale`
+    : `${names[0]} Sale`;
 
   return {
-    name: winner.name,
-    label: `${winner.name} Sale`,
-    daysUntil: winner.daysUntil,
-    holidayDate: winner.holidayDate,
+    name: names.join(" + "),
+    label,
+    daysUntil: primary.daysUntil,
+    holidayDate: primary.holidayDate,
     discountSummary: "up to 15% off",
   };
 }
