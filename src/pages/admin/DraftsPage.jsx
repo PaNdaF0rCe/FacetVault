@@ -111,13 +111,7 @@ function DraftCard({ draft, onApprove, onReject }) {
   const isOriginWaiting = draft.status === "awaiting_image";
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      className="overflow-hidden rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(4,10,22,0.97),rgba(2,6,18,0.99))] shadow-lux-elevated"
-    >
+    <div className="overflow-hidden rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(4,10,22,0.97),rgba(2,6,18,0.99))] shadow-lux-elevated">
       {/* post image */}
       {(draft.brandedImageUrl || draft.originalImageUrl) ? (
         <div className="relative aspect-square w-full overflow-hidden bg-obsidian-900">
@@ -212,7 +206,7 @@ function DraftCard({ draft, onApprove, onReject }) {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -355,16 +349,14 @@ export default function DraftsPage() {
 
       {!loading && drafts.length > 0 && (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <AnimatePresence>
-            {drafts.map((draft) => (
-              <DraftCard
-                key={draft.id}
-                draft={draft}
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
-            ))}
-          </AnimatePresence>
+          {drafts.map((draft) => (
+            <DraftCard
+              key={draft.id}
+              draft={draft}
+              onApprove={handleApprove}
+              onReject={handleReject}
+            />
+          ))}
         </div>
       )}
     </div>
