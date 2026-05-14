@@ -1,14 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   collection, query, where, orderBy, onSnapshot,
   doc, updateDoc, serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../../lib/firebase/config";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../../lib/firebase/config";
 import { onForegroundMessage } from "../../lib/firebase/fcm";
 import {
   CheckCircle, XCircle, RefreshCw,
-  Edit3, Check, X, Clock,
+  Edit3, Check, X, Clock, Upload, Shuffle, Undo2,
 } from "lucide-react";
 import { FaInstagram, FaFacebook } from "react-icons/fa";
 
@@ -93,19 +94,78 @@ function EditableCaption({ value, onChange, label, lang = "en" }) {
 
 // ── draft card ────────────────────────────────────────────────────────────────
 
+const BOT_URL = "https://facetvaultbot.onrender.com";
+
 function DraftCard({ draft, onApprove, onReject }) {
   const [captionEn, setCaptionEn] = useState(draft.captionEn || "");
   const [captionSi, setCaptionSi] = useState(draft.captionSinhala || "");
-  const [acting, setActing] = useState(null); // "approve" | "reject"
+  const [acting, setActing] = useState(null);
+  const [undoSecs, setUndoSecs] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+  const rejectTimerRef = useRef(null);
 
   const handleApprove = async () => {
     setActing("approve");
     await onApprove(draft.id, { captionEn, captionSinhala: captionSi });
   };
 
-  const handleReject = async () => {
+  // Reject with 5-second undo window
+  const startReject = () => {
+    let secs = 5;
+    setUndoSecs(secs);
+    rejectTimerRef.current = setInterval(() => {
+      secs -= 1;
+      if (secs <= 0) {
+        clearInterval(rejectTimerRef.current);
+        setUndoSecs(null);
+        setActing("reject");
+        onReject(draft.id).catch(() => setActing(null));
+      } else {
+        setUndoSecs(secs);
+      }
+    }, 1000);
+  };
+
+  const handleUndoReject = () => {
+    clearInterval(rejectTimerRef.current);
+    setUndoSecs(null);
+  };
+
+  // Remove awaiting-image draft immediately (no undo needed — no content yet)
+  const handleRemove = async () => {
     setActing("reject");
     await onReject(draft.id);
+  };
+
+  // Reject current draft and trigger the bot to generate a fresh one
+  const handleReselect = async () => {
+    setActing("reselect");
+    await onReject(draft.id);
+    fetch(`${BOT_URL}/trigger-draft`).catch(() => {});
+  };
+
+  // Upload a custom photo → sets brandedImageUrl and flips status to pending
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const sRef = storageRef(storage, `marketingDrafts/${draft.id}/custom`);
+      await uploadBytes(sRef, file);
+      const url = await getDownloadURL(sRef);
+      await updateDoc(doc(db, "marketingDrafts", draft.id), {
+        brandedImageUrl: url,
+        originalImageUrl: url,
+        status: "pending",
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const isOriginWaiting = draft.status === "awaiting_image";
@@ -182,42 +242,84 @@ function DraftCard({ draft, onApprove, onReject }) {
           </div>
         )}
 
-        {/* approve / reject */}
-        {!isOriginWaiting && (
-          <div className="flex gap-3 pt-1">
+        {/* awaiting-image actions: upload photo / new stone / remove */}
+        {isOriginWaiting && (
+          <div className="space-y-2 border-t border-white/6 pt-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage || !!acting}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/12 disabled:opacity-50"
+              >
+                {uploadingImage ? <RefreshCw size={13} className="animate-spin" /> : <Upload size={13} />}
+                {uploadingImage ? "Uploading…" : "Upload Photo"}
+              </button>
+              <button
+                type="button"
+                onClick={handleReselect}
+                disabled={!!acting || uploadingImage}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/50 transition hover:border-white/20 hover:text-white/70 disabled:opacity-50"
+              >
+                {acting === "reselect" ? <RefreshCw size={13} className="animate-spin" /> : <Shuffle size={13} />}
+                {acting === "reselect" ? "Selecting…" : "New Stone"}
+              </button>
+            </div>
             <button
               type="button"
-              onClick={handleApprove}
-              disabled={!!acting}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-emerald-300 transition hover:border-emerald-400/50 hover:bg-emerald-400/16 disabled:opacity-50"
+              onClick={handleRemove}
+              disabled={!!acting || uploadingImage}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-300/60 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
             >
-              {acting === "approve" ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-              {acting === "approve" ? "Approving…" : "Approve & Schedule"}
-            </button>
-            <button
-              type="button"
-              onClick={handleReject}
-              disabled={!!acting}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-red-300/70 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
-            >
-              {acting === "reject" ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={13} />}
-              {acting === "reject" ? "…" : "Reject"}
+              {acting === "reject" ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={12} />}
+              {acting === "reject" ? "Removing…" : "Remove"}
             </button>
           </div>
         )}
 
-        {/* remove awaiting-image draft */}
-        {isOriginWaiting && (
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={handleReject}
-              disabled={!!acting}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-red-300/70 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
-            >
-              {acting === "reject" ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={13} />}
-              {acting === "reject" ? "Removing…" : "Remove Draft"}
-            </button>
+        {/* pending: approve + reject with 5s undo */}
+        {!isOriginWaiting && (
+          <div className="space-y-2 pt-1">
+            {undoSecs !== null ? (
+              <div className="flex items-center justify-between rounded-2xl border border-amber-300/20 bg-amber-300/6 px-4 py-3">
+                <p className="text-[12px] text-amber-200/80">Rejecting in {undoSecs}s…</p>
+                <button
+                  type="button"
+                  onClick={handleUndoReject}
+                  className="flex items-center gap-1.5 rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-1.5 text-[11px] font-semibold text-amber-200 transition hover:bg-amber-300/18"
+                >
+                  <Undo2 size={11} /> Undo
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={!!acting}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-emerald-300 transition hover:border-emerald-400/50 hover:bg-emerald-400/16 disabled:opacity-50"
+                >
+                  {acting === "approve" ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                  {acting === "approve" ? "Approving…" : "Approve & Schedule"}
+                </button>
+                <button
+                  type="button"
+                  onClick={startReject}
+                  disabled={!!acting}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-red-300/70 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
+                >
+                  <XCircle size={13} />
+                  Reject
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
