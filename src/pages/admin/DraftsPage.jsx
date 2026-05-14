@@ -5,9 +5,9 @@ import {
   doc, updateDoc, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase/config";
-import { requestNotificationPermission, onForegroundMessage } from "../../lib/firebase/fcm";
+import { onForegroundMessage } from "../../lib/firebase/fcm";
 import {
-  CheckCircle, XCircle, RefreshCw, Bell, BellOff,
+  CheckCircle, XCircle, RefreshCw,
   Edit3, Check, X, Clock,
 } from "lucide-react";
 import { FaInstagram, FaFacebook } from "react-icons/fa";
@@ -205,6 +205,21 @@ function DraftCard({ draft, onApprove, onReject }) {
             </button>
           </div>
         )}
+
+        {/* remove awaiting-image draft */}
+        {isOriginWaiting && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleReject}
+              disabled={!!acting}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-red-300/70 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
+            >
+              {acting === "reject" ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={13} />}
+              {acting === "reject" ? "Removing…" : "Remove Draft"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -215,7 +230,6 @@ function DraftCard({ draft, onApprove, onReject }) {
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notifStatus, setNotifStatus] = useState("unknown"); // "granted" | "denied" | "unknown"
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = "success") => {
@@ -250,20 +264,6 @@ export default function DraftsPage() {
     return unsub;
   }, []);
 
-  // Check notification permission on mount
-  useEffect(() => {
-    if ("Notification" in window) {
-      setNotifStatus(Notification.permission);
-    }
-  }, []);
-
-  const enableNotifications = async () => {
-    const token = await requestNotificationPermission();
-    setNotifStatus(token ? "granted" : "denied");
-    if (token) showToast("Push notifications enabled");
-    else showToast("Notification permission denied", "error");
-  };
-
   const handleApprove = useCallback(async (draftId, edits) => {
     await updateDoc(doc(db, "marketingDrafts", draftId), {
       status: "approved",
@@ -296,19 +296,6 @@ export default function DraftsPage() {
           </p>
         </div>
 
-        {/* notification toggle */}
-        <button
-          type="button"
-          onClick={notifStatus !== "granted" ? enableNotifications : undefined}
-          className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[11px] uppercase tracking-[0.18em] transition ${
-            notifStatus === "granted"
-              ? "border-emerald-400/20 bg-emerald-400/8 text-emerald-300"
-              : "border-white/10 bg-white/4 text-white/40 hover:border-amber-300/30 hover:text-amber-200"
-          }`}
-        >
-          {notifStatus === "granted" ? <Bell size={12} /> : <BellOff size={12} />}
-          {notifStatus === "granted" ? "Notifications on" : "Enable notifications"}
-        </button>
       </div>
 
       {/* toast */}

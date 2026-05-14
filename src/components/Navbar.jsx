@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell, BellOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import logo from "../assets/logo-diamond.png";
 import { getActiveCampaign } from "../lib/services/holidayCampaign";
+import { requestNotificationPermission } from "../lib/firebase/fcm";
 
 function DesktopNavLink({ to, label, currentPath, index = 0, saleDot = false }) {
   const active = currentPath === to || (to !== "/" && currentPath.startsWith(to));
@@ -62,7 +63,19 @@ function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [menuLocked, setMenuLocked] = useState(false);
+  const [notifStatus, setNotifStatus] = useState("unknown");
   const activeCampaign = useMemo(() => getActiveCampaign(), []);
+
+  useEffect(() => {
+    if (isAdmin && "Notification" in window) {
+      setNotifStatus(Notification.permission);
+    }
+  }, [isAdmin]);
+
+  const enableNotifications = async () => {
+    const token = await requestNotificationPermission();
+    setNotifStatus(token ? "granted" : "denied");
+  };
 
   const reopenBlockUntilRef = useRef(0);
   const routeLockTimerRef = useRef(null);
@@ -204,22 +217,29 @@ function Navbar() {
             ))}
 
             {isAdmin && (
-  <>
-    <DesktopNavLink
-      to="/admin"
-      label="Admin"
-      currentPath={location.pathname}
-      index={navLinks.length}
-    />
-
-    <DesktopNavLink
-      to="/admin/leads"
-      label="Leads"
-      currentPath={location.pathname}
-      index={navLinks.length + 1}
-    />
-  </>
-)}
+              <>
+                <DesktopNavLink to="/admin" label="Admin" currentPath={location.pathname} index={navLinks.length} />
+                <DesktopNavLink to="/admin/leads" label="Leads" currentPath={location.pathname} index={navLinks.length + 1} />
+                <DesktopNavLink to="/admin/content" label="Content" currentPath={location.pathname} index={navLinks.length + 2} />
+                <DesktopNavLink to="/admin/drafts" label="Drafts" currentPath={location.pathname} index={navLinks.length + 3} />
+                <motion.button
+                  type="button"
+                  onClick={notifStatus !== "granted" ? enableNotifications : undefined}
+                  title={notifStatus === "granted" ? "Push notifications on" : "Enable push notifications"}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.28, delay: 0.05 + (navLinks.length + 4) * 0.04 }}
+                  whileHover={{ y: -1 }}
+                  className={`transition-colors duration-200 ${
+                    notifStatus === "granted"
+                      ? "text-emerald-400/70 hover:text-emerald-300"
+                      : "text-white/30 hover:text-amber-300"
+                  }`}
+                >
+                  {notifStatus === "granted" ? <Bell size={14} /> : <BellOff size={14} />}
+                </motion.button>
+              </>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -377,22 +397,27 @@ function Navbar() {
                 ))}
 
                 {isAdmin && (
-  <>
-    <MobileMenuButton
-      label="Admin"
-      active={location.pathname === "/admin"}
-      index={navLinks.length}
-      onClick={() => handleMobileNavigate("/admin")}
-    />
-
-    <MobileMenuButton
-      label="Leads"
-      active={location.pathname.startsWith("/admin/leads")}
-      index={navLinks.length + 1}
-      onClick={() => handleMobileNavigate("/admin/leads")}
-    />
-  </>
-)}
+                  <>
+                    <MobileMenuButton label="Admin" active={location.pathname === "/admin"} index={navLinks.length} onClick={() => handleMobileNavigate("/admin")} />
+                    <MobileMenuButton label="Leads" active={location.pathname.startsWith("/admin/leads")} index={navLinks.length + 1} onClick={() => handleMobileNavigate("/admin/leads")} />
+                    <MobileMenuButton label="Content" active={location.pathname.startsWith("/admin/content")} index={navLinks.length + 2} onClick={() => handleMobileNavigate("/admin/content")} />
+                    <MobileMenuButton label="Drafts" active={location.pathname.startsWith("/admin/drafts")} index={navLinks.length + 3} onClick={() => handleMobileNavigate("/admin/drafts")} />
+                    <motion.button
+                      type="button"
+                      onClick={notifStatus !== "granted" ? enableNotifications : undefined}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.28, delay: 0.06 + (navLinks.length + 4) * 0.05 }}
+                      className={`flex items-center gap-2 text-sm uppercase tracking-[0.2em] transition-colors ${
+                        notifStatus === "granted" ? "text-emerald-400" : "text-white/40 hover:text-amber-200"
+                      }`}
+                    >
+                      {notifStatus === "granted" ? <Bell size={15} /> : <BellOff size={15} />}
+                      {notifStatus === "granted" ? "Notifications on" : "Enable notifications"}
+                    </motion.button>
+                  </>
+                )}
 
                 {!user ? (
                   <motion.div
