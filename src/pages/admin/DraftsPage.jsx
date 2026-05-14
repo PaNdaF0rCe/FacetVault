@@ -345,10 +345,11 @@ export default function DraftsPage() {
       )}
 
       {!loading && drafts.length === 0 && (
-        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-white/6 bg-white/2 text-center">
-          <div className="mb-3 text-3xl text-white/10">◇</div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-white/24">No drafts pending</p>
-          <p className="mt-1 text-xs text-white/18">The bot will notify you when a new draft is ready</p>
+        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-amber-300/20 bg-amber-300/5 text-center">
+          <div className="mb-3 text-4xl text-amber-300/40">◇</div>
+          <p className="text-sm font-semibold text-white/70">No drafts pending</p>
+          <p className="mt-2 text-xs text-white/40">The bot will notify you when a new post is ready for review.</p>
+          <p className="mt-1 text-xs text-white/30">Trigger one manually from your Render dashboard to test.</p>
         </div>
       )}
 
