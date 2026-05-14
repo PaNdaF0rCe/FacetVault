@@ -13,6 +13,7 @@
     "convert:images:webp:dry": "node scripts/convert-images-to-webp.mjs --dry-run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@google/generative-ai": "^0.21.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
@@ -25,6 +26,7 @@
     "firebase-admin": "^10.3.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
+    "openai": "^6.37.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet-async": "^3.0.0",
