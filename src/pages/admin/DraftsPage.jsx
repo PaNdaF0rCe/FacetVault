@@ -98,16 +98,30 @@ const BOT_URL = "https://facetvaultbot.onrender.com";
 
 function DraftCard({ draft, onApprove, onReject }) {
   const [captionEn, setCaptionEn] = useState(draft.captionEn || "");
-  const [captionSi, setCaptionSi] = useState(draft.captionSinhala || "");
   const [acting, setActing] = useState(null);
   const [undoSecs, setUndoSecs] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [rebuildingImage, setRebuildingImage] = useState(false);
+  const [selectedLayout, setSelectedLayout] = useState(draft.currentLayout || "standard");
   const fileInputRef = useRef(null);
   const rejectTimerRef = useRef(null);
+  const imageUrlAtRebuildRef = useRef(draft.brandedImageUrl);
+
+  // Sync layout chip when Firestore pushes a new currentLayout
+  useEffect(() => {
+    setSelectedLayout(draft.currentLayout || "standard");
+  }, [draft.currentLayout]);
+
+  // Clear rebuilding spinner once a new branded image arrives via onSnapshot
+  useEffect(() => {
+    if (rebuildingImage && draft.brandedImageUrl !== imageUrlAtRebuildRef.current) {
+      setRebuildingImage(false);
+    }
+  }, [draft.brandedImageUrl, rebuildingImage]);
 
   const handleApprove = async () => {
     setActing("approve");
-    await onApprove(draft.id, { captionEn, captionSinhala: captionSi });
+    await onApprove(draft.id, { captionEn });
   };
 
   // Reject with 5-second undo window
@@ -145,22 +159,20 @@ function DraftCard({ draft, onApprove, onReject }) {
     fetch(`${BOT_URL}/trigger-draft`).catch(() => {});
   };
 
-  // Confirm the existing stone photo — no upload needed
+  // Use stone photo — trigger bot to build branded image
   const handleUseStone = async () => {
-    setActing("useStone");
+    imageUrlAtRebuildRef.current = draft.brandedImageUrl;
+    setRebuildingImage(true);
     try {
-      await updateDoc(doc(db, "marketingDrafts", draft.id), {
-        brandedImageUrl: draft.originalImageUrl,
-        status: "pending",
-        updatedAt: serverTimestamp(),
-      });
+      await fetch(`${BOT_URL}/rebuild-image?draftId=${draft.id}`);
     } catch (err) {
       console.error("Use stone failed:", err);
-      setActing(null);
+      setRebuildingImage(false);
     }
+    setTimeout(() => setRebuildingImage(false), 35000);
   };
 
-  // Upload a custom photo → sets brandedImageUrl and flips status to pending
+  // Upload a custom photo → store raw URL then trigger bot to build branded version
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -170,26 +182,46 @@ function DraftCard({ draft, onApprove, onReject }) {
       await uploadBytes(sRef, file);
       const url = await getDownloadURL(sRef);
       await updateDoc(doc(db, "marketingDrafts", draft.id), {
-        brandedImageUrl: url,
         originalImageUrl: url,
-        status: "pending",
         updatedAt: serverTimestamp(),
       });
+      imageUrlAtRebuildRef.current = draft.brandedImageUrl;
+      setRebuildingImage(true);
+      fetch(`${BOT_URL}/rebuild-image?draftId=${draft.id}`).catch(console.error);
+      setTimeout(() => setRebuildingImage(false), 35000);
     } catch (err) {
       console.error("Image upload failed:", err);
+      setRebuildingImage(false);
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
+  // Rebuild branded image with chosen layout (feature/mystery posts)
+  const handleRebuildImage = async (layout) => {
+    imageUrlAtRebuildRef.current = draft.brandedImageUrl;
+    setRebuildingImage(true);
+    setSelectedLayout(layout);
+    try {
+      await fetch(`${BOT_URL}/rebuild-image?draftId=${draft.id}&layout=${layout}`);
+    } catch (err) {
+      console.error("Rebuild failed:", err);
+      setRebuildingImage(false);
+      return;
+    }
+    setTimeout(() => setRebuildingImage(false), 35000);
+  };
+
   const isOriginWaiting = draft.status === "awaiting_image";
+  const isFeaturePost = draft.postType === "feature" || draft.postType === "mystery";
+  const imageAspect = draft.postType === "origin" ? "aspect-square" : "aspect-[4/5]";
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(4,10,22,0.97),rgba(2,6,18,0.99))] shadow-lux-elevated">
       {/* post image */}
       {(draft.brandedImageUrl || draft.originalImageUrl) ? (
-        <div className="relative aspect-square w-full overflow-hidden bg-obsidian-900">
+        <div className={`relative ${imageAspect} w-full overflow-hidden bg-obsidian-900`}>
           <img
             src={draft.brandedImageUrl || draft.originalImageUrl}
             alt={draft.altText || draft.stoneName}
@@ -199,23 +231,56 @@ function DraftCard({ draft, onApprove, onReject }) {
           <div className="absolute left-3 top-3 rounded-full border border-white/14 bg-black/52 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm">
             {POST_TYPE_LABELS[draft.postType] || draft.postType}
           </div>
-          {isOriginWaiting && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-sm gap-3 px-6">
+          {/* rebuilding spinner overlay */}
+          {rebuildingImage && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/65 backdrop-blur-sm">
+              <div className="h-8 w-8 rounded-full border-2 border-amber-300/30 border-t-amber-300 animate-spin" />
+              <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/80">Building image…</p>
+            </div>
+          )}
+          {/* awaiting-image overlay */}
+          {isOriginWaiting && !rebuildingImage && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 backdrop-blur-sm px-6">
               <p className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80">Choose image below</p>
               <button
                 type="button"
                 onClick={handleUseStone}
-                disabled={!!acting || uploadingImage}
+                disabled={uploadingImage}
                 className="flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-400/14 px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-50"
               >
-                {acting === "useStone" ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                {acting === "useStone" ? "Confirming…" : "Use This Stone"}
+                <CheckCircle size={13} />
+                Use This Stone
               </button>
             </div>
           )}
         </div>
       ) : (
-        <div className="flex aspect-square w-full items-center justify-center bg-obsidian-800 text-4xl text-white/10">◇</div>
+        <div className={`flex ${imageAspect} w-full items-center justify-center bg-obsidian-800 text-4xl text-white/10`}>◇</div>
+      )}
+
+      {/* layout selector — feature/mystery posts only */}
+      {isFeaturePost && !isOriginWaiting && (
+        <div className="flex gap-1.5 px-5 pt-4">
+          {[
+            { key: "standard", label: "Standard" },
+            { key: "tall", label: "Tall" },
+            { key: "overlay", label: "Overlay" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleRebuildImage(key)}
+              disabled={rebuildingImage}
+              className={`flex-1 rounded-xl border py-2 text-[9px] uppercase tracking-[0.15em] font-semibold transition disabled:opacity-50 ${
+                selectedLayout === key
+                  ? "border-amber-300/50 bg-amber-300/12 text-amber-200"
+                  : "border-white/10 bg-white/4 text-white/36 hover:border-white/20 hover:text-white/60"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* content */}
@@ -248,14 +313,6 @@ function DraftCard({ draft, onApprove, onReject }) {
               value={captionEn}
               onChange={setCaptionEn}
             />
-            {captionSi && (
-              <EditableCaption
-                label="Caption · සිංහල"
-                value={captionSi}
-                onChange={setCaptionSi}
-                lang="si"
-              />
-            )}
             {draft.hashtags && (
               <div>
                 <p className="text-[10px] uppercase tracking-[0.22em] text-white/36 mb-1.5">Hashtags</p>
@@ -272,7 +329,7 @@ function DraftCard({ draft, onApprove, onReject }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingImage || !!acting}
+              disabled={uploadingImage || rebuildingImage || !!acting}
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/12 disabled:opacity-50"
             >
               {uploadingImage ? <RefreshCw size={13} className="animate-spin" /> : <Upload size={13} />}
@@ -282,7 +339,7 @@ function DraftCard({ draft, onApprove, onReject }) {
               <button
                 type="button"
                 onClick={handleReselect}
-                disabled={!!acting || uploadingImage}
+                disabled={!!acting || uploadingImage || rebuildingImage}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 transition hover:border-white/20 hover:text-white/70 disabled:opacity-50"
               >
                 {acting === "reselect" ? <RefreshCw size={12} className="animate-spin" /> : <Shuffle size={12} />}
@@ -291,7 +348,7 @@ function DraftCard({ draft, onApprove, onReject }) {
               <button
                 type="button"
                 onClick={handleRemove}
-                disabled={!!acting || uploadingImage}
+                disabled={!!acting || uploadingImage || rebuildingImage}
                 className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-300/60 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
               >
                 {acting === "reject" ? <RefreshCw size={12} className="animate-spin" /> : <XCircle size={12} />}
@@ -406,7 +463,6 @@ export default function DraftsPage() {
     await updateDoc(doc(db, "marketingDrafts", draftId), {
       status: "approved",
       captionEn: edits.captionEn,
-      captionSinhala: edits.captionSinhala,
       updatedAt: serverTimestamp(),
     });
     showToast("Draft approved — the bot will post at the scheduled time");
