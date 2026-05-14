@@ -14,10 +14,12 @@ export default async function handler(req, res) {
   const { prompt, provider = "luma", aspectRatio = "9:16" } = req.body || {};
   if (!prompt) return res.status(400).json({ error: "prompt required" });
 
-  // ── Luma Dream Machine ────────────────────────────────────────────────────
+  // ── Luma Dream Machine (video) ────────────────────────────────────────────
+  // Requires LUMA_DREAM_MACHINE_KEY from lumalabs.ai → Dream Machine → API settings
+  // (different from the Luma Agents key used for images)
   if (provider === "luma") {
-    const key = process.env.LUMA_API_KEY;
-    if (!key) return res.status(500).json({ error: "LUMA_API_KEY not configured" });
+    const key = process.env.LUMA_DREAM_MACHINE_KEY;
+    if (!key) return res.status(500).json({ error: "LUMA_DREAM_MACHINE_KEY not configured — get it from lumalabs.ai Dream Machine API settings" });
 
     const r = await fetch("https://api.lumalabs.ai/dream-machine/v1/generations", {
       method: "POST",

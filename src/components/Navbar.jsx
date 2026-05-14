@@ -220,8 +220,7 @@ function Navbar() {
               <>
                 <DesktopNavLink to="/admin" label="Admin" currentPath={location.pathname} index={navLinks.length} />
                 <DesktopNavLink to="/admin/leads" label="Leads" currentPath={location.pathname} index={navLinks.length + 1} />
-                <DesktopNavLink to="/admin/content" label="Content" currentPath={location.pathname} index={navLinks.length + 2} />
-                <DesktopNavLink to="/admin/drafts" label="Drafts" currentPath={location.pathname} index={navLinks.length + 3} />
+                <DesktopNavLink to="/admin/drafts" label="Drafts" currentPath={location.pathname} index={navLinks.length + 2} />
                 <motion.button
                   type="button"
                   onClick={notifStatus !== "granted" ? enableNotifications : undefined}
@@ -400,8 +399,7 @@ function Navbar() {
                   <>
                     <MobileMenuButton label="Admin" active={location.pathname === "/admin"} index={navLinks.length} onClick={() => handleMobileNavigate("/admin")} />
                     <MobileMenuButton label="Leads" active={location.pathname.startsWith("/admin/leads")} index={navLinks.length + 1} onClick={() => handleMobileNavigate("/admin/leads")} />
-                    <MobileMenuButton label="Content" active={location.pathname.startsWith("/admin/content")} index={navLinks.length + 2} onClick={() => handleMobileNavigate("/admin/content")} />
-                    <MobileMenuButton label="Drafts" active={location.pathname.startsWith("/admin/drafts")} index={navLinks.length + 3} onClick={() => handleMobileNavigate("/admin/drafts")} />
+                    <MobileMenuButton label="Drafts" active={location.pathname.startsWith("/admin/drafts")} index={navLinks.length + 2} onClick={() => handleMobileNavigate("/admin/drafts")} />
                     <motion.button
                       type="button"
                       onClick={notifStatus !== "granted" ? enableNotifications : undefined}

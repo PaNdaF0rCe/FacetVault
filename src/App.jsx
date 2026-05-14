@@ -21,7 +21,6 @@ const AddGemPage = lazy(() => import("./pages/admin/AddGemPage"));
 const EditGemPage = lazy(() => import("./pages/admin/EditGemPage"));
 const AdminStoneDetailPage = lazy(() =>import("./pages/admin/AdminStoneDetailPage"));
 const LeadsDashboard = lazy(() => import("./pages/admin/LeadsDashboard"));
-const ContentGeneratorPage = lazy(() => import("./pages/admin/ContentGeneratorPage"));
 const DraftsPage = lazy(() => import("./pages/admin/DraftsPage"));
 
 function PageLoader() {
@@ -106,14 +105,6 @@ function App() {
   }
 />
 
-              <Route
-                path="/admin/content"
-                element={
-                  <AdminRoute>
-                    <ContentGeneratorPage />
-                  </AdminRoute>
-                }
-              />
 
               <Route
                 path="/admin/drafts"

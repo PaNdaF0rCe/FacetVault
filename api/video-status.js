@@ -16,8 +16,8 @@ export default async function handler(req, res) {
 
   // ── Luma Dream Machine ────────────────────────────────────────────────────
   if (provider === "luma") {
-    const key = process.env.LUMA_API_KEY;
-    if (!key) return res.status(500).json({ error: "LUMA_API_KEY not configured" });
+    const key = process.env.LUMA_DREAM_MACHINE_KEY;
+    if (!key) return res.status(500).json({ error: "LUMA_DREAM_MACHINE_KEY not configured" });
 
     const r = await fetch(`https://api.lumalabs.ai/dream-machine/v1/generations/${id}`, {
       headers: { Authorization: `Bearer ${key}` },
