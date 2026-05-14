@@ -36,6 +36,7 @@ const POST_TYPE_LABELS = {
   feature: "Feature Post",
   mystery: "Mystery Post",
   origin: "Informative Post",
+  quiz: "Gem Quiz",
 };
 
 // ── editable caption field ────────────────────────────────────────────────────
@@ -198,6 +199,19 @@ function DraftCard({ draft, onApprove, onReject }) {
     }
   };
 
+  // Friday quiz: Andrew picks a question, bot builds the image
+  const handleSelectQuestion = async (idx) => {
+    imageUrlAtRebuildRef.current = draft.brandedImageUrl;
+    setRebuildingImage(true);
+    try {
+      await fetch(`${BOT_URL}/select-question?draftId=${draft.id}&questionIndex=${idx}`);
+    } catch (err) {
+      console.error("Question selection failed:", err);
+      setRebuildingImage(false);
+    }
+    setTimeout(() => setRebuildingImage(false), 40000);
+  };
+
   // Rebuild branded image with chosen layout (feature/mystery posts)
   const handleRebuildImage = async (layout) => {
     imageUrlAtRebuildRef.current = draft.brandedImageUrl;
@@ -214,49 +228,72 @@ function DraftCard({ draft, onApprove, onReject }) {
   };
 
   const isOriginWaiting = draft.status === "awaiting_image";
+  const isQuizWaiting = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
   const isFeaturePost = draft.postType === "feature" || draft.postType === "mystery";
-  const imageAspect = draft.postType === "origin" ? "aspect-square" : "aspect-[4/5]";
+  const imageAspect = (draft.postType === "origin" || draft.postType === "quiz") ? "aspect-square" : "aspect-[4/5]";
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(4,10,22,0.97),rgba(2,6,18,0.99))] shadow-lux-elevated">
-      {/* post image */}
-      {(draft.brandedImageUrl || draft.originalImageUrl) ? (
-        <div className={`relative ${imageAspect} w-full overflow-hidden bg-obsidian-900`}>
-          <img
-            src={draft.brandedImageUrl || draft.originalImageUrl}
-            alt={draft.altText || draft.stoneName}
-            className="h-full w-full object-cover"
-          />
-          {/* post type badge */}
-          <div className="absolute left-3 top-3 rounded-full border border-white/14 bg-black/52 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm">
-            {POST_TYPE_LABELS[draft.postType] || draft.postType}
-          </div>
-          {/* rebuilding spinner overlay */}
-          {rebuildingImage && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/65 backdrop-blur-sm">
+      {/* post image area */}
+      {(() => {
+        // Full-screen building spinner (when no image exists yet — e.g. quiz or first Use This Stone)
+        if (rebuildingImage && !draft.brandedImageUrl && !draft.originalImageUrl) {
+          return (
+            <div className={`flex ${imageAspect} w-full flex-col items-center justify-center gap-2.5 bg-obsidian-900`}>
               <div className="h-8 w-8 rounded-full border-2 border-amber-300/30 border-t-amber-300 animate-spin" />
               <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/80">Building image…</p>
             </div>
-          )}
-          {/* awaiting-image overlay */}
-          {isOriginWaiting && !rebuildingImage && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 backdrop-blur-sm px-6">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80">Choose image below</p>
-              <button
-                type="button"
-                onClick={handleUseStone}
-                disabled={uploadingImage}
-                className="flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-400/14 px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-50"
-              >
-                <CheckCircle size={13} />
-                Use This Stone
-              </button>
+          );
+        }
+        // Quiz waiting for question selection
+        if (isQuizWaiting) {
+          return (
+            <div className={`flex ${imageAspect} w-full flex-col items-center justify-center gap-2 bg-obsidian-900`}>
+              <div className="text-4xl text-amber-300/30">◆</div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/40">Gem Quiz</p>
+              <p className="text-[10px] text-white/25 mt-0.5">Choose a question below</p>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className={`flex ${imageAspect} w-full items-center justify-center bg-obsidian-800 text-4xl text-white/10`}>◇</div>
-      )}
+          );
+        }
+        // Image available
+        if (draft.brandedImageUrl || draft.originalImageUrl) {
+          return (
+            <div className={`relative ${imageAspect} w-full overflow-hidden bg-obsidian-900`}>
+              <img
+                src={draft.brandedImageUrl || draft.originalImageUrl}
+                alt={draft.altText || draft.stoneName}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute left-3 top-3 rounded-full border border-white/14 bg-black/52 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/70 backdrop-blur-sm">
+                {POST_TYPE_LABELS[draft.postType] || draft.postType}
+              </div>
+              {rebuildingImage && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/65 backdrop-blur-sm">
+                  <div className="h-8 w-8 rounded-full border-2 border-amber-300/30 border-t-amber-300 animate-spin" />
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/80">Building image…</p>
+                </div>
+              )}
+              {isOriginWaiting && !rebuildingImage && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 backdrop-blur-sm px-6">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80">Choose image below</p>
+                  <button
+                    type="button"
+                    onClick={handleUseStone}
+                    disabled={uploadingImage}
+                    className="flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-400/14 px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-50"
+                  >
+                    <CheckCircle size={13} />
+                    Use This Stone
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        }
+        return (
+          <div className={`flex ${imageAspect} w-full items-center justify-center bg-obsidian-800 text-4xl text-white/10`}>◇</div>
+        );
+      })()}
 
       {/* layout selector — feature/mystery posts only */}
       {isFeaturePost && !isOriginWaiting && (
@@ -305,8 +342,25 @@ function DraftCard({ draft, onApprove, onReject }) {
           <p className="text-[11px] text-white/50">{formatScheduled(draft.scheduledPostTime)}</p>
         </div>
 
+        {/* quiz question selector */}
+        {isQuizWaiting && !rebuildingImage && (
+          <div className="space-y-2.5 border-t border-white/6 pt-4">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/60 mb-3">Choose a question</p>
+            {(draft.questionOptions || []).map((q, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSelectQuestion(idx)}
+                className="w-full rounded-2xl border border-white/10 bg-white/3 p-4 text-left text-[13px] leading-relaxed text-white/70 transition hover:border-amber-300/30 hover:bg-amber-300/5 hover:text-white/90 active:scale-[0.98]"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* captions */}
-        {!isOriginWaiting && (
+        {!isOriginWaiting && !isQuizWaiting && (
           <div className="space-y-4 border-t border-white/6 pt-4">
             <EditableCaption
               label="Caption · English"
@@ -359,7 +413,7 @@ function DraftCard({ draft, onApprove, onReject }) {
         )}
 
         {/* pending: approve + reject with 5s undo */}
-        {!isOriginWaiting && (
+        {!isOriginWaiting && !isQuizWaiting && (
           <div className="space-y-2 pt-1">
             {undoSecs !== null ? (
               <div className="flex items-center justify-between rounded-2xl border border-amber-300/20 bg-amber-300/6 px-4 py-3">
@@ -436,7 +490,7 @@ export default function DraftsPage() {
   useEffect(() => {
     const q = query(
       collection(db, "marketingDrafts"),
-      where("status", "in", ["pending", "awaiting_image"]),
+      where("status", "in", ["pending", "awaiting_image", "awaiting_question_selection"]),
       orderBy("createdAt", "desc")
     );
 
