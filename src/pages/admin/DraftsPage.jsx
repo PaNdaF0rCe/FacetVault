@@ -9,7 +9,7 @@ import { db, storage } from "../../lib/firebase/config";
 import { onForegroundMessage } from "../../lib/firebase/fcm";
 import {
   CheckCircle, XCircle, RefreshCw,
-  Edit3, Check, X, Clock, Upload, Shuffle, Undo2,
+  Edit3, Check, X, Clock, Upload, Shuffle, Undo2, Sparkles,
 } from "lucide-react";
 import { FaInstagram, FaFacebook } from "react-icons/fa";
 
@@ -332,11 +332,30 @@ function DraftCard({ draft, onApprove, onReject }) {
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch(`${BOT_URL}/trigger-draft`);
+      const text = await res.text();
+      if (text.toLowerCase().includes("already") || text.toLowerCase().includes("skip")) {
+        showToast("A draft is already pending — approve or remove it first", "info");
+      } else {
+        showToast("Generating new draft — it will appear here in a moment", "info");
+      }
+    } catch {
+      showToast("Could not reach the bot — check Render is running", "error");
+    } finally {
+      // Keep spinner a moment so it feels responsive
+      setTimeout(() => setGenerating(false), 3000);
+    }
   };
 
   // Subscribe to pending drafts in real-time
@@ -398,6 +417,15 @@ export default function DraftsPage() {
           </p>
         </div>
 
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={generating}
+          className="flex items-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60"
+        >
+          {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+          {generating ? "Generating…" : "Generate Draft"}
+        </button>
       </div>
 
       {/* toast */}
@@ -428,11 +456,19 @@ export default function DraftsPage() {
       )}
 
       {!loading && drafts.length === 0 && (
-        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-amber-300/20 bg-amber-300/5 text-center">
+        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-amber-300/20 bg-amber-300/5 text-center px-6">
           <div className="mb-3 text-4xl text-amber-300/40">◇</div>
           <p className="text-sm font-semibold text-white/70">No drafts pending</p>
           <p className="mt-2 text-xs text-white/40">The bot will notify you when a new post is ready for review.</p>
-          <p className="mt-1 text-xs text-white/30">Trigger one manually from your Render dashboard to test.</p>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generating}
+            className="mt-5 flex items-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 disabled:opacity-60"
+          >
+            {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+            {generating ? "Generating…" : "Generate Now"}
+          </button>
         </div>
       )}
 

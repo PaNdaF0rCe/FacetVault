@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -188,6 +188,153 @@ function HistoryCard({ item, onMarkPosted, onToggleFav }) {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ── video generator ───────────────────────────────────────────────────────────
+
+function VideoGeneratorCard({ prompt }) {
+  const [status, setStatus] = useState("idle"); // idle | starting | processing | completed | failed
+  const [genId, setGenId] = useState(null);
+  const [activeProvider, setActiveProvider] = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const pollRef = useRef(null);
+
+  useEffect(() => () => clearInterval(pollRef.current), []);
+
+  const startGeneration = async (provider) => {
+    clearInterval(pollRef.current);
+    setStatus("starting");
+    setErrorMsg("");
+    setVideoUrl(null);
+    setGenId(null);
+    setActiveProvider(provider);
+
+    try {
+      const res = await fetch("/api/generate-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, provider, aspectRatio: "9:16" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Generation failed");
+
+      setGenId(data.generationId);
+      setStatus("processing");
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const r = await fetch(`/api/video-status?id=${data.generationId}&provider=${provider}`);
+          const s = await r.json();
+          if (s.status === "completed") {
+            clearInterval(pollRef.current);
+            setVideoUrl(s.videoUrl);
+            setThumbnailUrl(s.thumbnailUrl);
+            setStatus("completed");
+          } else if (s.status === "failed") {
+            clearInterval(pollRef.current);
+            setStatus("failed");
+            setErrorMsg("Video generation failed. Try again.");
+          }
+        } catch { /* ignore transient poll errors */ }
+      }, 6000);
+    } catch (err) {
+      setStatus("failed");
+      setErrorMsg(err.message);
+    }
+  };
+
+  const reset = () => {
+    clearInterval(pollRef.current);
+    setStatus("idle");
+    setVideoUrl(null);
+    setGenId(null);
+    setErrorMsg("");
+  };
+
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/3 p-4 space-y-3">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/36">
+        <Video size={12} className="text-amber-300/60" />
+        Video Generation
+      </div>
+
+      <p className="text-[11px] leading-relaxed text-white/40 font-mono">{prompt}</p>
+
+      {status === "idle" && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => startGeneration("luma")}
+            className="flex items-center gap-1.5 rounded-xl border border-violet-400/30 bg-violet-400/8 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-300 transition hover:border-violet-400/50 hover:bg-violet-400/14"
+          >
+            <Video size={11} /> Luma Dream Machine
+          </button>
+          <button
+            type="button"
+            onClick={() => startGeneration("kling")}
+            className="flex items-center gap-1.5 rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-300 transition hover:border-blue-400/50 hover:bg-blue-400/14"
+          >
+            <Video size={11} /> Kling AI
+          </button>
+        </div>
+      )}
+
+      {(status === "starting" || status === "processing") && (
+        <div className="flex items-center gap-3 rounded-xl border border-violet-400/15 bg-violet-400/5 px-4 py-3">
+          <RefreshCw size={13} className="animate-spin text-violet-400 flex-shrink-0" />
+          <div>
+            <p className="text-[12px] text-violet-300">
+              {activeProvider === "luma" ? "Luma Dream Machine" : "Kling AI"} is generating…
+            </p>
+            <p className="text-[11px] text-white/30">Takes 1–3 minutes. Stay on this page.</p>
+          </div>
+        </div>
+      )}
+
+      {status === "completed" && videoUrl && (
+        <div className="space-y-2">
+          <video
+            src={videoUrl}
+            poster={thumbnailUrl || undefined}
+            controls
+            autoPlay
+            loop
+            muted
+            className="w-full rounded-xl"
+          />
+          <div className="flex gap-2">
+            <a
+              href={videoUrl}
+              download
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-400/8 px-3 py-1.5 text-[11px] text-emerald-300 transition hover:border-emerald-400/40"
+            >
+              Download
+            </a>
+            <button
+              type="button"
+              onClick={reset}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/4 px-3 py-1.5 text-[11px] text-white/40 transition hover:text-white/70"
+            >
+              <RefreshCw size={10} /> Regenerate
+            </button>
+          </div>
+        </div>
+      )}
+
+      {status === "failed" && (
+        <div className="space-y-2">
+          <p className="text-[12px] text-red-300">{errorMsg}</p>
+          <button type="button" onClick={reset} className="text-[11px] text-white/40 hover:text-white/70 transition">
+            Try again
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -501,9 +648,9 @@ export default function ContentGeneratorPage() {
                     <SectionCard icon={ImageIcon} title="Image Prompt (Leonardo / Midjourney)" value={result.imagePrompt} mono />
                   )}
 
-                  {/* video prompt */}
+                  {/* video generation */}
                   {result.videoPrompt && (
-                    <SectionCard icon={Video} title="Video Prompt (Kling / Luma / Pika)" value={result.videoPrompt} mono />
+                    <VideoGeneratorCard prompt={result.videoPrompt} />
                   )}
 
                   {/* product description */}
