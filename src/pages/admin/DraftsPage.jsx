@@ -145,6 +145,21 @@ function DraftCard({ draft, onApprove, onReject }) {
     fetch(`${BOT_URL}/trigger-draft`).catch(() => {});
   };
 
+  // Confirm the existing stone photo — no upload needed
+  const handleUseStone = async () => {
+    setActing("useStone");
+    try {
+      await updateDoc(doc(db, "marketingDrafts", draft.id), {
+        brandedImageUrl: draft.originalImageUrl,
+        status: "pending",
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Use stone failed:", err);
+      setActing(null);
+    }
+  };
+
   // Upload a custom photo → sets brandedImageUrl and flips status to pending
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -185,9 +200,17 @@ function DraftCard({ draft, onApprove, onReject }) {
             {POST_TYPE_LABELS[draft.postType] || draft.postType}
           </div>
           {isOriginWaiting && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/62 backdrop-blur-sm">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80 mb-1">Waiting for image</p>
-              <p className="text-[12px] text-white/50 text-center px-6">Send a photo via Instagram DM or reply USE STONE</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-sm gap-3 px-6">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-amber-300/80">Choose image below</p>
+              <button
+                type="button"
+                onClick={handleUseStone}
+                disabled={!!acting || uploadingImage}
+                className="flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-400/14 px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-emerald-300 transition hover:bg-emerald-400/20 disabled:opacity-50"
+              >
+                {acting === "useStone" ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                {acting === "useStone" ? "Confirming…" : "Use This Stone"}
+              </button>
             </div>
           )}
         </div>
@@ -242,45 +265,39 @@ function DraftCard({ draft, onApprove, onReject }) {
           </div>
         )}
 
-        {/* awaiting-image actions: upload photo / new stone / remove */}
+        {/* awaiting-image actions */}
         {isOriginWaiting && (
           <div className="space-y-2 border-t border-white/6 pt-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage || !!acting}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/12 disabled:opacity-50"
+            >
+              {uploadingImage ? <RefreshCw size={13} className="animate-spin" /> : <Upload size={13} />}
+              {uploadingImage ? "Uploading…" : "Upload a Different Photo"}
+            </button>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage || !!acting}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/12 disabled:opacity-50"
-              >
-                {uploadingImage ? <RefreshCw size={13} className="animate-spin" /> : <Upload size={13} />}
-                {uploadingImage ? "Uploading…" : "Upload Photo"}
-              </button>
               <button
                 type="button"
                 onClick={handleReselect}
                 disabled={!!acting || uploadingImage}
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/50 transition hover:border-white/20 hover:text-white/70 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 transition hover:border-white/20 hover:text-white/70 disabled:opacity-50"
               >
-                {acting === "reselect" ? <RefreshCw size={13} className="animate-spin" /> : <Shuffle size={13} />}
+                {acting === "reselect" ? <RefreshCw size={12} className="animate-spin" /> : <Shuffle size={12} />}
                 {acting === "reselect" ? "Selecting…" : "New Stone"}
               </button>
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={!!acting || uploadingImage}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-300/60 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
+              >
+                {acting === "reject" ? <RefreshCw size={12} className="animate-spin" /> : <XCircle size={12} />}
+                {acting === "reject" ? "Removing…" : "Remove"}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleRemove}
-              disabled={!!acting || uploadingImage}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-300/60 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
-            >
-              {acting === "reject" ? <RefreshCw size={13} className="animate-spin" /> : <XCircle size={12} />}
-              {acting === "reject" ? "Removing…" : "Remove"}
-            </button>
           </div>
         )}
 
