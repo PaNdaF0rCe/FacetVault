@@ -33,11 +33,22 @@ function formatScheduled(ts) {
 }
 
 const POST_TYPE_LABELS = {
-  feature: "Feature Post",
-  mystery: "Mystery Post",
-  origin: "Informative Post",
-  quiz: "Gem Quiz",
+  feature:          "Feature Post",
+  mystery:          "Mystery Post",
+  origin:           "Informative Post",
+  quiz:             "Gem Quiz",
+  stone_to_jewelry: "Stone → Jewelry",
+  birthstone:       "Birthstone Gift",
+  astrology:        "Astrology",
+  trust:            "Trust & Education",
+  how_to_buy:       "How to Buy",
+  faq:              "FAQ",
 };
+
+// Post types that use a stone image in 4/5 portrait ratio
+const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone", "astrology"]);
+// Post types that use a layout selector
+const LAYOUT_SELECTOR_TYPES = new Set(["feature", "mystery", "stone_to_jewelry"]);
 
 // ── editable caption field ────────────────────────────────────────────────────
 
@@ -229,8 +240,8 @@ function DraftCard({ draft, onApprove, onReject }) {
 
   const isOriginWaiting = draft.status === "awaiting_image";
   const isQuizWaiting = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
-  const isFeaturePost = draft.postType === "feature" || draft.postType === "mystery";
-  const imageAspect = (draft.postType === "origin" || draft.postType === "quiz") ? "aspect-square" : "aspect-[4/5]";
+  const isFeaturePost = LAYOUT_SELECTOR_TYPES.has(draft.postType);
+  const imageAspect = PORTRAIT_TYPES.has(draft.postType) ? "aspect-[4/5]" : "aspect-square";
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(4,10,22,0.97),rgba(2,6,18,0.99))] shadow-lux-elevated">
@@ -457,10 +468,23 @@ function DraftCard({ draft, onApprove, onReject }) {
 
 // ── main page ─────────────────────────────────────────────────────────────────
 
+const TRIGGERABLE_TYPES = [
+  { value: "auto",           label: "Auto (today's type)" },
+  { value: "feature",        label: "Feature Post" },
+  { value: "mystery",        label: "Mystery Post" },
+  { value: "stone_to_jewelry", label: "Stone → Jewelry" },
+  { value: "birthstone",     label: "Birthstone Gift" },
+  { value: "astrology",      label: "Astrology" },
+  { value: "trust",          label: "Trust & Education" },
+  { value: "origin",         label: "Informative / Origin" },
+  { value: "quiz",           label: "Gem Quiz" },
+];
+
 export default function DraftsPage() {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [selectedType, setSelectedType] = useState("auto");
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = "success") => {
@@ -471,7 +495,10 @@ export default function DraftsPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const res = await fetch(`${BOT_URL}/trigger-draft`);
+      const endpoint = selectedType === "auto" || selectedType === "origin"
+        ? selectedType === "origin" ? `${BOT_URL}/trigger-origin` : `${BOT_URL}/trigger-draft`
+        : `${BOT_URL}/trigger-draft?postType=${selectedType}`;
+      const res = await fetch(endpoint);
       const text = await res.text();
       if (text.toLowerCase().includes("already") || text.toLowerCase().includes("skip")) {
         showToast("A draft is already pending — approve or remove it first", "info");
@@ -481,7 +508,6 @@ export default function DraftsPage() {
     } catch {
       showToast("Could not reach the bot — check Render is running", "error");
     } finally {
-      // Keep spinner a moment so it feels responsive
       setTimeout(() => setGenerating(false), 3000);
     }
   };
@@ -505,10 +531,11 @@ export default function DraftsPage() {
     return unsub;
   }, []);
 
-  // Foreground notification toast
+  // Foreground notification toast — reads from data field (data-only FCM messages)
   useEffect(() => {
     const unsub = onForegroundMessage((payload) => {
-      showToast(payload.notification?.body || "New draft ready", "info");
+      const body = payload.data?.body || payload.notification?.body || "New draft ready";
+      showToast(body, "info");
     });
     return unsub;
   }, []);
@@ -544,15 +571,27 @@ export default function DraftsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={generating}
-          className="flex items-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60"
-        >
-          {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
-          {generating ? "Generating…" : "Generate Draft"}
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            disabled={generating}
+            className="rounded-xl border border-white/10 bg-obsidian-800 px-3 py-2.5 text-[11px] text-white/60 outline-none focus:border-amber-300/30 disabled:opacity-50"
+          >
+            {TRIGGERABLE_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generating}
+            className="flex items-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60"
+          >
+            {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+            {generating ? "Generating…" : "Generate"}
+          </button>
+        </div>
       </div>
 
       {/* toast */}
