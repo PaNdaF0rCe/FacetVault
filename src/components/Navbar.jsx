@@ -5,7 +5,7 @@ import { Menu, X, Bell, BellOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import logo from "../assets/logo-diamond.png";
 import { getActiveCampaign } from "../lib/services/holidayCampaign";
-import { requestNotificationPermission } from "../lib/firebase/fcm";
+import { requestNotificationPermission, silentlyRefreshToken } from "../lib/firebase/fcm";
 
 function DesktopNavLink({ to, label, currentPath, index = 0, saleDot = false }) {
   const active = currentPath === to || (to !== "/" && currentPath.startsWith(to));
@@ -69,6 +69,11 @@ function Navbar() {
   useEffect(() => {
     if (isAdmin && "Notification" in window) {
       setNotifStatus(Notification.permission);
+      // Silently re-register token on every admin page load so the mobile PWA
+      // always has a fresh token in Firestore without any user interaction.
+      if (Notification.permission === "granted") {
+        silentlyRefreshToken();
+      }
     }
   }, [isAdmin]);
 
