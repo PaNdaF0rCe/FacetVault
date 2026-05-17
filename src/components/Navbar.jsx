@@ -73,8 +73,11 @@ function Navbar() {
   }, [isAdmin]);
 
   const enableNotifications = async () => {
+    // Always re-run registration — this refreshes the Firestore token even if
+    // permission was already granted (e.g. after a browser/token reset).
+    setNotifStatus("pending");
     const token = await requestNotificationPermission();
-    setNotifStatus(token ? "granted" : "denied");
+    setNotifStatus(token ? "granted" : Notification.permission);
   };
 
   const reopenBlockUntilRef = useRef(0);
@@ -220,8 +223,12 @@ function Navbar() {
                 <DesktopNavLink to="/admin/drafts" label="Drafts" currentPath={location.pathname} index={navLinks.length + 2} />
                 <motion.button
                   type="button"
-                  onClick={notifStatus !== "granted" ? enableNotifications : undefined}
-                  title={notifStatus === "granted" ? "Push notifications on" : "Enable push notifications"}
+                  onClick={notifStatus !== "pending" ? enableNotifications : undefined}
+                  title={
+                    notifStatus === "granted" ? "Notifications on — click to refresh token" :
+                    notifStatus === "pending" ? "Registering…" :
+                    "Enable push notifications"
+                  }
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.28, delay: 0.05 + (navLinks.length + 4) * 0.04 }}
@@ -229,10 +236,14 @@ function Navbar() {
                   className={`transition-colors duration-200 ${
                     notifStatus === "granted"
                       ? "text-emerald-400/70 hover:text-emerald-300"
+                      : notifStatus === "pending"
+                      ? "animate-pulse text-amber-300/50"
                       : "text-white/30 hover:text-amber-300"
                   }`}
                 >
-                  {notifStatus === "granted" ? <Bell size={14} /> : <BellOff size={14} />}
+                  {notifStatus === "granted" || notifStatus === "pending"
+                    ? <Bell size={14} />
+                    : <BellOff size={14} />}
                 </motion.button>
               </>
             )}
@@ -399,17 +410,23 @@ function Navbar() {
                     <MobileMenuButton label="Drafts" active={location.pathname.startsWith("/admin/drafts")} index={navLinks.length + 2} onClick={() => handleMobileNavigate("/admin/drafts")} />
                     <motion.button
                       type="button"
-                      onClick={notifStatus !== "granted" ? enableNotifications : undefined}
+                      onClick={notifStatus !== "pending" ? enableNotifications : undefined}
                       initial={{ opacity: 0, y: 18 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.28, delay: 0.06 + (navLinks.length + 4) * 0.05 }}
                       className={`flex items-center gap-2 text-sm uppercase tracking-[0.2em] transition-colors ${
-                        notifStatus === "granted" ? "text-emerald-400" : "text-white/40 hover:text-amber-200"
+                        notifStatus === "granted" ? "text-emerald-400" :
+                        notifStatus === "pending" ? "animate-pulse text-amber-300/50" :
+                        "text-white/40 hover:text-amber-200"
                       }`}
                     >
-                      {notifStatus === "granted" ? <Bell size={15} /> : <BellOff size={15} />}
-                      {notifStatus === "granted" ? "Notifications on" : "Enable notifications"}
+                      {notifStatus === "granted" || notifStatus === "pending"
+                        ? <Bell size={15} />
+                        : <BellOff size={15} />}
+                      {notifStatus === "granted" ? "Notifications on — tap to refresh" :
+                       notifStatus === "pending" ? "Registering…" :
+                       "Enable notifications"}
                     </motion.button>
                   </>
                 )}
