@@ -24,14 +24,6 @@ export const PROMPT_TEMPLATES = [
     description: "Birthday, anniversary, meaningful gifting — ask for the month",
   },
   {
-    id: "astrology-stone",
-    name: "Astrology & Meaning",
-    postType: "astrology",
-    style: "Traditional",
-    contentType: "Caption Only",
-    description: "Traditionally associated framing, Navaratna, Vedic gem practice — with disclaimer",
-  },
-  {
     id: "trust-education",
     name: "Trust & Education",
     postType: "trust",
@@ -83,7 +75,7 @@ export const PROMPT_TEMPLATES = [
 
 export const POST_TYPES = [
   "feature", "mystery", "origin", "stone_to_jewelry",
-  "birthstone", "astrology", "trust", "how_to_buy", "faq", "quiz",
+  "birthstone", "trust", "how_to_buy", "faq", "quiz",
 ];
 
 export const POST_TYPE_LABELS = {
@@ -93,7 +85,6 @@ export const POST_TYPE_LABELS = {
   quiz:             "Gem Quiz",
   stone_to_jewelry: "Stone → Jewelry",
   birthstone:       "Birthstone Gift",
-  astrology:        "Astrology",
   trust:            "Trust & Education",
   how_to_buy:       "How to Buy",
   faq:              "FAQ",

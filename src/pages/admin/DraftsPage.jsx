@@ -39,14 +39,13 @@ const POST_TYPE_LABELS = {
   quiz:             "Gem Quiz",
   stone_to_jewelry: "Stone → Jewelry",
   birthstone:       "Birthstone Gift",
-  astrology:        "Astrology",
   trust:            "Trust & Education",
   how_to_buy:       "How to Buy",
   faq:              "FAQ",
 };
 
 // Post types that use a stone image in 4/5 portrait ratio
-const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone", "astrology"]);
+const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone"]);
 // Post types that use a layout selector
 const LAYOUT_SELECTOR_TYPES = new Set(["feature", "mystery", "stone_to_jewelry"]);
 
@@ -474,7 +473,6 @@ const TRIGGERABLE_TYPES = [
   { value: "mystery",        label: "Mystery Post" },
   { value: "stone_to_jewelry", label: "Stone → Jewelry" },
   { value: "birthstone",     label: "Birthstone Gift" },
-  { value: "astrology",      label: "Astrology" },
   { value: "trust",          label: "Trust & Education" },
   { value: "origin",         label: "Informative / Origin" },
   { value: "quiz",           label: "Gem Quiz" },
