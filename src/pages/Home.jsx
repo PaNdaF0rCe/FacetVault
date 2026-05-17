@@ -119,24 +119,24 @@ function Home() {
         <title>FacetVault | Natural Sri Lankan Gemstones — Buy via WhatsApp</title>
         <meta
           name="description"
-          content="Natural Ceylon gemstones sourced from Ratnapura. See real videos before you buy. Inquire on WhatsApp. Stone-to-jewelry service available."
+          content="Natural Ceylon gemstones sourced from Sri Lanka. See real videos before you buy. Inquire on WhatsApp. Stone-to-jewelry service available."
         />
         <link rel="canonical" href="https://facetvault.store/" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://facetvault.store/" />
         <meta property="og:title" content="FacetVault | Natural Sri Lankan Gemstones — Buy via WhatsApp" />
-        <meta property="og:description" content="Natural Ceylon gemstones sourced from Ratnapura. See real videos before you buy. Inquire on WhatsApp." />
+        <meta property="og:description" content="Natural Ceylon gemstones sourced from Sri Lanka. See real videos before you buy. Inquire on WhatsApp." />
         <meta property="og:image" content="https://facetvault.store/logo.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="FacetVault | Natural Sri Lankan Gemstones — Buy via WhatsApp" />
-        <meta name="twitter:description" content="Natural Ceylon gemstones sourced from Ratnapura. See real videos before you buy." />
+        <meta name="twitter:description" content="Natural Ceylon gemstones sourced from Sri Lanka. See real videos before you buy." />
         <meta name="twitter:image" content="https://facetvault.store/logo.png" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "FacetVault",
           "url": "https://facetvault.store",
-          "description": "Natural Sri Lankan gemstones sourced from Ratnapura. Buy via WhatsApp.",
+          "description": "Natural Sri Lankan gemstones sourced from Sri Lanka. Buy via WhatsApp.",
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://facetvault.store/collection",
@@ -161,7 +161,7 @@ function Home() {
           >
             <div className="mx-auto max-w-4xl text-center">
               <motion.p variants={fadeUp} className="lux-eyebrow">
-                FacetVault — Sourced from Ratnapura, Sri Lanka
+                FacetVault — Natural Gemstones from Sri Lanka
               </motion.p>
 
               <motion.h1
@@ -213,7 +213,7 @@ function Home() {
             >
               <TrustPill icon={Video} text="Real videos before purchase" />
               <TrustPill icon={ShieldCheck} text="Official LGL Gem Lab partner" />
-              <TrustPill icon={MapPin} text="Sourced from Ratnapura" />
+              <TrustPill icon={MapPin} text="Sourced from Sri Lanka" />
               <TrustPill icon={MessageCircle} text="WhatsApp support from the founder" />
               <TrustPill icon={Gem} text="Stone-to-jewelry service" />
             </motion.div>
@@ -400,8 +400,8 @@ function Home() {
                 },
                 {
                   icon: MapPin,
-                  title: "Sourced from Ratnapura",
-                  text: "Stones are purchased directly from Ratnapura gem markets and trusted dealers we know personally.",
+                  title: "Sourced from Sri Lanka",
+                  text: "All stones are sourced from Sri Lanka — purchased directly from Ratnapura gem markets and trusted local dealers.",
                 },
                 {
                   icon: ShieldCheck,

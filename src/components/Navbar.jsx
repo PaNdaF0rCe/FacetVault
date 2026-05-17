@@ -163,9 +163,6 @@ function Navbar() {
   const navLinks = [
     { to: "/", label: "Home" },
     { to: "/collection", label: "Collection" },
-    { to: "/about", label: "About" },
-    { to: "/how-to-buy", label: "How to Buy" },
-    { to: "/contact", label: "Contact" },
   ];
 
   return (

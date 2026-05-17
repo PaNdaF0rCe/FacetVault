@@ -9,9 +9,6 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
-const About = lazy(() => import("./pages/About"));
-const HowToBuy = lazy(() => import("./pages/HowToBuy"));
-const Contact = lazy(() => import("./pages/Contact"));
 const StoneDetail = lazy(() => import("./pages/StoneDetail"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 
@@ -44,9 +41,6 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/collection" element={<Marketplace />} />
               <Route path="/stone/:id" element={<StoneDetail />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/how-to-buy" element={<HowToBuy />} />
-              <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/privacy" element={<Privacy />} />

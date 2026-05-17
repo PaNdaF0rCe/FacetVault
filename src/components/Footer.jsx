@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { MessageCircle, Phone, Mail } from "lucide-react";
-import { FaInstagram } from "react-icons/fa";
+import { MessageCircle, Phone } from "lucide-react";
+import { FaInstagram, FaFacebook } from "react-icons/fa";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import logo from "../assets/logo-diamond.png";
 
 const INSTAGRAM_URL = "https://www.instagram.com/facetvault/";
-const EMAIL_ADDRESS = "hello@facetvault.store";
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61572045051162";
 
 function FooterColumn({ title, children }) {
   return (
@@ -94,7 +94,7 @@ function Footer() {
       </div>
 
       <div className="relative mx-auto w-full max-w-[1400px] px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
           {/* Brand */}
           <div>
             <Link to="/" className="inline-flex items-center gap-3">
@@ -136,10 +136,11 @@ function Footer() {
                 <FaInstagram size={15} />
               </IconButton>
               <IconButton
-                href={`mailto:${EMAIL_ADDRESS}`}
-                label="Email FacetVault"
+                href={FACEBOOK_URL}
+                label="FacetVault on Facebook"
+                external
               >
-                <Mail size={15} strokeWidth={1.6} />
+                <FaFacebook size={15} />
               </IconButton>
             </div>
           </div>
@@ -152,14 +153,6 @@ function Footer() {
             <FooterLink to="/collection?filter=collector">
               Collector Pieces
             </FooterLink>
-          </FooterColumn>
-
-          {/* Company */}
-          <FooterColumn title="The House">
-            <FooterLink to="/about">About</FooterLink>
-            <FooterLink to="/how-to-buy">How to Buy</FooterLink>
-            <FooterLink to="/contact">Contact</FooterLink>
-            <FooterLink to="/privacy">Privacy</FooterLink>
           </FooterColumn>
 
           {/* Direct Inquiry */}
@@ -175,10 +168,10 @@ function Footer() {
               </FooterLink>
             )}
             <FooterLink href={INSTAGRAM_URL} external>
-              @facetvault
+              Instagram @facetvault
             </FooterLink>
-            <FooterLink href={`mailto:${EMAIL_ADDRESS}`}>
-              {EMAIL_ADDRESS}
+            <FooterLink href={FACEBOOK_URL} external>
+              Facebook @facetvault
             </FooterLink>
           </FooterColumn>
         </div>
@@ -188,6 +181,8 @@ function Footer() {
         <div className="mt-6 flex flex-col items-start justify-between gap-3 text-[11px] text-white/35 sm:flex-row sm:items-center">
           <p>
             © {year} FacetVault. Curated gemstones, sourced from Sri Lanka.
+            {" "}·{" "}
+            <Link to="/privacy" className="hover:text-white/60 transition-colors duration-200">Privacy</Link>
           </p>
           <p className="font-mono tracking-[0.2em] text-white/30">
             CRAFTED · WITH · CARE
