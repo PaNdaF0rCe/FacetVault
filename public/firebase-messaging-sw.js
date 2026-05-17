@@ -19,8 +19,8 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(title || "FacetVault", {
     body: body || "New draft ready for review",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    icon: "/logo.png",
+    badge: "/logo.png",
     data: { url },
     requireInteraction: true,
     actions: [{ action: "open", title: "Review Draft" }],
