@@ -346,23 +346,22 @@ h4 {
    ============================================================ */
 
 .lux-card {
-  background: rgba(10, 18, 32, 0.72);
+  background: rgba(10, 18, 32, 0.92);
   border: 1px solid var(--fv-hairline);
   border-radius: 18px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   transition:
     border-color 0.3s var(--fv-ease),
     transform 0.3s var(--fv-ease),
-    box-shadow 0.3s var(--fv-ease),
-    background-color 0.3s var(--fv-ease);
-  will-change: transform;
+    box-shadow 0.3s var(--fv-ease);
 }
 
-.lux-card:hover {
-  border-color: rgba(251, 191, 36, 0.28);
-  transform: translateY(-3px);
-  box-shadow: var(--fv-shadow-elevated);
+@media (hover: hover) {
+  .lux-card:hover {
+    border-color: rgba(251, 191, 36, 0.28);
+    transform: translateY(-3px);
+    box-shadow: var(--fv-shadow-elevated);
+    will-change: transform;
+  }
 }
 
 /* Elevated card with a faint conic gold border on hover */
@@ -407,14 +406,17 @@ h4 {
   pointer-events: none;
 }
 
-.lux-card-elevated:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--fv-shadow-elevated);
-  border-color: rgba(251, 191, 36, 0.05);
-}
+@media (hover: hover) {
+  .lux-card-elevated:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--fv-shadow-elevated);
+    border-color: rgba(251, 191, 36, 0.05);
+    will-change: transform;
+  }
 
-.lux-card-elevated:hover::before {
-  opacity: 0.65;
+  .lux-card-elevated:hover::before {
+    opacity: 0.65;
+  }
 }
 
 /* ============================================================

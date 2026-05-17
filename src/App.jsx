@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import AdminRoute from "./components/AdminRoute";
@@ -20,6 +20,23 @@ const AdminStoneDetailPage = lazy(() =>import("./pages/admin/AdminStoneDetailPag
 const LeadsDashboard = lazy(() => import("./pages/admin/LeadsDashboard"));
 const DraftsPage = lazy(() => import("./pages/admin/DraftsPage"));
 
+// Warm the two most-visited public page chunks during browser idle time
+// so navigating to them feels instant even on first visit.
+function usePrefetchPublicRoutes() {
+  useEffect(() => {
+    const prefetch = () => {
+      import("./pages/Home");
+      import("./pages/Marketplace");
+    };
+    if ("requestIdleCallback" in window) {
+      const id = requestIdleCallback(prefetch, { timeout: 3000 });
+      return () => cancelIdleCallback(id);
+    }
+    const t = setTimeout(prefetch, 2000);
+    return () => clearTimeout(t);
+  }, []);
+}
+
 function PageLoader() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
@@ -32,6 +49,7 @@ function PageLoader() {
 }
 
 function App() {
+  usePrefetchPublicRoutes();
   return (
     <BrowserRouter>
       <AuthProvider>

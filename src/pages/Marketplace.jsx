@@ -129,7 +129,7 @@ function MarketplaceImage({ item }) {
         src={imageSrc}
         srcSet={srcSet}
         alt={item.name || "Gemstone"}
-        className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-[1.018] ${
+        className={`h-full w-full object-cover transition-[transform,opacity] duration-500 [@media(hover:hover)]:group-hover:scale-[1.018] ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
         loading="lazy"
@@ -542,7 +542,7 @@ function Marketplace() {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-5">
+            <div className="mt-4 flex items-center gap-x-5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {filters.map((f) => {
                 const active = activeCollection === f.key;
 
@@ -550,7 +550,7 @@ function Marketplace() {
                   <button
                     key={f.key}
                     onClick={() => setActiveCollection(f.key)}
-                    className={`group relative pb-1 text-[11px] uppercase tracking-[0.2em] transition-colors duration-200 ${
+                    className={`group relative shrink-0 pb-1 text-[11px] uppercase tracking-[0.2em] transition-colors duration-200 ${
                       active
                         ? "text-amber-300"
                         : "text-white/38 hover:text-white/72"

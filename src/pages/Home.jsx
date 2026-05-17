@@ -166,7 +166,7 @@ function Home() {
 
               <motion.h1
                 variants={fadeUp}
-                className="lux-display mx-auto mt-6 max-w-4xl text-[2.4rem] text-white sm:text-[4rem] lg:text-[4.8rem]"
+                className="lux-display mx-auto mt-6 max-w-4xl text-[1.9rem] text-white sm:text-[3.6rem] lg:text-[4.8rem]"
               >
                 Natural gemstones.
                 <br className="hidden sm:block" />{" "}
@@ -221,7 +221,7 @@ function Home() {
         </section>
 
         {/* ── HOW IT WORKS ── */}
-        <section className="px-4 py-14 sm:px-6 sm:py-18 lg:px-8">
+        <section className="px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="show"
@@ -229,7 +229,7 @@ function Home() {
             variants={stagger}
             className="mx-auto max-w-6xl"
           >
-            <motion.div variants={fadeUp} className="mb-10 text-center">
+            <motion.div variants={fadeUp} className="mb-8 text-center">
               <p className="lux-eyebrow">Simple Process</p>
               <h2 className="lux-display mt-4 text-[1.9rem] text-white sm:text-[2.6rem]">
                 How buying works
@@ -316,7 +316,7 @@ function Home() {
         </section>
 
         {/* ── STONE TO JEWELRY ── */}
-        <section className="px-4 py-14 sm:px-6 sm:py-18 lg:px-8">
+        <section className="px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="show"

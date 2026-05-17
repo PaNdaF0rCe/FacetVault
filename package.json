@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "convert:images:webp": "node scripts/convert-images-to-webp.mjs",
-    "convert:images:webp:dry": "node scripts/convert-images-to-webp.mjs --dry-run"
+    "convert:images:webp:dry": "node scripts/convert-images-to-webp.mjs --dry-run",
+    "cleanup:storage:dry": "node scripts/cleanup-old-originals.mjs --dry-run",
+    "cleanup:storage": "node scripts/cleanup-old-originals.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",

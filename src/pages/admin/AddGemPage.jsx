@@ -178,6 +178,13 @@ async function processImage(file) {
     console.warn("Image decode failed, will fall back to raw upload:", err);
     return null;
   }
+
+  const baseName = file.name.replace(/\.[^.]+$/, "");
+  const [thumb, medium, full] = await Promise.all(
+    IMAGE_VARIANTS.map((v) => renderWebpVariant(img, baseName, v))
+  );
+
+  return { thumbnail: thumb, medium, original: full };
 }
 
 function CompactToggle({ label, name, checked, onChange }) {
@@ -334,21 +341,14 @@ export function GemFormPage({
       let imagePayload = null;
 
       if (imageFile) {
-        let thumbnailFile = null;
-
+        let processed = null;
         try {
-          thumbnailFile = await createThumbnail(imageFile);
-        } catch (thumbnailError) {
-          console.warn(
-            "Thumbnail generation failed, continuing with original image only:",
-            thumbnailError
-          );
+          processed = await processImage(imageFile);
+        } catch (err) {
+          console.warn("WebP conversion failed, uploading original:", err);
         }
 
-        imagePayload = {
-          original: imageFile,
-          thumbnail: thumbnailFile,
-        };
+        imagePayload = processed ?? { original: imageFile };
       }
 
       if (isEditMode) {
