@@ -5,6 +5,8 @@ import FilterBar from "../components/FilterBar";
 import InventoryItemCard from "../components/InventoryItemCard";
 import Toast from "../components/Toast";
 import { getFilteredInventory } from "../lib/firebase/inventory-operations";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../lib/firebase/config";
 
 function normalizeDateMs(value) {
   if (!value) return 0;
@@ -169,6 +171,140 @@ function LoadingSkeletons() {
   );
 }
 
+// ── action data hook ─────────────────────────────────────────────────────────
+
+function useActionData() {
+  const [data, setData] = useState({ pendingDrafts: 0, failedDrafts: 0, unrepliedLeads: 0, hotLeads: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const [draftSnap, leadSnap] = await Promise.all([
+          getDocs(query(
+            collection(db, "marketingDrafts"),
+            where("status", "in", [
+              "pending", "awaiting_image", "awaiting_question_selection",
+              "failed_generation", "failed_image", "failed_publish",
+            ])
+          )),
+          getDocs(collection(db, "leads")),
+        ]);
+
+        if (cancelled) return;
+
+        const drafts = draftSnap.docs.map((d) => d.data());
+        const leads  = leadSnap.docs.map((d)  => d.data());
+
+        const pendingDrafts = drafts.filter((d) =>
+          ["pending", "awaiting_image", "awaiting_question_selection"].includes(d.status)
+        ).length;
+
+        const failedDrafts = drafts.filter((d) =>
+          ["failed_generation", "failed_image", "failed_publish"].includes(d.status)
+        ).length;
+
+        const unrepliedLeads = leads.filter((l) =>
+          ["new"].includes(l.status) || (!l.status && l.intent)
+        ).length;
+
+        const hotLeads = leads.filter((l) =>
+          /high/i.test(l.intentLevel || l.intentCategory || l.intent || "")
+        ).length;
+
+        setData({ pendingDrafts, failedDrafts, unrepliedLeads, hotLeads });
+      } catch (err) {
+        console.error("Action data load error:", err);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  return data;
+}
+
+// ── today's actions section ───────────────────────────────────────────────────
+
+function TodayActions({ pendingDrafts, failedDrafts, unrepliedLeads, navigate }) {
+  const items = [
+    pendingDrafts > 0 && {
+      label: `${pendingDrafts} draft${pendingDrafts > 1 ? "s" : ""} waiting for approval`,
+      path:  "/admin/drafts",
+      color: "border-amber-300/20 bg-amber-300/6 text-amber-200",
+      dot:   "bg-amber-300",
+    },
+    failedDrafts > 0 && {
+      label: `${failedDrafts} draft${failedDrafts > 1 ? "s" : ""} failed — needs attention`,
+      path:  "/admin/drafts",
+      color: "border-red-300/20 bg-red-300/6 text-red-200",
+      dot:   "bg-red-400",
+    },
+    unrepliedLeads > 0 && {
+      label: `${unrepliedLeads} new lead${unrepliedLeads > 1 ? "s" : ""} haven't been replied to`,
+      path:  "/admin/leads",
+      color: "border-sky-300/20 bg-sky-300/6 text-sky-200",
+      dot:   "bg-sky-400",
+    },
+  ].filter(Boolean);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.96),rgba(4,12,26,0.97))] p-4 sm:p-5">
+      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-white/35">
+        Today's Actions
+      </p>
+      <div className="flex flex-col gap-2">
+        {items.map(({ label, path, color, dot }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => navigate(path)}
+            className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-left text-[12px] font-medium transition hover:brightness-110 ${color}`}
+          >
+            <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+            {label}
+            <span className="ml-auto text-[11px] opacity-50">→</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── business overview section ─────────────────────────────────────────────────
+
+function BusinessOverview({ allGems, hotLeads, pendingDrafts, navigate }) {
+  const forSale  = allGems.filter((g) => g.isForSale && !g.isSold).length;
+  const sold     = allGems.filter((g) => g.isSold).length;
+
+  return (
+    <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {[
+        { label: "For Sale",      value: forSale,       path: "/admin",         accent: false },
+        { label: "Hot Leads",     value: hotLeads,      path: "/admin/leads",   accent: hotLeads > 0 },
+        { label: "Pending Posts", value: pendingDrafts, path: "/admin/drafts",  accent: pendingDrafts > 0 },
+        { label: "Sold",          value: sold,          path: "/admin/reports", accent: false },
+      ].map(({ label, value, path, accent }) => (
+        <button
+          key={label}
+          type="button"
+          onClick={() => navigate(path)}
+          className="rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-4 text-left transition hover:border-white/14 hover:bg-white/[0.04]"
+        >
+          <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/42">{label}</p>
+          <p className={`mt-2 text-2xl font-semibold ${accent ? "text-amber-300" : "text-white"}`}>
+            {value}
+          </p>
+        </button>
+      ))}
+    </section>
+  );
+}
+
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -176,6 +312,8 @@ function Dashboard() {
   const [allGems, setAllGems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState(null);
+
+  const { pendingDrafts, failedDrafts, unrepliedLeads, hotLeads } = useActionData();
 
   const [filters, setFilters] = useState({
     category: "",
@@ -317,6 +455,20 @@ function Dashboard() {
 
           </div>
         </section>
+
+        <TodayActions
+          pendingDrafts={pendingDrafts}
+          failedDrafts={failedDrafts}
+          unrepliedLeads={unrepliedLeads}
+          navigate={navigate}
+        />
+
+        <BusinessOverview
+          allGems={allGems}
+          hotLeads={hotLeads}
+          pendingDrafts={pendingDrafts}
+          navigate={navigate}
+        />
 
         {!isLoading && gems.length > 0 && (
           <>

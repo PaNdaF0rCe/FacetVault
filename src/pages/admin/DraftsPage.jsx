@@ -10,6 +10,7 @@ import { onForegroundMessage } from "../../lib/firebase/fcm";
 import {
   CheckCircle, XCircle, RefreshCw,
   Edit3, Check, X, Clock, Upload, Shuffle, Undo2, Sparkles,
+  AlertTriangle, RotateCcw,
 } from "lucide-react";
 import { FaInstagram, FaFacebook } from "react-icons/fa";
 
@@ -106,8 +107,23 @@ function EditableCaption({ value, onChange, label, lang = "en" }) {
 // ── draft card ────────────────────────────────────────────────────────────────
 
 const BOT_URL = "https://facetvaultbot.onrender.com";
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_API_KEY || "";
 
-function DraftCard({ draft, onApprove, onReject }) {
+/** Append admin key to any bot URL, handling existing query strings cleanly. */
+function botUrl(path) {
+  if (!ADMIN_KEY) return `${BOT_URL}${path}`;
+  const sep = path.includes("?") ? "&" : "?";
+  return `${BOT_URL}${path}${sep}key=${ADMIN_KEY}`;
+}
+
+const CTA_STRENGTH_COLORS = {
+  soft:     "border-white/10 bg-white/4 text-white/45",
+  medium:   "border-amber-300/20 bg-amber-300/8 text-amber-200/80",
+  strong:   "border-emerald-400/25 bg-emerald-400/8 text-emerald-300/90",
+  none:     "border-white/8 bg-white/3 text-white/36",
+};
+
+function DraftCard({ draft, onApprove, onReject, showToast }) {
   const [captionEn, setCaptionEn] = useState(draft.captionEn || "");
   const [acting, setActing] = useState(null);
   const [undoSecs, setUndoSecs] = useState(null);
@@ -167,7 +183,7 @@ function DraftCard({ draft, onApprove, onReject }) {
   const handleReselect = async () => {
     setActing("reselect");
     await onReject(draft.id);
-    fetch(`${BOT_URL}/trigger-draft`).catch(() => {});
+    fetch(botUrl("/trigger-draft")).catch(() => {});
   };
 
   // Use stone photo — trigger bot to build branded image
@@ -175,7 +191,7 @@ function DraftCard({ draft, onApprove, onReject }) {
     imageUrlAtRebuildRef.current = draft.brandedImageUrl;
     setRebuildingImage(true);
     try {
-      await fetch(`${BOT_URL}/rebuild-image?draftId=${draft.id}`);
+      await fetch(botUrl(`/rebuild-image?draftId=${draft.id}`));
     } catch (err) {
       console.error("Use stone failed:", err);
       setRebuildingImage(false);
@@ -198,7 +214,7 @@ function DraftCard({ draft, onApprove, onReject }) {
       });
       imageUrlAtRebuildRef.current = draft.brandedImageUrl;
       setRebuildingImage(true);
-      fetch(`${BOT_URL}/rebuild-image?draftId=${draft.id}`).catch(console.error);
+      fetch(botUrl(`/rebuild-image?draftId=${draft.id}`)).catch(console.error);
       setTimeout(() => setRebuildingImage(false), 35000);
     } catch (err) {
       console.error("Image upload failed:", err);
@@ -214,7 +230,7 @@ function DraftCard({ draft, onApprove, onReject }) {
     imageUrlAtRebuildRef.current = draft.brandedImageUrl;
     setRebuildingImage(true);
     try {
-      await fetch(`${BOT_URL}/select-question?draftId=${draft.id}&questionIndex=${idx}`);
+      await fetch(botUrl(`/select-question?draftId=${draft.id}&questionIndex=${idx}`));
     } catch (err) {
       console.error("Question selection failed:", err);
       setRebuildingImage(false);
@@ -228,7 +244,7 @@ function DraftCard({ draft, onApprove, onReject }) {
     setRebuildingImage(true);
     setSelectedLayout(layout);
     try {
-      await fetch(`${BOT_URL}/rebuild-image?draftId=${draft.id}&layout=${layout}`);
+      await fetch(botUrl(`/rebuild-image?draftId=${draft.id}&layout=${layout}`));
     } catch (err) {
       console.error("Rebuild failed:", err);
       setRebuildingImage(false);
@@ -237,10 +253,39 @@ function DraftCard({ draft, onApprove, onReject }) {
     setTimeout(() => setRebuildingImage(false), 35000);
   };
 
+  // Retry a failed generation (bot deletes draft + makes a new one)
+  const handleRetryGeneration = async () => {
+    setActing("retry");
+    try {
+      await fetch(botUrl(`/retry-generation?draftId=${draft.id}`), { method: "POST" });
+      showToast?.("Retry triggered — a new draft will appear shortly", "info");
+    } catch {
+      setActing(null);
+    }
+  };
+
+  // Retry publish (set back to approved, bot re-sends to Instagram)
+  const handleRetryPublish = async () => {
+    setActing("retry");
+    try {
+      await fetch(botUrl(`/retry-publish?draftId=${draft.id}`), { method: "POST" });
+      showToast?.("Re-queued for publishing", "info");
+    } catch {
+      setActing(null);
+    }
+  };
+
   const isOriginWaiting = draft.status === "awaiting_image";
   const isQuizWaiting = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
   const isFeaturePost = LAYOUT_SELECTOR_TYPES.has(draft.postType);
   const imageAspect = PORTRAIT_TYPES.has(draft.postType) ? "aspect-[4/5]" : "aspect-square";
+
+  const isFailed = ["failed_generation", "failed_image", "failed_publish"].includes(draft.status);
+  const failedLabel = draft.status === "failed_generation" ? "Generation failed"
+    : draft.status === "failed_image" ? "Image build failed"
+    : "Publish failed";
+  const hasCompliance = (draft.complianceWarnings?.length ?? 0) > 0;
+  const hasObjectives = draft.objective || draft.targetBuyer || draft.ctaStrength;
 
   return (
     <div className="overflow-hidden rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(4,10,22,0.97),rgba(2,6,18,0.99))] shadow-lux-elevated">
@@ -332,6 +377,67 @@ function DraftCard({ draft, onApprove, onReject }) {
 
       {/* content */}
       <div className="p-5 space-y-4">
+        {/* failed state banner */}
+        {isFailed && (
+          <div className="rounded-2xl border border-red-400/25 bg-red-400/8 px-4 py-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={13} className="shrink-0 text-red-300/80" />
+              <p className="text-[12px] font-semibold text-red-300">{failedLabel}</p>
+            </div>
+            {draft.errorMessage && (
+              <p className="text-[11px] text-red-200/55 leading-relaxed">{draft.errorMessage}</p>
+            )}
+            <div className="flex gap-2 pt-0.5">
+              {draft.status === "failed_generation" && (
+                <button
+                  type="button"
+                  onClick={handleRetryGeneration}
+                  disabled={!!acting}
+                  className="flex items-center gap-1.5 rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-1.5 text-[11px] font-semibold text-red-300 transition hover:bg-red-400/18 disabled:opacity-50"
+                >
+                  {acting === "retry" ? <RefreshCw size={11} className="animate-spin" /> : <RotateCcw size={11} />}
+                  {acting === "retry" ? "Retrying…" : "Retry Generation"}
+                </button>
+              )}
+              {draft.status === "failed_image" && (
+                <button
+                  type="button"
+                  onClick={handleUseStone}
+                  disabled={rebuildingImage || !!acting}
+                  className="flex items-center gap-1.5 rounded-xl border border-amber-300/25 bg-amber-300/8 px-3 py-1.5 text-[11px] font-semibold text-amber-200 transition hover:bg-amber-300/14 disabled:opacity-50"
+                >
+                  {rebuildingImage ? <RefreshCw size={11} className="animate-spin" /> : <RotateCcw size={11} />}
+                  {rebuildingImage ? "Building…" : "Retry Image"}
+                </button>
+              )}
+              {draft.status === "failed_publish" && (
+                <button
+                  type="button"
+                  onClick={handleRetryPublish}
+                  disabled={!!acting}
+                  className="flex items-center gap-1.5 rounded-xl border border-emerald-400/25 bg-emerald-400/8 px-3 py-1.5 text-[11px] font-semibold text-emerald-300 transition hover:bg-emerald-400/14 disabled:opacity-50"
+                >
+                  {acting === "retry" ? <RefreshCw size={11} className="animate-spin" /> : <RotateCcw size={11} />}
+                  {acting === "retry" ? "Re-queuing…" : "Retry Publish"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* compliance warnings */}
+        {hasCompliance && (
+          <div className="rounded-2xl border border-amber-400/25 bg-amber-400/6 px-4 py-3 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={12} className="shrink-0 text-amber-300/80" />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-300/80">Compliance warnings</p>
+            </div>
+            {draft.complianceWarnings.map((w, i) => (
+              <p key={i} className="text-[11px] text-amber-200/55 leading-relaxed pl-5">— {w}</p>
+            ))}
+          </div>
+        )}
+
         {/* stone info */}
         <div className="flex items-start justify-between">
           <div>
@@ -345,6 +451,27 @@ function DraftCard({ draft, onApprove, onReject }) {
             <FaFacebook size={13} />
           </div>
         </div>
+
+        {/* content objectives metadata */}
+        {hasObjectives && (
+          <div className="flex flex-wrap gap-1.5">
+            {draft.objective && (
+              <span className="rounded-lg border border-white/10 bg-white/4 px-2.5 py-1 text-[9px] uppercase tracking-[0.15em] text-white/45">
+                {draft.objective}
+              </span>
+            )}
+            {draft.targetBuyer && (
+              <span className="rounded-lg border border-white/10 bg-white/4 px-2.5 py-1 text-[9px] uppercase tracking-[0.15em] text-white/45">
+                {draft.targetBuyer}
+              </span>
+            )}
+            {draft.ctaStrength && (
+              <span className={`rounded-lg border px-2.5 py-1 text-[9px] uppercase tracking-[0.15em] ${CTA_STRENGTH_COLORS[draft.ctaStrength] || CTA_STRENGTH_COLORS.none}`}>
+                CTA: {draft.ctaStrength}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* scheduled time */}
         <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 px-3 py-2">
@@ -493,9 +620,11 @@ export default function DraftsPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const endpoint = selectedType === "auto" || selectedType === "origin"
-        ? selectedType === "origin" ? `${BOT_URL}/trigger-origin` : `${BOT_URL}/trigger-draft`
-        : `${BOT_URL}/trigger-draft?postType=${selectedType}`;
+      const endpoint = selectedType === "origin"
+        ? botUrl("/trigger-origin")
+        : selectedType === "auto"
+        ? botUrl("/trigger-draft")
+        : botUrl(`/trigger-draft?postType=${selectedType}`);
       const res = await fetch(endpoint);
       const text = await res.text();
       if (text.toLowerCase().includes("already") || text.toLowerCase().includes("skip")) {
@@ -510,11 +639,18 @@ export default function DraftsPage() {
     }
   };
 
-  // Subscribe to pending drafts in real-time
+  // Subscribe to pending + failed drafts in real-time
   useEffect(() => {
     const q = query(
       collection(db, "marketingDrafts"),
-      where("status", "in", ["pending", "awaiting_image", "awaiting_question_selection"]),
+      where("status", "in", [
+        "pending",
+        "awaiting_image",
+        "awaiting_question_selection",
+        "failed_generation",
+        "failed_image",
+        "failed_publish",
+      ]),
       orderBy("createdAt", "desc")
     );
 
@@ -645,6 +781,7 @@ export default function DraftsPage() {
               draft={draft}
               onApprove={handleApprove}
               onReject={handleReject}
+              showToast={showToast}
             />
           ))}
         </div>

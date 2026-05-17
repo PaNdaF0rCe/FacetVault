@@ -10,6 +10,79 @@ import {
 } from "../../lib/firebase/inventory-operations";
 import { updateUserStats } from "../../lib/firebase/users";
 
+// ── Promotion readiness score ────────────────────────────────────────────────
+// Mirrors the logic in facetvaultbot/marketing/scheduler.js computeReadinessScore()
+const READINESS_CHECKS = [
+  { field: "Image",      key: (s) => !!(s.imageUrl || s.mediumUrl || s.thumbnailUrl), points: 25 },
+  { field: "Sale price", key: (s) => !!s.salePrice,   points: 15 },
+  { field: "Stone code", key: (s) => !!s.stoneCode,   points: 15 },
+  { field: "Listed for sale", key: (s) => !!s.isForSale, points: 10 },
+  { field: "Carat",     key: (s) => !!s.carat,        points: 10 },
+  { field: "Color",     key: (s) => !!s.color,        points: 10 },
+  { field: "Stone type",key: (s) => !!s.stoneType,    points: 10 },
+  { field: "Origin",    key: (s) => !!s.origin,       points: 5  },
+  { field: "Treatment / no treatment note", key: (s) => !!s.treatment, points: 5 },
+  { field: "Video",     key: (s) => !!s.videoUrl,     points: 5  },
+];
+
+function computeReadinessScore(stone = {}) {
+  const checks = READINESS_CHECKS.map((c) => ({ ...c, pass: c.key(stone) }));
+  const score  = checks.filter((c) => c.pass).reduce((s, c) => s + c.points, 0);
+  const missing = checks.filter((c) => !c.pass);
+  return { score, missing, ready: score >= 60 };
+}
+
+function ReadinessPanel({ gem }) {
+  const { score, missing, ready } = computeReadinessScore(gem);
+
+  const color = score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-300" : "text-red-300";
+  const ringColor = score >= 80 ? "border-emerald-400/30" : score >= 60 ? "border-amber-300/30" : "border-red-300/30";
+  const ringBg   = score >= 80 ? "bg-emerald-400/6"  : score >= 60 ? "bg-amber-300/6"  : "bg-red-300/6";
+  const pillText = ready ? "Ready to promote" : "Not ready to promote";
+  const pillCls  = ready
+    ? "border-emerald-400/25 bg-emerald-400/8 text-emerald-300"
+    : "border-red-300/22 bg-red-300/6 text-red-300/85";
+
+  return (
+    <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-white">Promotion Readiness</h3>
+        <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${pillCls}`}>
+          {pillText}
+        </span>
+      </div>
+
+      <div className="mt-4 flex items-center gap-4">
+        <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 ${ringColor} ${ringBg}`}>
+          <span className={`text-xl font-bold ${color}`}>{score}</span>
+        </div>
+        <div>
+          <p className="text-[11px] text-white/45">out of 100 · bot promotes at ≥ 60</p>
+          {missing.length === 0 ? (
+            <p className="mt-1 text-[12px] text-emerald-400/80">All fields complete ✓</p>
+          ) : (
+            <p className="mt-1 text-[12px] text-white/40">
+              Missing {missing.length} field{missing.length > 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {missing.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-1.5">
+          {missing.map(({ field, points }) => (
+            <div key={field} className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/[0.025] px-3 py-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-300/50" />
+              <span className="flex-1 text-[11px] text-white/45">{field}</span>
+              <span className="text-[10px] text-white/25">+{points}pts</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function formatCarat(value) {
   if (value === null || value === undefined || value === "") return "—";
   const num = Number(value);
@@ -419,6 +492,8 @@ function AdminStoneDetailPage() {
               />
             </div>
           </section>
+
+          <ReadinessPanel gem={gem} />
 
           <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
             <div className="flex items-center justify-between gap-3">

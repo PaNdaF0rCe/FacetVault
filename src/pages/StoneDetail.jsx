@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck } from "lucide-react";
+import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck, Video, PackageCheck, CreditCard, Truck } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
@@ -213,6 +213,21 @@ export default function StoneDetail() {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   }, [stone, isSold, hasDiscount, discountedPrice, campaign]);
 
+  const whatsappVideoLink = useMemo(() => {
+    if (!stone || isSold) return "#";
+
+    const msg = [
+      `Hi, could I get a real video of this stone from FacetVault?`,
+      stone.name || stone.stoneType || "Gemstone",
+      stone.stoneCode ? `Code: ${stone.stoneCode}` : "",
+      typeof window !== "undefined" ? window.location.href : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  }, [stone, isSold]);
+
   if (isLoading) {
     return (
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -405,7 +420,16 @@ export default function StoneDetail() {
               <DetailRow label="Color" value={stone.color} />
               <DetailRow label="Cut" value={stone.cut} />
               <DetailRow label="Origin" value={stone.origin} />
-              <DetailRow label="Treatment" value={stone.treatment} />
+              <DetailRow
+                label="Treatment"
+                value={
+                  stone.treatment
+                    ? stone.treatment
+                    : !isSold
+                    ? "Not disclosed"
+                    : null
+                }
+              />
               <DetailRow label="Category" value={stone.category} />
             </div>
 
@@ -417,7 +441,7 @@ export default function StoneDetail() {
 
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-300/16 bg-amber-300/6 px-4 py-2 text-[12px] text-amber-200/80">
               <ShieldCheck size={13} className="shrink-0" />
-              Certified by our official partner, LGL Gem Lab — available on request
+              LGL Gem Lab certification available on request for eligible stones
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -426,15 +450,27 @@ export default function StoneDetail() {
                   This gemstone has been sold
                 </div>
               ) : (
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="lux-button-primary"
-                >
-                  <MessageCircle size={17} className="mr-2" strokeWidth={1.8} />
-                  Inquire on WhatsApp
-                </a>
+                <>
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="lux-button-primary"
+                  >
+                    <MessageCircle size={17} className="mr-2" strokeWidth={1.8} />
+                    Inquire on WhatsApp
+                  </a>
+
+                  <a
+                    href={whatsappVideoLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-medium text-white/75 transition-[transform,border-color,color] duration-200 hover:border-amber-300/20 hover:text-amber-200 active:scale-[0.98]"
+                  >
+                    <Video size={15} strokeWidth={1.8} />
+                    Request Real Video
+                  </a>
+                </>
               )}
 
               <button
@@ -447,6 +483,29 @@ export default function StoneDetail() {
                 {copied ? "Copied" : "Share"}
               </button>
             </div>
+
+            {!isSold && (
+              <div className="mt-8 rounded-2xl border border-white/8 bg-white/[0.025] p-5">
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
+                  How buying works
+                </p>
+                <ol className="space-y-3">
+                  {[
+                    { icon: MessageCircle, step: "1. Inquire", desc: "Send a WhatsApp message — we'll confirm availability and answer your questions." },
+                    { icon: CreditCard,    step: "2. Pay",     desc: "Bank transfer or cash on delivery. We confirm your order once payment clears." },
+                    { icon: Truck,         step: "3. Receive", desc: "Courier delivery islandwide. Packaging is discreet and insured." },
+                  ].map(({ icon: Icon, step, desc }) => (
+                    <li key={step} className="flex items-start gap-3">
+                      <Icon size={14} className="mt-0.5 shrink-0 text-amber-300/60" strokeWidth={1.8} />
+                      <div>
+                        <span className="text-[12px] font-semibold text-white/75">{step} </span>
+                        <span className="text-[12px] text-white/42">{desc}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </div>
         </div>
 

@@ -9,6 +9,176 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../../contexts/AuthContext";
 
+// ── marketing insights helpers ────────────────────────────────────────────────
+
+const POST_TYPE_LABELS = {
+  feature:          "Feature",
+  mystery:          "Mystery",
+  origin:           "Informative",
+  quiz:             "Gem Quiz",
+  stone_to_jewelry: "Stone→Jewelry",
+  birthstone:       "Birthstone",
+  trust:            "Trust",
+  how_to_buy:       "How to Buy",
+  faq:              "FAQ",
+};
+
+function isFailedStatus(s) {
+  return ["failed_generation", "failed_image", "failed_publish"].includes(s);
+}
+
+function MarketingInsights() {
+  const [drafts, setDrafts]   = useState([]);
+  const [leads, setLeads]     = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const [draftSnap, leadSnap] = await Promise.all([
+          getDocs(collection(db, "marketingDrafts")),
+          getDocs(collection(db, "leads")),
+        ]);
+        setDrafts(draftSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setLeads(leadSnap.docs.map((d)  => ({ id: d.id, ...d.data() })));
+      } catch (err) {
+        console.error("Marketing insights load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, []);
+
+  const draftStats = useMemo(() => {
+    const published = drafts.filter((d) => d.status === "published").length;
+    const pending   = drafts.filter((d) => ["pending", "awaiting_image", "awaiting_question_selection"].includes(d.status)).length;
+    const approved  = drafts.filter((d) => d.status === "approved").length;
+    const rejected  = drafts.filter((d) => d.status === "rejected").length;
+    const failed    = drafts.filter((d) => isFailedStatus(d.status)).length;
+
+    // Post type distribution (published only)
+    const byType = {};
+    drafts.filter((d) => d.status === "published").forEach((d) => {
+      const t = d.postType || "unknown";
+      byType[t] = (byType[t] || 0) + 1;
+    });
+    const typeRows = Object.entries(byType)
+      .sort((a, b) => b[1] - a[1])
+      .map(([type, count]) => ({ type, label: POST_TYPE_LABELS[type] || type, count }));
+
+    return { total: drafts.length, published, pending, approved, rejected, failed, typeRows };
+  }, [drafts]);
+
+  const leadStats = useMemo(() => {
+    const resolve = (l) => l.intentLevel || l.intentCategory || l.intent || "";
+
+    const hot      = leads.filter((l) => /high/i.test(resolve(l))).length;
+    const medium   = leads.filter((l) => /medium/i.test(resolve(l))).length;
+    const support  = leads.filter((l) => /support/i.test(resolve(l)) || l.status === "support").length;
+    const sold     = leads.filter((l) => l.status === "sold").length;
+    const lost     = leads.filter((l) => l.status === "lost" || l.status === "not_interested").length;
+    const total    = leads.length;
+
+    return { total, hot, medium, support, sold, lost };
+  }, [leads]);
+
+  if (loading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-7 w-7 rounded-full border-2 border-amber-300/30 border-t-amber-300 animate-spin" />
+      </div>
+    );
+  }
+
+  const maxTypeCount = Math.max(1, ...draftStats.typeRows.map((r) => r.count));
+
+  return (
+    <div className="space-y-8 mt-6">
+      {/* draft pipeline summary */}
+      <div>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/35">
+          Content Pipeline
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[
+            { label: "Total Generated",  value: draftStats.total,     color: "text-white" },
+            { label: "Published",        value: draftStats.published, color: "text-emerald-400" },
+            { label: "Pending / Queue",  value: draftStats.pending + draftStats.approved, color: "text-amber-300" },
+            { label: "Rejected",         value: draftStats.rejected,  color: "text-white/50" },
+            { label: "Failed",           value: draftStats.failed,    color: "text-red-300" },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="rounded-2xl border border-white/8 bg-white/[0.04] p-4">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/38">{label}</p>
+              <p className={`mt-2 text-2xl font-semibold ${color}`}>{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* post type breakdown */}
+      {draftStats.typeRows.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/35">
+            Posts Published by Type
+          </p>
+          <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-4 space-y-3">
+            {draftStats.typeRows.map(({ type, label, count }) => (
+              <div key={type} className="flex items-center gap-3">
+                <p className="w-32 shrink-0 text-[11px] text-white/60">{label}</p>
+                <div className="flex-1 rounded-full bg-white/6 h-2 overflow-hidden">
+                  <div
+                    className="h-2 rounded-full bg-amber-300/70 transition-all"
+                    style={{ width: `${(count / maxTypeCount) * 100}%` }}
+                  />
+                </div>
+                <p className="w-6 shrink-0 text-right text-[11px] font-semibold text-white/70">{count}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* lead funnel */}
+      <div>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/35">
+          Lead Funnel — {leadStats.total} total
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[
+            { label: "Hot Leads",     value: leadStats.hot,     color: "text-amber-300" },
+            { label: "Medium Leads",  value: leadStats.medium,  color: "text-white" },
+            { label: "Support",       value: leadStats.support, color: "text-sky-300" },
+            { label: "Sold",          value: leadStats.sold,    color: "text-emerald-400" },
+            { label: "Lost / Cold",   value: leadStats.lost,    color: "text-white/42" },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="rounded-2xl border border-white/8 bg-white/[0.04] p-4">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/38">{label}</p>
+              <p className={`mt-2 text-2xl font-semibold ${color}`}>{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* conversion note */}
+      {leadStats.total > 0 && (
+        <div className="rounded-2xl border border-white/6 bg-white/[0.02] p-4">
+          <p className="text-[11px] text-white/35">
+            Lead → Sale conversion:{" "}
+            <span className="font-semibold text-emerald-400/80">
+              {((leadStats.sold / leadStats.total) * 100).toFixed(1)}%
+            </span>
+            {" "}· Hot lead rate:{" "}
+            <span className="font-semibold text-amber-300/80">
+              {((leadStats.hot / leadStats.total) * 100).toFixed(1)}%
+            </span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function formatMoney(val) {
   if (val === null || val === undefined) return "—";
   return `LKR ${Number(val).toLocaleString(undefined, {
@@ -135,6 +305,7 @@ function MobileSaleCard({ sale }) {
 export default function Reports() {
   const { user } = useAuth();
 
+  const [activeTab, setActiveTab] = useState("pl"); // "pl" | "marketing"
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -262,22 +433,52 @@ export default function Reports() {
               FacetVault Reports
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              Profit & Loss
+              {activeTab === "pl" ? "Profit & Loss" : "Marketing Insights"}
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-white/50">
-              View sales performance, recent transactions, and export your report.
+              {activeTab === "pl"
+                ? "View sales performance, recent transactions, and export your report."
+                : "Content pipeline, post type breakdown, and lead conversion data."}
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={exportCSV}
-            className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-[#09101c] transition hover:brightness-105"
-          >
-            Download Report (CSV)
-          </button>
+          {activeTab === "pl" && (
+            <button
+              type="button"
+              onClick={exportCSV}
+              className="inline-flex items-center justify-center rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-[#09101c] transition hover:brightness-105"
+            >
+              Download Report (CSV)
+            </button>
+          )}
         </div>
 
+        {/* tab bar */}
+        <div className="mt-5 flex gap-1 overflow-x-auto pb-1 border-b border-white/8">
+          {[
+            { key: "pl",        label: "Profit & Loss" },
+            { key: "marketing", label: "Marketing Insights" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`shrink-0 rounded-t-lg px-4 py-2.5 text-sm font-medium transition -mb-px border-b-2 ${
+                activeTab === key
+                  ? "border-amber-300 text-amber-300"
+                  : "border-transparent text-white/45 hover:text-white/70"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* marketing insights tab */}
+        {activeTab === "marketing" && <MarketingInsights />}
+
+        {/* P&L date filters — only show on P&L tab */}
+        {activeTab === "pl" && (
         <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
           <FilterPill
             active={range === "all"}
@@ -295,7 +496,9 @@ export default function Reports() {
             onClick={() => setRange("30")}
           />
         </div>
+        )}
 
+        {activeTab === "pl" && (<>
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <SummaryCard label="Revenue" value={formatMoney(summary.revenue)} />
           <SummaryCard label="Cost" value={formatMoney(summary.cost)} />
@@ -392,6 +595,7 @@ export default function Reports() {
             </>
           )}
         </div>
+        </>)}
       </div>
     </div>
   );
