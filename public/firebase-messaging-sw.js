@@ -12,15 +12,20 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Handle background push notifications
+// Handle background push notifications.
+// Messages are sent data-only (no `notification` field) so Chrome doesn't
+// auto-display a duplicate — all rendering is handled here.
 messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {};
+  const title = payload.data?.title || payload.notification?.title || "FacetVault";
+  const body = payload.data?.body || payload.notification?.body || "New draft ready for review";
   const url = payload.data?.url || "/admin/drafts";
 
-  self.registration.showNotification(title || "FacetVault", {
-    body: body || "New draft ready for review",
+  self.registration.showNotification(title, {
+    body,
     icon: "/logo.png",
     badge: "/logo.png",
+    tag: "facetvault-draft",
+    renotify: true,
     data: { url },
     requireInteraction: true,
     actions: [{ action: "open", title: "Review Draft" }],
