@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, MessageCircle, Share2, Check } from "lucide-react";
+import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
@@ -415,7 +415,12 @@ export default function StoneDetail() {
               </p>
             ) : null}
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-300/16 bg-amber-300/6 px-4 py-2 text-[12px] text-amber-200/80">
+              <ShieldCheck size={13} className="shrink-0" />
+              Certified by our official partner, LGL Gem Lab — available on request
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               {isSold ? (
                 <div className="inline-flex items-center gap-2 rounded-full border border-rose-300/18 bg-rose-300/8 px-5 py-3 text-sm font-semibold text-rose-200">
                   This gemstone has been sold

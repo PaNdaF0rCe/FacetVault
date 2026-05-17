@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Search, X } from "lucide-react";
+import { Search, X, MessageCircle } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import {
   getExchangeRates,
@@ -10,6 +10,7 @@ import {
   formatCurrency,
 } from "../lib/services/exchangeRates";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
+import { WHATSAPP_NUMBER } from "../config/appConfig";
 
 const PRICE_THRESHOLD = 15000;
 const NEW_DAYS = 7;
@@ -156,8 +157,8 @@ function MarketplaceCard({ item, rates, currency, campaign }) {
     secondaryPrice = null;
     isSmall = false;
   } else if (!Number.isNaN(salePrice)) {
-    if (salePrice === 0 || rawPrice > 15000) {
-      primaryPrice = "View price";
+    if (salePrice === 0) {
+      primaryPrice = "Ask for price";
       secondaryPrice = null;
       isSmall = true;
     } else if (salePrice > 0) {
@@ -189,9 +190,19 @@ function MarketplaceCard({ item, rates, currency, campaign }) {
 
   const badge = getPrimaryBadge(item);
 
-  const detailText = [item.carat ? `${item.carat} ct` : null, item.color || null]
+  const detailText = [
+    item.carat ? `${item.carat} ct` : null,
+    item.color || null,
+    item.cut || null,
+    item.origin || null,
+  ]
     .filter(Boolean)
-    .join(" • ");
+    .join(" · ");
+
+  const waText = encodeURIComponent(
+    `Hi FacetVault, I saw ${item.name || "a stone"}${item.stoneCode ? ` (${item.stoneCode})` : ""}. Is it still available? Can I see a real video?`
+  );
+  const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${waText}`;
 
   return (
     <article className="lux-card-elevated group flex h-full flex-col overflow-hidden">
@@ -274,6 +285,18 @@ function MarketplaceCard({ item, rates, currency, campaign }) {
         >
           {item?.isSold ? "View Sold Stone" : "View Stone"}
         </Link>
+
+        {!item?.isSold && (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-400/18 bg-emerald-400/8 px-3 py-2 text-[12px] font-medium text-emerald-300 transition-colors hover:bg-emerald-400/14 active:scale-[0.98]"
+          >
+            <MessageCircle size={12} />
+            Ask on WhatsApp
+          </a>
+        )}
       </div>
     </article>
   );
