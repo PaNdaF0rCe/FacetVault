@@ -560,23 +560,24 @@ export default function DraftsPage() {
   return (
     <div className="min-h-screen bg-obsidian-900 px-4 py-8 sm:px-6 lg:px-10">
       {/* header */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-[0.34em] text-amber-300/60">FacetVault · Content</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-white">
+          <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             Draft Approvals
           </h1>
           <p className="mt-1.5 text-sm text-white/36">
-            Review and approve auto-generated posts before they go live.
+            Review and approve posts before they go live.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* generate controls — stacks vertically on mobile */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:shrink-0">
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
             disabled={generating}
-            className="rounded-xl border border-white/10 bg-obsidian-800 px-3 py-2.5 text-[11px] text-white/60 outline-none focus:border-amber-300/30 disabled:opacity-50"
+            className="w-full rounded-xl border border-white/10 bg-obsidian-800 px-3 py-2.5 text-[11px] text-white/60 outline-none focus:border-amber-300/30 disabled:opacity-50 sm:w-auto"
           >
             {TRIGGERABLE_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
@@ -586,7 +587,7 @@ export default function DraftsPage() {
             type="button"
             onClick={handleGenerate}
             disabled={generating}
-            className="flex items-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60 sm:w-auto"
           >
             {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
             {generating ? "Generating…" : "Generate"}
@@ -622,10 +623,10 @@ export default function DraftsPage() {
       )}
 
       {!loading && drafts.length === 0 && (
-        <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-amber-300/20 bg-amber-300/5 text-center px-6">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-amber-300/20 bg-amber-300/5 text-center px-6 py-12">
           <div className="mb-3 text-4xl text-amber-300/40">◇</div>
           <p className="text-sm font-semibold text-white/70">No drafts pending</p>
-          <p className="mt-2 text-xs text-white/40">The bot will notify you when a new post is ready for review.</p>
+          <p className="mt-2 text-xs text-white/40">The bot will notify you when a new post is ready.</p>
           <button
             type="button"
             onClick={handleGenerate}
