@@ -257,20 +257,32 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
   const handleRetryGeneration = async () => {
     setActing("retry");
     try {
-      await fetch(botUrl(`/retry-generation?draftId=${draft.id}`), { method: "POST" });
+      const res = await fetch(botUrl(`/retry-generation?draftId=${draft.id}`), { method: "POST" });
+      if (!res.ok) {
+        showToast?.(`Retry failed (${res.status}) — check Render logs`, "error");
+        setActing(null);
+        return;
+      }
       showToast?.("Retry triggered — a new draft will appear shortly", "info");
     } catch {
+      showToast?.("Could not reach the bot — check Render is running", "error");
       setActing(null);
     }
   };
 
-  // Retry publish (set back to approved, bot re-sends to Instagram)
+  // Retry publish (set back to approved, bot re-sends to Instagram + Facebook)
   const handleRetryPublish = async () => {
     setActing("retry");
     try {
-      await fetch(botUrl(`/retry-publish?draftId=${draft.id}`), { method: "POST" });
+      const res = await fetch(botUrl(`/retry-publish?draftId=${draft.id}`), { method: "POST" });
+      if (!res.ok) {
+        showToast?.(`Retry failed (${res.status}) — check Render logs`, "error");
+        setActing(null);
+        return;
+      }
       showToast?.("Re-queued for publishing", "info");
     } catch {
+      showToast?.("Could not reach the bot — check Render is running", "error");
       setActing(null);
     }
   };
@@ -626,16 +638,30 @@ export default function DraftsPage() {
         ? botUrl("/trigger-draft")
         : botUrl(`/trigger-draft?postType=${selectedType}`);
       const res = await fetch(endpoint);
+
+      if (res.status === 401) {
+        showToast("Unauthorized — check VITE_ADMIN_API_KEY is set in Vercel", "error");
+        setGenerating(false);
+        return;
+      }
+      if (!res.ok) {
+        showToast(`Bot error (${res.status}) — check Render logs`, "error");
+        setGenerating(false);
+        return;
+      }
+
       const text = await res.text();
       if (text.toLowerCase().includes("already") || text.toLowerCase().includes("skip")) {
         showToast("A draft is already pending — approve or remove it first", "info");
+        setGenerating(false);
       } else {
-        showToast("Generating new draft — it will appear here in a moment", "info");
+        showToast("Generating — draft will appear in about 30–60 seconds", "info");
+        // Keep spinner active while bot works in background (~30–60s for AI + image)
+        setTimeout(() => setGenerating(false), 20000);
       }
     } catch {
       showToast("Could not reach the bot — check Render is running", "error");
-    } finally {
-      setTimeout(() => setGenerating(false), 3000);
+      setGenerating(false);
     }
   };
 
