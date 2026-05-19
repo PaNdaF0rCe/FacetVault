@@ -30,7 +30,25 @@ function formatScheduled(ts) {
   if (d <= now) return "post immediately on approval";
   return d.toLocaleString("en-LK", {
     weekday: "short", hour: "2-digit", minute: "2-digit",
+    timeZone: "Asia/Colombo",
   });
+}
+
+// Convert a Firestore Timestamp to a datetime-local input value displayed in LKA time
+function tsToLkaInput(ts) {
+  if (!ts?.toDate) return "";
+  const s = ts.toDate().toLocaleString("sv-SE", { timeZone: "Asia/Colombo" });
+  return s.slice(0, 16).replace(" ", "T"); // "2026-05-18T17:30"
+}
+
+// Convert a datetime-local input value (user enters LKA time) to a UTC Date
+function lkaInputToUtc(inputVal) {
+  if (!inputVal) return null;
+  const [datePart, timePart] = inputVal.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi] = timePart.split(":").map(Number);
+  // LKA = UTC+5:30 → UTC = LKA − 5h30m
+  return new Date(Date.UTC(y, mo - 1, d, h - 5, mi - 30, 0, 0));
 }
 
 const POST_TYPE_LABELS = {
@@ -130,9 +148,13 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [rebuildingImage, setRebuildingImage] = useState(false);
   const [selectedLayout, setSelectedLayout] = useState(draft.currentLayout || "standard");
+  const [customTime, setCustomTime] = useState(() => tsToLkaInput(draft.scheduledPostTime));
   const fileInputRef = useRef(null);
   const rejectTimerRef = useRef(null);
   const imageUrlAtRebuildRef = useRef(draft.brandedImageUrl);
+
+  const isApproved = draft.status === "approved";
+  const isPublishing = draft.status === "publishing";
 
   // Sync layout chip when Firestore pushes a new currentLayout
   useEffect(() => {
@@ -148,7 +170,27 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
 
   const handleApprove = async () => {
     setActing("approve");
-    await onApprove(draft.id, { captionEn });
+    await onApprove(draft.id, { captionEn, customTime });
+  };
+
+  const handlePostNow = async () => {
+    setActing("post-now");
+    try {
+      const res = await fetch(botUrl(`/post-now`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draftId: draft.id }),
+      });
+      if (!res.ok) {
+        showToast?.(`Post failed (${res.status}) — check Render logs`, "error");
+        setActing(null);
+        return;
+      }
+      showToast?.("Posting now — it'll be live in a moment 🚀", "info");
+    } catch {
+      showToast?.("Could not reach the bot — check Render is running", "error");
+      setActing(null);
+    }
   };
 
   // Reject with 5-second undo window
@@ -485,11 +527,26 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
           </div>
         )}
 
-        {/* scheduled time */}
-        <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 px-3 py-2">
-          <Clock size={12} className="text-amber-300/50 flex-shrink-0" />
-          <p className="text-[11px] text-white/50">{formatScheduled(draft.scheduledPostTime)}</p>
-        </div>
+        {/* scheduled time — editable for pending drafts, read-only for approved */}
+        {isApproved || isPublishing ? (
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/6 px-3 py-2">
+            <Clock size={12} className="text-emerald-300/60 flex-shrink-0" />
+            <p className="text-[11px] text-emerald-200/70">
+              {isPublishing ? "Posting now…" : `Scheduled · ${formatScheduled(draft.scheduledPostTime)}`}
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-white/6 bg-white/3 px-3 py-2">
+            <Clock size={12} className="text-amber-300/50 flex-shrink-0" />
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 shrink-0">Post at</p>
+            <input
+              type="datetime-local"
+              value={customTime}
+              onChange={(e) => setCustomTime(e.target.value)}
+              className="flex-1 bg-transparent text-[11px] text-white/60 outline-none [color-scheme:dark] cursor-pointer hover:text-white/80 transition"
+            />
+          </div>
+        )}
 
         {/* quiz question selector */}
         {isQuizWaiting && !rebuildingImage && (
@@ -561,8 +618,31 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
           </div>
         )}
 
+        {/* approved: post now or cancel */}
+        {isApproved && (
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={handlePostNow}
+              disabled={!!acting}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-emerald-300 transition hover:border-emerald-400/50 hover:bg-emerald-400/16 disabled:opacity-50"
+            >
+              {acting === "post-now" ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+              {acting === "post-now" ? "Posting…" : "Post Now"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onReject(draft.id)}
+              disabled={!!acting}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/6 px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-red-300/70 transition hover:border-red-400/40 hover:text-red-300 disabled:opacity-50"
+            >
+              <XCircle size={13} /> Cancel
+            </button>
+          </div>
+        )}
+
         {/* pending: approve + reject with 5s undo */}
-        {!isOriginWaiting && !isQuizWaiting && (
+        {!isOriginWaiting && !isQuizWaiting && !isApproved && !isPublishing && (
           <div className="space-y-2 pt-1">
             {undoSecs !== null ? (
               <div className="flex items-center justify-between rounded-2xl border border-amber-300/20 bg-amber-300/6 px-4 py-3">
@@ -673,6 +753,8 @@ export default function DraftsPage() {
         "pending",
         "awaiting_image",
         "awaiting_question_selection",
+        "approved",
+        "publishing",
         "failed_generation",
         "failed_image",
         "failed_publish",
@@ -701,11 +783,19 @@ export default function DraftsPage() {
   }, []);
 
   const handleApprove = useCallback(async (draftId, edits) => {
-    await updateDoc(doc(db, "marketingDrafts", draftId), {
+    const update = {
       status: "approved",
       captionEn: edits.captionEn,
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (edits.customTime) {
+      const utcDate = lkaInputToUtc(edits.customTime);
+      if (utcDate) {
+        update.scheduledPostTime = utcDate;
+        update.alreadyPastOptimal = utcDate <= new Date();
+      }
+    }
+    await updateDoc(doc(db, "marketingDrafts", draftId), update);
     showToast("Draft approved — the bot will post at the scheduled time");
   }, []);
 
