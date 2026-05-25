@@ -725,6 +725,8 @@ export default function DraftsPage() {
     if (generatingTimeoutRef.current) clearTimeout(generatingTimeoutRef.current);
     generatingTimeoutRef.current = setTimeout(() => {
       generatingRef.current = false;
+      knownDraftIdsRef.current = null;
+      localStorage.removeItem("fv_generating");
       setGenerating(false);
     }, 180000);
   };
@@ -733,12 +735,37 @@ export default function DraftsPage() {
     if (generatingTimeoutRef.current) clearTimeout(generatingTimeoutRef.current);
     generatingRef.current = false;
     knownDraftIdsRef.current = null;
+    localStorage.removeItem("fv_generating");
     setGenerating(false);
   };
 
+  // On mount: restore spinner state from localStorage if generation started
+  // less than 15 minutes ago (meaning the user navigated away mid-generation).
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("fv_generating");
+      if (stored) {
+        const { startedAt, knownIds } = JSON.parse(stored);
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < 15 * 60 * 1000) {
+          knownDraftIdsRef.current = new Set(knownIds);
+          startGenerating();
+        } else {
+          localStorage.removeItem("fv_generating");
+        }
+      }
+    } catch {
+      localStorage.removeItem("fv_generating");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleGenerate = async () => {
     // Snapshot the IDs currently on screen so we can tell when a NEW draft arrives
-    knownDraftIdsRef.current = new Set(drafts.map((d) => d.id));
+    const knownIds = drafts.map((d) => d.id);
+    knownDraftIdsRef.current = new Set(knownIds);
+    // Persist generating state so spinner survives page navigation
+    localStorage.setItem("fv_generating", JSON.stringify({ startedAt: Date.now(), knownIds }));
     startGenerating();
     try {
       const suggestionParam = suggestion.trim()
