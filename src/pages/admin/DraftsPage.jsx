@@ -707,7 +707,10 @@ export default function DraftsPage() {
 
   // Refs used inside Firestore callbacks to avoid stale closures
   const generatingRef = useRef(false);
-  const prevDraftCountRef = useRef(0);
+  // Tracks which draft IDs existed when generation started — a genuinely new
+  // draft is any ID not in this set. Using IDs instead of a count means we
+  // correctly detect new drafts even when other drafts change status simultaneously.
+  const knownDraftIdsRef = useRef(null);
   const generatingTimeoutRef = useRef(null);
 
   const showToast = (msg, type = "success") => {
@@ -729,10 +732,13 @@ export default function DraftsPage() {
   const stopGenerating = () => {
     if (generatingTimeoutRef.current) clearTimeout(generatingTimeoutRef.current);
     generatingRef.current = false;
+    knownDraftIdsRef.current = null;
     setGenerating(false);
   };
 
   const handleGenerate = async () => {
+    // Snapshot the IDs currently on screen so we can tell when a NEW draft arrives
+    knownDraftIdsRef.current = new Set(drafts.map((d) => d.id));
     startGenerating();
     try {
       const suggestionParam = suggestion.trim()
@@ -793,11 +799,12 @@ export default function DraftsPage() {
       const newDrafts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setDrafts(newDrafts);
       setLoading(false);
-      // Clear spinner as soon as a new draft appears
-      if (generatingRef.current && newDrafts.length > prevDraftCountRef.current) {
-        stopGenerating();
+      // Clear spinner the moment a genuinely new draft appears (one whose ID
+      // was not in the set when the user clicked Generate).
+      if (generatingRef.current && knownDraftIdsRef.current !== null) {
+        const hasNew = newDrafts.some((d) => !knownDraftIdsRef.current.has(d.id));
+        if (hasNew) stopGenerating();
       }
-      prevDraftCountRef.current = newDrafts.length;
     }, (err) => {
       console.error("Drafts listener error:", err);
       setLoading(false);
