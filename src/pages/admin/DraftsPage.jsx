@@ -702,46 +702,73 @@ export default function DraftsPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [selectedType, setSelectedType] = useState("auto");
+  const [suggestion, setSuggestion] = useState("");
   const [toast, setToast] = useState(null);
+
+  // Refs used inside Firestore callbacks to avoid stale closures
+  const generatingRef = useRef(false);
+  const prevDraftCountRef = useRef(0);
+  const generatingTimeoutRef = useRef(null);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  const handleGenerate = async () => {
+  const startGenerating = () => {
+    generatingRef.current = true;
     setGenerating(true);
+    // Safety fallback — clear spinner after 3 min even if no draft arrives
+    if (generatingTimeoutRef.current) clearTimeout(generatingTimeoutRef.current);
+    generatingTimeoutRef.current = setTimeout(() => {
+      generatingRef.current = false;
+      setGenerating(false);
+    }, 180000);
+  };
+
+  const stopGenerating = () => {
+    if (generatingTimeoutRef.current) clearTimeout(generatingTimeoutRef.current);
+    generatingRef.current = false;
+    setGenerating(false);
+  };
+
+  const handleGenerate = async () => {
+    startGenerating();
     try {
+      const suggestionParam = suggestion.trim()
+        ? `&suggestion=${encodeURIComponent(suggestion.trim())}`
+        : "";
+
       const endpoint = selectedType === "origin"
-        ? botUrl("/trigger-origin")
+        ? botUrl(`/trigger-origin${suggestionParam ? `?${suggestionParam.slice(1)}` : ""}`)
         : selectedType === "auto"
-        ? botUrl("/trigger-draft")
-        : botUrl(`/trigger-draft?postType=${selectedType}`);
+        ? botUrl(`/trigger-draft${suggestionParam ? `?${suggestionParam.slice(1)}` : ""}`)
+        : botUrl(`/trigger-draft?postType=${selectedType}${suggestionParam}`);
+
       const res = await fetch(endpoint);
 
       if (res.status === 401) {
         showToast("Unauthorized — check VITE_ADMIN_API_KEY is set in Vercel", "error");
-        setGenerating(false);
+        stopGenerating();
         return;
       }
       if (!res.ok) {
         showToast(`Bot error (${res.status}) — check Render logs`, "error");
-        setGenerating(false);
+        stopGenerating();
         return;
       }
 
       const text = await res.text();
       if (text.toLowerCase().includes("already") || text.toLowerCase().includes("skip")) {
         showToast("A draft is already pending — approve or remove it first", "info");
-        setGenerating(false);
+        stopGenerating();
       } else {
-        showToast("Generating — draft will appear in about 30–60 seconds", "info");
-        // Keep spinner active while bot works in background (~30–60s for AI + image)
-        setTimeout(() => setGenerating(false), 20000);
+        showToast("Generating — spinner clears when the draft appears", "info");
+        // spinner stays — Firestore watcher clears it when draft arrives
       }
     } catch {
       showToast("Could not reach the bot — check Render is running", "error");
-      setGenerating(false);
+      stopGenerating();
     }
   };
 
@@ -763,8 +790,14 @@ export default function DraftsPage() {
     );
 
     const unsub = onSnapshot(q, (snap) => {
-      setDrafts(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const newDrafts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setDrafts(newDrafts);
       setLoading(false);
+      // Clear spinner as soon as a new draft appears
+      if (generatingRef.current && newDrafts.length > prevDraftCountRef.current) {
+        stopGenerating();
+      }
+      prevDraftCountRef.current = newDrafts.length;
     }, (err) => {
       console.error("Drafts listener error:", err);
       setLoading(false);
@@ -822,26 +855,37 @@ export default function DraftsPage() {
         </div>
 
         {/* generate controls — stacks vertically on mobile */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:shrink-0">
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
+        <div className="flex flex-col gap-2 sm:shrink-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              disabled={generating}
+              className="w-full rounded-xl border border-white/10 bg-obsidian-800 px-3 py-2.5 text-[11px] text-white/60 outline-none focus:border-amber-300/30 disabled:opacity-50 sm:w-auto"
+            >
+              {TRIGGERABLE_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generating}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60 sm:w-auto"
+            >
+              {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+              {generating ? "Generating…" : "Generate"}
+            </button>
+          </div>
+          {/* optional suggestion for caption direction */}
+          <textarea
+            value={suggestion}
+            onChange={(e) => setSuggestion(e.target.value)}
             disabled={generating}
-            className="w-full rounded-xl border border-white/10 bg-obsidian-800 px-3 py-2.5 text-[11px] text-white/60 outline-none focus:border-amber-300/30 disabled:opacity-50 sm:w-auto"
-          >
-            {TRIGGERABLE_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={generating}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/25 bg-amber-300/8 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/14 disabled:opacity-60 sm:w-auto"
-          >
-            {generating ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
-            {generating ? "Generating…" : "Generate"}
-          </button>
+            rows={2}
+            placeholder="Optional: add a direction or note for the caption… (e.g. 'make it more mysterious' or 'mention it's a gift stone')"
+            className="w-full resize-none rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-[11px] text-white/60 placeholder:text-white/22 outline-none focus:border-amber-300/20 focus:text-white/75 disabled:opacity-40 transition"
+          />
         </div>
       </div>
 
