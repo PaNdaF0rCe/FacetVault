@@ -52,15 +52,19 @@ function lkaInputToUtc(inputVal) {
 }
 
 const POST_TYPE_LABELS = {
-  feature:          "Feature Post",
-  mystery:          "Mystery Post",
-  origin:           "Informative Post",
-  quiz:             "Gem Quiz",
-  stone_to_jewelry: "Stone → Jewelry",
-  birthstone:       "Birthstone Gift",
-  trust:            "Trust & Education",
-  how_to_buy:       "How to Buy",
-  faq:              "FAQ",
+  feature:            "Feature Post",
+  mystery:            "Mystery Post",
+  origin:             "Informative Post",
+  quiz:               "Gem Quiz",
+  stone_to_jewelry:   "Stone → Jewelry",
+  birthstone:         "Birthstone Gift",
+  trust:              "Trust & Education",
+  how_to_buy:         "How to Buy",
+  faq:                "FAQ",
+  spot_the_inclusion: "Spot the Inclusion",
+  macro_detail:       "Macro Detail",
+  gem_id_challenge:   "Gem ID Challenge",
+  luxury_editorial:   "Luxury Editorial",
 };
 
 // Post types that use a stone image in 4/5 portrait ratio
@@ -687,14 +691,18 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
 // ── main page ─────────────────────────────────────────────────────────────────
 
 const TRIGGERABLE_TYPES = [
-  { value: "auto",           label: "Auto (today's type)" },
-  { value: "feature",        label: "Feature Post" },
-  { value: "mystery",        label: "Mystery Post" },
-  { value: "stone_to_jewelry", label: "Stone → Jewelry" },
-  { value: "birthstone",     label: "Birthstone Gift" },
-  { value: "trust",          label: "Trust & Education" },
-  { value: "origin",         label: "Informative / Origin" },
-  { value: "quiz",           label: "Gem Quiz" },
+  { value: "auto",              label: "Auto (today's type)" },
+  { value: "feature",           label: "Feature Post" },
+  { value: "luxury_editorial",  label: "Luxury Editorial" },
+  { value: "mystery",           label: "Mystery Post" },
+  { value: "stone_to_jewelry",  label: "Stone → Jewelry" },
+  { value: "birthstone",        label: "Birthstone Gift" },
+  { value: "spot_the_inclusion",label: "Spot the Inclusion" },
+  { value: "macro_detail",      label: "Macro Detail" },
+  { value: "gem_id_challenge",  label: "Gem ID Challenge" },
+  { value: "trust",             label: "Trust & Education" },
+  { value: "origin",            label: "Informative / Origin" },
+  { value: "quiz",              label: "Gem Quiz" },
 ];
 
 export default function DraftsPage() {
