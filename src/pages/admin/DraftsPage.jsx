@@ -65,10 +65,11 @@ const POST_TYPE_LABELS = {
   macro_detail:       "Macro Detail",
   gem_id_challenge:   "Gem ID Challenge",
   luxury_editorial:   "Luxury Editorial",
+  reel:               "✦ Reel",
 };
 
 // Post types that use a stone image in 4/5 portrait ratio
-const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone"]);
+const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone", "reel"]);
 // Post types that use a layout selector
 const LAYOUT_SELECTOR_TYPES = new Set(["feature", "mystery", "stone_to_jewelry"]);
 
@@ -336,6 +337,7 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
   const isOriginWaiting = draft.status === "awaiting_image";
   const isQuizWaiting = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
   const isFeaturePost = LAYOUT_SELECTOR_TYPES.has(draft.postType);
+  const isReel = draft.postType === "reel";
   const imageAspect = PORTRAIT_TYPES.has(draft.postType) ? "aspect-[4/5]" : "aspect-square";
 
   const isFailed = ["failed_generation", "failed_image", "failed_publish"].includes(draft.status);
@@ -365,6 +367,22 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
               <div className="text-4xl text-amber-300/30">◆</div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/40">Gem Quiz</p>
               <p className="text-[10px] text-white/25 mt-0.5">Choose a question below</p>
+            </div>
+          );
+        }
+        // Reel — show video player
+        if (isReel && draft.videoUrl) {
+          return (
+            <div className={`relative ${imageAspect} w-full overflow-hidden bg-obsidian-900`}>
+              <video
+                src={draft.videoUrl}
+                controls
+                playsInline
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute left-3 top-3 rounded-full border border-amber-300/30 bg-black/60 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-200/90 backdrop-blur-sm">
+                ✦ Reel
+              </div>
             </div>
           );
         }
@@ -408,8 +426,8 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
         );
       })()}
 
-      {/* layout selector — feature/mystery posts only */}
-      {isFeaturePost && !isOriginWaiting && (
+      {/* layout selector — feature/mystery posts only (not for reels) */}
+      {isFeaturePost && !isOriginWaiting && !isReel && (
         <div className="flex gap-1.5 px-5 pt-4">
           {[
             { key: "standard", label: "Standard" },
@@ -586,8 +604,8 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
           </div>
         )}
 
-        {/* awaiting-image actions */}
-        {isOriginWaiting && (
+        {/* awaiting-image actions — not shown for reels */}
+        {isOriginWaiting && !isReel && (
           <div className="space-y-2 border-t border-white/6 pt-4">
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             <button
@@ -703,6 +721,8 @@ const TRIGGERABLE_TYPES = [
   { value: "trust",             label: "Trust & Education" },
   { value: "origin",            label: "Informative / Origin" },
   { value: "quiz",              label: "Gem Quiz" },
+  // Reels are generated from facetvault-remotion locally, not triggered here.
+  // They appear automatically once generate.js uploads the rendered MP4.
 ];
 
 export default function DraftsPage() {
