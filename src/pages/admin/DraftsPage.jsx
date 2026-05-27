@@ -337,13 +337,16 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
   const isOriginWaiting  = draft.status === "awaiting_image";
   const isQuizWaiting    = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
   const isAwaitingRender = draft.postType === "reel" && draft.status === "awaiting_render";
+  const isRendering      = draft.postType === "reel" && draft.status === "rendering";
+  const isFailedRender   = draft.status === "failed_render";
   const isFeaturePost    = LAYOUT_SELECTOR_TYPES.has(draft.postType);
   const isReel           = draft.postType === "reel";
   const imageAspect      = PORTRAIT_TYPES.has(draft.postType) ? "aspect-[4/5]" : "aspect-square";
 
-  const isFailed = ["failed_generation", "failed_image", "failed_publish"].includes(draft.status);
+  const isFailed = ["failed_generation", "failed_image", "failed_publish", "failed_render"].includes(draft.status);
   const failedLabel = draft.status === "failed_generation" ? "Generation failed"
     : draft.status === "failed_image" ? "Image build failed"
+    : draft.status === "failed_render" ? "Video render failed"
     : "Publish failed";
   const hasCompliance = (draft.complianceWarnings?.length ?? 0) > 0;
   const hasObjectives = draft.objective || draft.targetBuyer || draft.ctaStrength;
@@ -368,6 +371,32 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
               <div className="text-4xl text-amber-300/30">◆</div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/40">Gem Quiz</p>
               <p className="text-[10px] text-white/25 mt-0.5">Choose a question below</p>
+            </div>
+          );
+        }
+        // Reel rendering on server — show branded image with animated spinner overlay
+        if (isRendering) {
+          return (
+            <div className={`relative ${imageAspect} w-full overflow-hidden bg-obsidian-900`}>
+              {draft.brandedImageUrl ? (
+                <img
+                  src={draft.brandedImageUrl}
+                  alt={draft.stoneName}
+                  className="h-full w-full object-cover opacity-40"
+                />
+              ) : (
+                <div className="h-full w-full bg-obsidian-900" />
+              )}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 backdrop-blur-[2px]">
+                <div className="h-10 w-10 rounded-full border-2 border-amber-300/30 border-t-amber-300 animate-spin" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-300/90">
+                  Rendering…
+                </p>
+                <p className="text-[10px] text-white/40">~2 minutes on Render</p>
+              </div>
+              <div className="absolute left-3 top-3 rounded-full border border-amber-300/30 bg-black/60 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-200/90 backdrop-blur-sm">
+                ✦ Reel
+              </div>
             </div>
           );
         }
@@ -533,6 +562,26 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
                   {acting === "retry" ? "Re-queuing…" : "Retry Publish"}
                 </button>
               )}
+              {draft.status === "failed_render" && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setActing("retry");
+                    try {
+                      await fetch(botUrl(`/trigger-reel?stoneCode=${draft.stoneCode}`));
+                      showToast?.("Re-render triggered — this takes ~2 minutes", "info");
+                    } catch {
+                      showToast?.("Could not reach the bot", "error");
+                      setActing(null);
+                    }
+                  }}
+                  disabled={!!acting}
+                  className="flex items-center gap-1.5 rounded-xl border border-amber-300/25 bg-amber-300/8 px-3 py-1.5 text-[11px] font-semibold text-amber-200 transition hover:bg-amber-300/14 disabled:opacity-50"
+                >
+                  {acting === "retry" ? <RefreshCw size={11} className="animate-spin" /> : <RotateCcw size={11} />}
+                  {acting === "retry" ? "Retrying…" : "Retry Render"}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -624,7 +673,7 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
         )}
 
         {/* captions */}
-        {!isOriginWaiting && !isQuizWaiting && !isAwaitingRender && (
+        {!isOriginWaiting && !isQuizWaiting && !isAwaitingRender && !isRendering && (
           <div className="space-y-4 border-t border-white/6 pt-4">
             <EditableCaption
               label="Caption · English"
@@ -699,8 +748,8 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
           </div>
         )}
 
-        {/* awaiting_render: discard only — can't approve before video exists */}
-        {isAwaitingRender && (
+        {/* rendering / awaiting_render: discard only — can't approve without video */}
+        {(isAwaitingRender || isRendering) && (
           <div className="pt-1">
             <button
               type="button"
@@ -714,7 +763,7 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
         )}
 
         {/* pending: approve + reject with 5s undo */}
-        {!isOriginWaiting && !isQuizWaiting && !isApproved && !isPublishing && !isAwaitingRender && (
+        {!isOriginWaiting && !isQuizWaiting && !isApproved && !isPublishing && !isAwaitingRender && !isRendering && (
           <div className="space-y-2 pt-1">
             {undoSecs !== null ? (
               <div className="flex items-center justify-between rounded-2xl border border-amber-300/20 bg-amber-300/6 px-4 py-3">
@@ -893,11 +942,13 @@ export default function DraftsPage() {
         "awaiting_image",
         "awaiting_question_selection",
         "awaiting_render",
+        "rendering",
         "approved",
         "publishing",
         "failed_generation",
         "failed_image",
         "failed_publish",
+        "failed_render",
       ]),
       orderBy("createdAt", "desc")
     );
