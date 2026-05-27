@@ -334,11 +334,12 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
     }
   };
 
-  const isOriginWaiting = draft.status === "awaiting_image";
-  const isQuizWaiting = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
-  const isFeaturePost = LAYOUT_SELECTOR_TYPES.has(draft.postType);
-  const isReel = draft.postType === "reel";
-  const imageAspect = PORTRAIT_TYPES.has(draft.postType) ? "aspect-[4/5]" : "aspect-square";
+  const isOriginWaiting  = draft.status === "awaiting_image";
+  const isQuizWaiting    = draft.postType === "quiz" && draft.status === "awaiting_question_selection";
+  const isAwaitingRender = draft.postType === "reel" && draft.status === "awaiting_render";
+  const isFeaturePost    = LAYOUT_SELECTOR_TYPES.has(draft.postType);
+  const isReel           = draft.postType === "reel";
+  const imageAspect      = PORTRAIT_TYPES.has(draft.postType) ? "aspect-[4/5]" : "aspect-square";
 
   const isFailed = ["failed_generation", "failed_image", "failed_publish"].includes(draft.status);
   const failedLabel = draft.status === "failed_generation" ? "Generation failed"
@@ -367,6 +368,41 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
               <div className="text-4xl text-amber-300/30">◆</div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300/40">Gem Quiz</p>
               <p className="text-[10px] text-white/25 mt-0.5">Choose a question below</p>
+            </div>
+          );
+        }
+        // Reel awaiting local render — show branded image + render instruction overlay
+        if (isAwaitingRender) {
+          return (
+            <div className={`relative ${imageAspect} w-full overflow-hidden bg-obsidian-900`}>
+              {draft.brandedImageUrl ? (
+                <img
+                  src={draft.brandedImageUrl}
+                  alt={draft.stoneName}
+                  className="h-full w-full object-cover opacity-50"
+                />
+              ) : (
+                <div className="h-full w-full bg-obsidian-900" />
+              )}
+              {/* Overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 backdrop-blur-[2px] px-6 text-center">
+                <div className="text-2xl text-amber-300/60">◈</div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-300/90">
+                  Ready to render
+                </p>
+                <p className="text-[11px] text-white/55 leading-relaxed">
+                  Run this on your machine:
+                </p>
+                <div className="rounded-xl border border-amber-300/25 bg-black/60 px-4 py-2 font-mono text-[11px] text-amber-200/90 select-all">
+                  node generate.js {draft.stoneCode}
+                </div>
+                <p className="text-[10px] text-white/30 leading-relaxed">
+                  The video will upload automatically
+                </p>
+              </div>
+              <div className="absolute left-3 top-3 rounded-full border border-amber-300/30 bg-black/60 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-200/90 backdrop-blur-sm">
+                ✦ Reel
+              </div>
             </div>
           );
         }
@@ -588,7 +624,7 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
         )}
 
         {/* captions */}
-        {!isOriginWaiting && !isQuizWaiting && (
+        {!isOriginWaiting && !isQuizWaiting && !isAwaitingRender && (
           <div className="space-y-4 border-t border-white/6 pt-4">
             <EditableCaption
               label="Caption · English"
@@ -663,8 +699,22 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
           </div>
         )}
 
+        {/* awaiting_render: discard only — can't approve before video exists */}
+        {isAwaitingRender && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => onReject(draft.id)}
+              disabled={!!acting}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40 transition hover:border-red-400/30 hover:text-red-300/70 disabled:opacity-50"
+            >
+              <XCircle size={12} /> Discard
+            </button>
+          </div>
+        )}
+
         {/* pending: approve + reject with 5s undo */}
-        {!isOriginWaiting && !isQuizWaiting && !isApproved && !isPublishing && (
+        {!isOriginWaiting && !isQuizWaiting && !isApproved && !isPublishing && !isAwaitingRender && (
           <div className="space-y-2 pt-1">
             {undoSecs !== null ? (
               <div className="flex items-center justify-between rounded-2xl border border-amber-300/20 bg-amber-300/6 px-4 py-3">
@@ -721,8 +771,7 @@ const TRIGGERABLE_TYPES = [
   { value: "trust",             label: "Trust & Education" },
   { value: "origin",            label: "Informative / Origin" },
   { value: "quiz",              label: "Gem Quiz" },
-  // Reels are generated from facetvault-remotion locally, not triggered here.
-  // They appear automatically once generate.js uploads the rendered MP4.
+  { value: "reel",              label: "✦ Reel (video)" },
 ];
 
 export default function DraftsPage() {
@@ -802,6 +851,8 @@ export default function DraftsPage() {
 
       const endpoint = selectedType === "origin"
         ? botUrl(`/trigger-origin${suggestionParam ? `?${suggestionParam.slice(1)}` : ""}`)
+        : selectedType === "reel"
+        ? botUrl(`/trigger-reel`)
         : selectedType === "auto"
         ? botUrl(`/trigger-draft${suggestionParam ? `?${suggestionParam.slice(1)}` : ""}`)
         : botUrl(`/trigger-draft?postType=${selectedType}${suggestionParam}`);
@@ -841,6 +892,7 @@ export default function DraftsPage() {
         "pending",
         "awaiting_image",
         "awaiting_question_selection",
+        "awaiting_render",
         "approved",
         "publishing",
         "failed_generation",
@@ -939,15 +991,24 @@ export default function DraftsPage() {
               {generating ? "Generating…" : "Generate"}
             </button>
           </div>
-          {/* optional suggestion for caption direction */}
-          <textarea
-            value={suggestion}
-            onChange={(e) => setSuggestion(e.target.value)}
-            disabled={generating}
-            rows={2}
-            placeholder="Optional: add a direction or note for the caption… (e.g. 'make it more mysterious' or 'mention it's a gift stone')"
-            className="w-full resize-none rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-[11px] text-white/60 placeholder:text-white/22 outline-none focus:border-amber-300/20 focus:text-white/75 disabled:opacity-40 transition"
-          />
+          {/* optional suggestion for caption direction — not applicable for reels */}
+          {selectedType !== "reel" && (
+            <textarea
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value)}
+              disabled={generating}
+              rows={2}
+              placeholder="Optional: add a direction or note for the caption… (e.g. 'make it more mysterious' or 'mention it's a gift stone')"
+              className="w-full resize-none rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-[11px] text-white/60 placeholder:text-white/22 outline-none focus:border-amber-300/20 focus:text-white/75 disabled:opacity-40 transition"
+            />
+          )}
+          {selectedType === "reel" && (
+            <p className="text-[10px] text-white/30 px-1">
+              The bot picks a stone and runs the image pipeline. You'll get a push notification — then run{" "}
+              <span className="font-mono text-amber-300/60">node generate.js &lt;stoneCode&gt;</span>{" "}
+              locally to render the video.
+            </p>
+          )}
         </div>
       </div>
 
