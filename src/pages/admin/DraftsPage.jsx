@@ -53,24 +53,18 @@ function lkaInputToUtc(inputVal) {
 
 const POST_TYPE_LABELS = {
   feature:            "Feature Post",
-  mystery:            "Mystery Post",
-  origin:             "Informative Post",
-  quiz:               "Gem Quiz",
   stone_to_jewelry:   "Stone → Jewelry",
+  origin:             "Origin Story",
   birthstone:         "Birthstone Gift",
-  trust:              "Trust & Education",
-  how_to_buy:         "How to Buy",
-  faq:                "FAQ",
+  quiz:               "Gem Quiz",
+  mystery:            "Mystery Stone",
   spot_the_inclusion: "Spot the Inclusion",
-  macro_detail:       "Macro Detail",
-  gem_id_challenge:   "Gem ID Challenge",
-  luxury_editorial:   "Luxury Editorial",
 };
 
-// Post types that use a stone image in 4/5 portrait ratio
-const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone"]);
-// Post types that use a layout selector
-const LAYOUT_SELECTOR_TYPES = new Set(["feature", "mystery", "stone_to_jewelry"]);
+// All stone post types use portrait 4:5 ratio
+const PORTRAIT_TYPES = new Set(["feature", "mystery", "stone_to_jewelry", "birthstone", "origin", "spot_the_inclusion"]);
+// Only feature (Monday) uses the AI pipeline with layout variants
+const LAYOUT_SELECTOR_TYPES = new Set(["feature"]);
 
 // ── editable caption field ────────────────────────────────────────────────────
 
@@ -692,17 +686,13 @@ function DraftCard({ draft, onApprove, onReject, showToast }) {
 
 const TRIGGERABLE_TYPES = [
   { value: "auto",              label: "Auto (today's type)" },
-  { value: "feature",           label: "Feature Post" },
-  { value: "luxury_editorial",  label: "Luxury Editorial" },
-  { value: "mystery",           label: "Mystery Post" },
-  { value: "stone_to_jewelry",  label: "Stone → Jewelry" },
-  { value: "birthstone",        label: "Birthstone Gift" },
-  { value: "spot_the_inclusion",label: "Spot the Inclusion" },
-  { value: "macro_detail",      label: "Macro Detail" },
-  { value: "gem_id_challenge",  label: "Gem ID Challenge" },
-  { value: "trust",             label: "Trust & Education" },
-  { value: "origin",            label: "Informative / Origin" },
-  { value: "quiz",              label: "Gem Quiz" },
+  { value: "feature",           label: "Mon · Feature Stone" },
+  { value: "stone_to_jewelry",  label: "Tue · Stone → Jewelry" },
+  { value: "origin",            label: "Wed · Origin Story" },
+  { value: "birthstone",        label: "Thu · Birthstone Gift" },
+  { value: "quiz",              label: "Fri · Gem Quiz" },
+  { value: "mystery",           label: "Sat · Mystery Stone" },
+  { value: "spot_the_inclusion",label: "Sun · Spot the Inclusion" },
 ];
 
 export default function DraftsPage() {
