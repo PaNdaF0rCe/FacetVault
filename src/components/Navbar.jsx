@@ -20,7 +20,7 @@ function DesktopNavLink({ to, label, currentPath, index = 0, saleDot = false }) 
         <Link
           to={to}
           className={`relative text-[11px] uppercase tracking-[0.28em] transition-colors duration-200 ${
-            active ? "text-amber-300" : "text-white/42 hover:text-white/80"
+            active ? "text-amber-300" : "text-white/62 hover:text-white/90"
           }`}
         >
           {label}
@@ -46,7 +46,7 @@ function MobileMenuButton({ label, active, onClick, index = 0 }) {
         onClick={onClick}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.985 }}
-        className={`text-center text-[clamp(2rem,5vw,3.2rem)] leading-none tracking-[-0.02em] transition-colors duration-200 ${
+        className={`text-center text-[clamp(1.8rem,4vw,3rem)] leading-none tracking-[-0.02em] transition-colors duration-200 ${
           active ? "text-amber-300" : "text-white hover:text-amber-200"
         }`}
       >
@@ -264,7 +264,7 @@ function Navbar() {
                 >
                   <Link
                     to="/login"
-                    className="text-[11px] uppercase tracking-[0.24em] text-white/46 transition-colors duration-200 hover:text-white/80"
+                    className="text-[11px] uppercase tracking-[0.24em] text-white/60 transition-colors duration-200 hover:text-white/90"
                   >
                     Login
                   </Link>
@@ -307,7 +307,7 @@ function Navbar() {
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleLogout}
-                  className="text-[11px] uppercase tracking-[0.24em] text-white/46 transition-colors duration-200 hover:text-white/80"
+                  className="text-[11px] uppercase tracking-[0.24em] text-white/60 transition-colors duration-200 hover:text-white/90"
                 >
                   Logout
                 </motion.button>

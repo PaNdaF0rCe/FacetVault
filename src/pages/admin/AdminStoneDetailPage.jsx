@@ -9,6 +9,7 @@ import {
   markItemAsSold,
 } from "../../lib/firebase/inventory-operations";
 import { updateUserStats } from "../../lib/firebase/users";
+import { createInvoiceFromSale } from "../../lib/firebase/invoice-bridge";
 
 // ── Promotion readiness score ────────────────────────────────────────────────
 // Mirrors the logic in facetvaultbot/marketing/scheduler.js computeReadinessScore()
@@ -153,6 +154,7 @@ function AdminStoneDetailPage() {
   const [sellingPrice, setSellingPrice] = useState("");
   const [expenses, setExpenses] = useState("");
   const [notes, setNotes] = useState("");
+  const [buyerName, setBuyerName] = useState("");
   const [sellingLoading, setSellingLoading] = useState(false);
 
   const loadGem = useCallback(async () => {
@@ -294,17 +296,35 @@ function AdminStoneDetailPage() {
           user.uid
         );
 
+        // Auto-create a draft invoice in the shared invoices collection
+        // so it immediately appears in the FacetVault Invoice App.
+        let invoiceRef = null;
+        try {
+          invoiceRef = await createInvoiceFromSale(gem, {
+            sellingPrice: Number(sellingPrice),
+            expenses: Number(expenses || 0),
+            notes,
+            buyerName,
+          });
+        } catch (invoiceErr) {
+          // Non-fatal — sale is already recorded, just warn
+          console.warn("Invoice draft creation failed:", invoiceErr);
+        }
+
         await loadGem();
 
         setShowSoldModal(false);
         setSellingPrice("");
         setExpenses("");
         setNotes("");
+        setBuyerName("");
 
         setToast({
           type: "success",
-          title: "Marked as sold",
-          message: "This gem will stay visible as sold for 7 days.",
+          title: "Sale recorded" + (invoiceRef ? " · Invoice draft created" : ""),
+          message: invoiceRef
+            ? `Draft invoice ${invoiceRef} is ready in the Invoice App.`
+            : "Gem marked as sold. (Invoice draft could not be created.)",
         });
       } catch (error) {
         console.error("Error marking gem as sold:", error);
@@ -603,6 +623,19 @@ function AdminStoneDetailPage() {
             </p>
 
             <div className="mt-5 space-y-3">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-white/38">
+                  Buyer Name (optional — for invoice)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Priya Mendis"
+                  value={buyerName}
+                  onChange={(e) => setBuyerName(e.target.value)}
+                  className="w-full rounded-2xl border border-white/8 bg-[#020617] px-3.5 py-2.5 text-sm text-white placeholder:text-white/26 outline-none transition-[border-color,background-color,box-shadow] duration-200 focus:border-amber-300/30 focus:bg-[#030a16] focus:shadow-[0_0_0_3px_rgba(251,191,36,0.05)]"
+                />
+              </div>
+
               <div>
                 <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.2em] text-white/38">
                   Selling Price (LKR) *

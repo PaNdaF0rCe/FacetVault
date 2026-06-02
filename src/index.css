@@ -599,6 +599,60 @@ h4 {
 }
 
 /* ============================================================
+   FV LAYOUT & TYPOGRAPHY UTILITIES
+   ============================================================ */
+
+.fv-section {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.fv-section-sm {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.fv-section-alt {
+  background: rgba(8, 14, 26, 0.50);
+  border-top: 1px solid var(--fv-hairline);
+  border-bottom: 1px solid var(--fv-hairline);
+}
+
+.fv-body {
+  font-size: 15px;
+  line-height: 1.72;
+  color: rgba(203, 213, 225, 0.90);
+}
+
+.fv-body-sm {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+/* Trust card with left amber accent */
+.fv-trust-card {
+  border-left: 2px solid rgba(251, 191, 36, 0.35);
+  padding-left: 1.25rem;
+}
+
+/* Connecting step line parent */
+.fv-steps {
+  position: relative;
+}
+
+.fv-steps::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 2rem;
+  bottom: 2rem;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(251,191,36,0.25), rgba(251,191,36,0.08), transparent);
+  pointer-events: none;
+}
+
+/* ============================================================
    UTILITIES
    ============================================================ */
 
