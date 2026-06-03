@@ -2,10 +2,29 @@ import { useMemo, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck, Video, PackageCheck, CreditCard, Truck } from "lucide-react";
+import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck, Video, CreditCard, Truck, Heart, Bell } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
+import { useWishlist } from "../hooks/useWishlist";
+
+// Carat → approximate diameter for round-cut corundum (mm)
+const CARAT_SIZE_REF = [
+  { max: 0.25, mm: "3.5–4", desc: "Very small — pinky ring or stacking band" },
+  { max: 0.5,  mm: "4–5",   desc: "Small — dainty solitaire" },
+  { max: 0.75, mm: "5–5.5", desc: "Small-medium — classic solitaire" },
+  { max: 1.0,  mm: "5.5–6", desc: "Medium — popular engagement size" },
+  { max: 1.5,  mm: "6.5–7", desc: "Medium-large — noticeable statement" },
+  { max: 2.0,  mm: "7.5–8", desc: "Large — bold statement piece" },
+  { max: 3.0,  mm: "8.5–9", desc: "Very large — collector-grade" },
+  { max: Infinity, mm: "9+", desc: "Exceptional — investment-grade" },
+];
+
+function getSizeRef(carat) {
+  const ct = Number(carat);
+  if (Number.isNaN(ct) || ct <= 0) return null;
+  return CARAT_SIZE_REF.find((r) => ct <= r.max) || CARAT_SIZE_REF[CARAT_SIZE_REF.length - 1];
+}
 
 function formatMoney(value) {
   if (value === null || value === undefined || value === "") return null;
@@ -166,6 +185,8 @@ export default function StoneDetail() {
   const hasDiscount = discountedPrice !== null && discountedPrice !== rawSalePrice;
 
   const [copied, setCopied] = useState(false);
+  const [activeImg, setActiveImg] = useState(0);
+  const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
@@ -329,39 +350,60 @@ export default function StoneDetail() {
         </Link>
 
         <div className="grid items-start gap-10 lg:grid-cols-[1.16fr_0.84fr]">
-          <div className="relative overflow-hidden rounded-[32px] border border-white/8 bg-[#04101f] shadow-[0_22px_50px_rgba(0,0,0,0.18)]">
-            {(() => {
-              const heroSrc =
-                stone.imageUrl || stone.mediumUrl || stone.thumbnailUrl;
-              const heroCandidates = [
-                stone.thumbnailUrl ? `${stone.thumbnailUrl} 600w` : null,
-                stone.mediumUrl ? `${stone.mediumUrl} 1000w` : null,
-                stone.imageUrl ? `${stone.imageUrl} 1600w` : null,
-              ].filter(Boolean);
-              const heroSrcSet =
-                heroCandidates.length > 1
-                  ? heroCandidates.join(", ")
-                  : undefined;
+          {/* Image gallery */}
+          {(() => {
+            const allImages = [
+              stone.imageUrl || stone.mediumUrl || stone.thumbnailUrl,
+              ...(Array.isArray(stone.imageUrls) ? stone.imageUrls : []),
+            ].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i);
 
-              return (
-                <img
-                  src={heroSrc}
-                  srcSet={heroSrcSet}
-                  sizes="(max-width: 1024px) 100vw, 56vw"
-                  alt={stone.name || stone.stoneType || "Gemstone"}
-                  className="h-full w-full object-cover"
-                  decoding="async"
-                  fetchpriority="high"
-                />
-              );
-            })()}
+            const currentSrc = allImages[activeImg] || allImages[0];
 
-            {isSold && (
-              <div className="absolute right-4 top-4 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
-                Sold
+            return (
+              <div>
+                <div className="relative overflow-hidden rounded-[32px] border border-white/8 bg-[#04101f] shadow-[0_22px_50px_rgba(0,0,0,0.18)]">
+                  <img
+                    src={currentSrc}
+                    sizes="(max-width: 1024px) 100vw, 56vw"
+                    alt={stone.name || stone.stoneType || "Gemstone"}
+                    className="h-full w-full object-cover"
+                    decoding="async"
+                    fetchpriority="high"
+                  />
+
+                  {isSold && (
+                    <div className="absolute right-4 top-4 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
+                      Sold
+                    </div>
+                  )}
+                </div>
+
+                {allImages.length > 1 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {allImages.map((src, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setActiveImg(i)}
+                        className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-[border-color,opacity] ${
+                          i === activeImg
+                            ? "border-amber-300/60 opacity-100"
+                            : "border-white/8 opacity-55 hover:opacity-80"
+                        }`}
+                      >
+                        <img
+                          src={src}
+                          alt={`View ${i + 1}`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           <div className="pt-1">
             <p className="lux-eyebrow-rule text-[10px] text-amber-300/75">
@@ -415,7 +457,23 @@ export default function StoneDetail() {
               />
               <DetailRow
                 label="Carat"
-                value={stone.carat ? `${stone.carat} ct` : null}
+                value={
+                  stone.carat
+                    ? (() => {
+                        const ref = getSizeRef(stone.carat);
+                        return (
+                          <span className="flex flex-col items-end gap-0.5">
+                            <span>{stone.carat} ct</span>
+                            {ref && (
+                              <span className="text-[11px] text-white/36">
+                                ≈ {ref.mm} mm · {ref.desc}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()
+                    : null
+                }
               />
               <DetailRow label="Color" value={stone.color} />
               <DetailRow label="Cut" value={stone.cut} />
@@ -446,9 +504,27 @@ export default function StoneDetail() {
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               {isSold ? (
-                <div className="inline-flex items-center gap-2 rounded-full border border-rose-300/18 bg-rose-300/8 px-5 py-3 text-sm font-semibold text-rose-200">
-                  This gemstone has been sold
-                </div>
+                <>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-rose-300/18 bg-rose-300/8 px-5 py-3 text-sm font-semibold text-rose-200">
+                    This gemstone has been sold
+                  </div>
+                  {(() => {
+                    const notifyMsg = encodeURIComponent(
+                      `Hi FacetVault! I noticed "${stone.name || stone.stoneType || "a stone"}"${stone.stoneCode ? ` (${stone.stoneCode})` : ""} has been sold. Could you notify me when something similar arrives? I'm looking for: [describe what you want]`
+                    );
+                    return (
+                      <a
+                        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${notifyMsg}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-amber-300/18 bg-amber-300/8 px-4 py-3 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-300/14 active:scale-[0.98]"
+                      >
+                        <Bell size={15} strokeWidth={1.8} />
+                        Notify me for similar
+                      </a>
+                    );
+                  })()}
+                </>
               ) : (
                 <>
                   <a
@@ -481,6 +557,20 @@ export default function StoneDetail() {
               >
                 {copied ? <Check size={16} /> : <Share2 size={16} />}
                 {copied ? "Copied" : "Share"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => toggleWishlist(stone.id)}
+                title={isWishlisted(stone.id) ? "Remove from wishlist" : "Save to wishlist"}
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-medium transition-[transform,border-color,background-color,color] duration-200 active:scale-[0.98] ${
+                  isWishlisted(stone.id)
+                    ? "border-rose-300/28 bg-rose-300/10 text-rose-200 hover:bg-rose-300/16"
+                    : "border-white/10 bg-white/[0.03] text-white/70 hover:border-rose-300/20 hover:text-rose-200"
+                }`}
+              >
+                <Heart size={15} fill={isWishlisted(stone.id) ? "currentColor" : "none"} />
+                {isWishlisted(stone.id) ? "Saved" : "Save"}
               </button>
             </div>
 

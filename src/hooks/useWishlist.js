@@ -1,64 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
-const STORAGE_KEY = 'fv_wishlist_v1';
+const KEY = "fv_wishlist_v1";
 
-function readFromStorage() {
+function loadWishlist() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return JSON.parse(localStorage.getItem(KEY) || "[]");
   } catch {
     return [];
   }
 }
 
-function writeToStorage(ids) {
+function saveWishlist(ids) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    localStorage.setItem(KEY, JSON.stringify(ids));
   } catch {
-    // storage full or unavailable
+    // storage blocked — fail silently
   }
 }
 
 export function useWishlist() {
-  const [wishlist, setWishlist] = useState(() => readFromStorage());
-
-  useEffect(() => {
-    function handleStorageEvent(e) {
-      if (e.key === STORAGE_KEY) {
-        setWishlist(readFromStorage());
-      }
-    }
-    window.addEventListener('storage', handleStorageEvent);
-    return () => window.removeEventListener('storage', handleStorageEvent);
-  }, []);
+  const [ids, setIds] = useState(() => loadWishlist());
 
   const toggle = useCallback((id) => {
-    setWishlist((prev) => {
+    setIds((prev) => {
       const next = prev.includes(id)
-        ? prev.filter((item) => item !== id)
+        ? prev.filter((x) => x !== id)
         : [...prev, id];
-      writeToStorage(next);
+      saveWishlist(next);
       return next;
     });
   }, []);
 
-  const isWishlisted = useCallback(
-    (id) => wishlist.includes(id),
-    [wishlist]
-  );
+  const has = useCallback((id) => ids.includes(id), [ids]);
 
-  const clear = useCallback(() => {
-    writeToStorage([]);
-    setWishlist([]);
-  }, []);
-
-  return {
-    wishlist,
-    toggle,
-    isWishlisted,
-    count: wishlist.length,
-    clear,
-  };
+  return { ids, has, toggle, count: ids.length };
 }

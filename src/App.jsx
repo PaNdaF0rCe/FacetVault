@@ -11,7 +11,8 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const StoneDetail = lazy(() => import("./pages/StoneDetail"));
 const Privacy = lazy(() => import("./pages/Privacy"));
-
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
+const LearnPage = lazy(() => import("./pages/LearnPage"));
 
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const AddGemPage = lazy(() => import("./pages/admin/AddGemPage"));
@@ -62,6 +63,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/learn" element={<LearnPage />} />
 
               <Route
                 path="/admin"

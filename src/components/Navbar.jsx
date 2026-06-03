@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Menu, X, Bell, BellOff } from "lucide-react";
+import { Menu, X, Bell, BellOff, Heart } from "lucide-react";
+import { useWishlist } from "../hooks/useWishlist";
 import { AnimatePresence, motion } from "framer-motion";
 import logo from "../assets/logo-diamond.png";
 import { getActiveCampaign } from "../lib/services/holidayCampaign";
@@ -168,9 +169,12 @@ function Navbar() {
     navigate("/");
   };
 
+  const { count: wishlistCount } = useWishlist();
+
   const navLinks = [
     { to: "/", label: "Home" },
     { to: "/collection", label: "Collection" },
+    { to: "/learn", label: "Learn" },
   ];
 
   return (
@@ -255,6 +259,20 @@ function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Wishlist icon — always visible */}
+            <Link
+              to="/wishlist"
+              aria-label={`Wishlist${wishlistCount > 0 ? ` (${wishlistCount})` : ""}`}
+              className="relative flex h-9 w-9 items-center justify-center rounded-full text-white/50 transition-colors hover:text-rose-300"
+            >
+              <Heart size={17} strokeWidth={1.8} />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-400 px-1 text-[9px] font-bold leading-none text-white">
+                  {wishlistCount > 9 ? "9+" : wishlistCount}
+                </span>
+              )}
+            </Link>
+
             {!user ? (
               <div className="hidden items-center gap-4 lg:flex">
                 <motion.div
@@ -407,6 +425,12 @@ function Navbar() {
                     onClick={() => handleMobileNavigate(link.to)}
                   />
                 ))}
+                <MobileMenuButton
+                  label={wishlistCount > 0 ? `Wishlist (${wishlistCount})` : "Wishlist"}
+                  active={location.pathname === "/wishlist"}
+                  index={navLinks.length}
+                  onClick={() => handleMobileNavigate("/wishlist")}
+                />
 
                 {isAdmin && (
                   <>

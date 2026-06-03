@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Search, X, MessageCircle } from "lucide-react";
+import { Search, X, MessageCircle, Heart } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import {
   getExchangeRates,
   detectCurrency,
   convertFromLkr,
   formatCurrency,
+  setPreferredCurrency,
 } from "../lib/services/exchangeRates";
+import { useWishlist } from "../hooks/useWishlist";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 
@@ -57,6 +59,17 @@ function isPreciousStone(stoneType = "") {
     value.includes("ruby") ||
     value.includes("emerald") ||
     value.includes("diamond")
+  );
+}
+
+function isNoHeat(item) {
+  const t = String(item?.treatment || "").toLowerCase().trim();
+  return (
+    t === "no heat" ||
+    t === "unheated" ||
+    t === "untreated" ||
+    t.includes("no heat") ||
+    t.includes("unheated")
   );
 }
 
@@ -141,7 +154,7 @@ function MarketplaceImage({ item }) {
   );
 }
 
-function MarketplaceCard({ item, rates, currency, campaign }) {
+function MarketplaceCard({ item, rates, currency, campaign, isWishlisted, onToggleWishlist }) {
   const isSold = item?.isSold === true;
   const rawPrice = Number(item?.salePrice ?? item?.pricePaid);
   const salePrice = campaign && !isSold && !Number.isNaN(rawPrice) && rawPrice > 0
@@ -224,7 +237,26 @@ function MarketplaceCard({ item, rates, currency, campaign }) {
                 {badge.label}
               </span>
             ) : null}
+
+            {isNoHeat(item) ? (
+              <span className="inline-flex rounded-full border border-emerald-300/22 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-200 backdrop-blur">
+                No Heat ✦
+              </span>
+            ) : null}
           </div>
+
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); onToggleWishlist(item.id); }}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+            className={`absolute left-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur transition-colors ${
+              isWishlisted
+                ? "border-rose-300/30 bg-rose-300/18 text-rose-300"
+                : "border-white/14 bg-black/28 text-white/50 hover:border-rose-300/24 hover:text-rose-300"
+            }`}
+          >
+            <Heart size={12} strokeWidth={2} fill={isWishlisted ? "currentColor" : "none"} />
+          </button>
         </div>
       </Link>
 
@@ -343,6 +375,9 @@ function LoadingCard() {
   );
 }
 
+const SCROLL_KEY = "fv_marketplace_scroll";
+const CURRENCIES = ["LKR", "USD", "GBP", "EUR", "AUD"];
+
 function Marketplace() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -350,8 +385,10 @@ function Marketplace() {
   const [search, setSearch] = useState("");
   const [activeCollection, setActiveCollection] = useState("all");
   const [rates, setRates] = useState(null);
-  const currency = useMemo(() => detectCurrency(), []);
+  const [currency, setCurrency] = useState(() => detectCurrency());
   const campaign = useMemo(() => getActiveCampaign(), []);
+  const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
+  const scrollRestoredRef = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -389,6 +426,33 @@ function Marketplace() {
       mounted = false;
     };
   }, []);
+
+  // Restore scroll position after items load
+  useEffect(() => {
+    if (!loading && !scrollRestoredRef.current) {
+      scrollRestoredRef.current = true;
+      const saved = sessionStorage.getItem(SCROLL_KEY);
+      if (saved) {
+        const pos = parseInt(saved, 10);
+        sessionStorage.removeItem(SCROLL_KEY);
+        if (pos > 0) {
+          requestAnimationFrame(() => window.scrollTo({ top: pos, behavior: "instant" }));
+        }
+      }
+    }
+  }, [loading]);
+
+  // Save scroll position on unmount
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    };
+  }, []);
+
+  const handleCurrencyChange = (c) => {
+    setPreferredCurrency(c);
+    setCurrency(c);
+  };
 
   const filteredItems = useMemo(() => {
     let result = [...items];
@@ -542,6 +606,23 @@ function Marketplace() {
               </div>
             </div>
 
+            <div className="mt-4 flex items-center gap-2">
+              {CURRENCIES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => handleCurrencyChange(c)}
+                  className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                    currency === c
+                      ? "border-amber-300/30 bg-amber-300/12 text-amber-200"
+                      : "border-white/8 bg-transparent text-white/35 hover:border-white/16 hover:text-white/60"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+
             <div className="mt-4 flex items-center gap-x-5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {filters.map((f) => {
                 const active = activeCollection === f.key;
@@ -606,6 +687,8 @@ function Marketplace() {
                   rates={rates}
                   currency={currency}
                   campaign={campaign}
+                  isWishlisted={isWishlisted(item.id)}
+                  onToggleWishlist={toggleWishlist}
                 />
               ))}
             </div>
