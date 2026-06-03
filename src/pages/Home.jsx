@@ -5,7 +5,7 @@ import {
   MessageCircle, Video, ShieldCheck, MapPin, Gem,
   ChevronDown, Star, ArrowRight, Flame
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
@@ -412,9 +412,80 @@ function ReviewsSection() {
   );
 }
 
+/* ── Section nav ── */
+const NAV_SECTIONS = [
+  { id: "sec-stones",     label: "Stones" },
+  { id: "sec-categories", label: "Categories" },
+  { id: "sec-how",        label: "How It Works" },
+  { id: "sec-reviews",    label: "Reviews" },
+  { id: "sec-faq",        label: "FAQ" },
+];
+
+function SectionNav({ heroRef }) {
+  const [visible, setVisible] = useState(false);
+  const [active, setActive]   = useState(null);
+
+  // Show nav once the hero scrolls out of view
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [heroRef]);
+
+  // Highlight active section while scrolling
+  useEffect(() => {
+    const observers = NAV_SECTIONS.map(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActive(id); },
+        { rootMargin: "-15% 0px -65% 0px", threshold: 0 }
+      );
+      obs.observe(el);
+      return obs;
+    });
+    return () => observers.forEach((o) => o?.disconnect());
+  }, []);
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div
+      className={`fixed left-0 right-0 top-[57px] z-40 border-b border-white/6 bg-[rgba(2,6,23,0.92)] backdrop-blur-xl transition-[opacity,transform] duration-300 ${
+        visible ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
+      }`}
+    >
+      <div className="flex gap-0.5 overflow-x-auto px-3 py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {NAV_SECTIONS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => scrollTo(id)}
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200 ${
+              active === id
+                ? "bg-amber-300/12 text-amber-300"
+                : "text-white/38 hover:text-white/68"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── main component ── */
 
 function Home() {
+  const heroRef = useRef(null);
   const { data: allItems } = useQuery({
     queryKey: ["inventory-featured"],
     queryFn: () => getPublicSaleInventory(),
@@ -431,6 +502,7 @@ function Home() {
 
   return (
     <>
+      <SectionNav heroRef={heroRef} />
       <Helmet>
         <title>FacetVault | Natural Sri Lankan Gemstones — Buy via WhatsApp</title>
         <meta name="description" content="Natural Ceylon gemstones sourced from Sri Lanka. See real videos before you buy. Inquire on WhatsApp. Stone-to-jewelry service available." />
@@ -461,7 +533,7 @@ function Home() {
       <div className="flex flex-col pb-20 sm:pb-0">
 
         {/* ── HERO ── */}
-        <section className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
+        <section ref={heroRef} className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
           {/* ambient glow */}
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex justify-center">
             <div className="h-[320px] w-[700px] rounded-full bg-amber-400/7 blur-3xl" />
@@ -570,7 +642,7 @@ function Home() {
 
         {/* ── FEATURED STONES ── */}
         {featured.length > 0 && (
-          <section className="fv-section fv-section-alt px-4 sm:px-6 lg:px-8">
+          <section id="sec-stones" className="fv-section fv-section-alt px-4 sm:px-6 lg:px-8">
             <motion.div
               initial="hidden"
               whileInView="show"
@@ -605,7 +677,7 @@ function Home() {
         )}
 
         {/* ── BROWSE BY CATEGORY ── */}
-        <section className="fv-section px-4 sm:px-6 lg:px-8">
+        <section id="sec-categories" className="fv-section px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="show"
@@ -731,7 +803,7 @@ function Home() {
         </section>
 
         {/* ── HOW IT WORKS ── */}
-        <section className="fv-section fv-section-alt px-4 sm:px-6 lg:px-8">
+        <section id="sec-how" className="fv-section fv-section-alt px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="show"
@@ -855,7 +927,7 @@ function Home() {
         </section>
 
         {/* ── REVIEWS ── */}
-        <ReviewsSection />
+        <div id="sec-reviews"><ReviewsSection /></div>
 
         {/* ── EDUCATIONAL CONTENT ── */}
         <section className="fv-section fv-section-alt px-4 sm:px-6 lg:px-8">
@@ -915,7 +987,7 @@ function Home() {
         </section>
 
         {/* ── FAQ ── */}
-        <section className="fv-section px-4 sm:px-6 lg:px-8">
+        <section id="sec-faq" className="fv-section px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="show"
