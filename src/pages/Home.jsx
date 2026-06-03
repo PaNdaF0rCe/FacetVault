@@ -5,7 +5,7 @@ import {
   MessageCircle, Video, ShieldCheck, MapPin, Gem,
   ChevronDown, Star, ArrowRight, Flame
 } from "lucide-react";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
@@ -412,83 +412,9 @@ function ReviewsSection() {
   );
 }
 
-/* ── Section nav ── */
-const NAV_SECTIONS = [
-  { id: "sec-stones",     label: "Stones" },
-  { id: "sec-categories", label: "Browse" },
-  { id: "sec-how",        label: "Steps" },
-  { id: "sec-reviews",    label: "Reviews" },
-  { id: "sec-faq",        label: "FAQ" },
-];
-
-function SectionNav({ heroRef }) {
-  const [visible, setVisible] = useState(false);
-  const [active, setActive]   = useState(null);
-
-  // Show nav once the hero scrolls out of view
-  useEffect(() => {
-    const el = heroRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setVisible(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [heroRef]);
-
-  // Highlight active section while scrolling
-  useEffect(() => {
-    const observers = NAV_SECTIONS.map(({ id }) => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActive(id); },
-        { rootMargin: "-15% 0px -65% 0px", threshold: 0 }
-      );
-      obs.observe(el);
-      return obs;
-    });
-    return () => observers.forEach((o) => o?.disconnect());
-  }, []);
-
-  const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  return (
-    <div
-      className={`fixed left-0 right-0 top-[57px] z-40 border-b border-white/6 bg-[rgba(2,6,23,0.92)] backdrop-blur-xl transition-[opacity,transform] duration-300 ${
-        visible ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
-      }`}
-    >
-      <div className="flex w-full items-center justify-around px-2 py-1.5">
-        {NAV_SECTIONS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => scrollTo(id)}
-            className={`relative flex-1 rounded-full py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ${
-              active === id
-                ? "text-amber-300"
-                : "text-white/36 hover:text-white/65"
-            }`}
-          >
-            {label}
-            {active === id && (
-              <span className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-amber-300/70" />
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ── main component ── */
 
 function Home() {
-  const heroRef = useRef(null);
   const { data: allItems } = useQuery({
     queryKey: ["inventory-featured"],
     queryFn: () => getPublicSaleInventory(),
@@ -505,7 +431,6 @@ function Home() {
 
   return (
     <>
-      <SectionNav heroRef={heroRef} />
       <Helmet>
         <title>FacetVault | Natural Sri Lankan Gemstones — Buy via WhatsApp</title>
         <meta name="description" content="Natural Ceylon gemstones sourced from Sri Lanka. See real videos before you buy. Inquire on WhatsApp. Stone-to-jewelry service available." />
@@ -536,7 +461,7 @@ function Home() {
       <div className="flex flex-col pb-20 sm:pb-0">
 
         {/* ── HERO ── */}
-        <section ref={heroRef} className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
+        <section className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
           {/* ambient glow */}
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex justify-center">
             <div className="h-[320px] w-[700px] rounded-full bg-amber-400/7 blur-3xl" />
@@ -546,7 +471,7 @@ function Home() {
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
 
               {/* left — text */}
-              <div className="order-2 lg:order-1">
+              <div className="order-1">
                 <motion.p variants={fadeUp} className="lux-eyebrow">
                   FacetVault · Natural Gemstones · Sri Lanka
                 </motion.p>
@@ -596,12 +521,12 @@ function Home() {
               {/* right — decorative gem stack (shows featured images or placeholder) */}
               <motion.div
                 variants={fadeUp}
-                className="order-1 flex justify-center lg:order-2 lg:justify-end"
+                className="order-2 flex justify-center lg:justify-end"
               >
-                <div className="relative w-full max-w-[340px]">
+                <div className="relative w-full max-w-[220px] sm:max-w-[300px] lg:max-w-[380px]">
                   {/* glow behind */}
                   <div className="absolute inset-0 -z-10 rounded-3xl bg-amber-400/8 blur-2xl" />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {featured.slice(0, 3).map((stone, i) =>
                       stone?.thumbnailUrl || stone?.imageUrl ? (
                         <div
@@ -633,9 +558,9 @@ function Home() {
                   </div>
 
                   {/* floating trust badge */}
-                  <div className="absolute -bottom-4 -right-4 flex items-center gap-2 rounded-full border border-amber-300/22 bg-[rgba(5,8,16,0.88)] px-4 py-2.5 shadow-lg backdrop-blur-md">
-                    <ShieldCheck size={13} className="text-amber-300" />
-                    <span className="text-[11.5px] font-medium text-white/90">LGL Certified Partner</span>
+                  <div className="absolute -bottom-3 -right-3 flex items-center gap-1.5 rounded-full border border-amber-300/22 bg-[rgba(5,8,16,0.88)] px-3 py-2 shadow-lg backdrop-blur-md sm:-bottom-4 sm:-right-4 sm:gap-2 sm:px-4 sm:py-2.5">
+                    <ShieldCheck size={11} className="shrink-0 text-amber-300 sm:size-[13px]" />
+                    <span className="text-[10px] font-medium text-white/90 sm:text-[11.5px]">LGL Certified Partner</span>
                   </div>
                 </div>
               </motion.div>
