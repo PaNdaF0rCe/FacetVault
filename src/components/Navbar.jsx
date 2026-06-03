@@ -56,6 +56,20 @@ function CustomerNav() {
   const { count: wishlistCount } = useWishlist();
   const [active, setActive] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [heroPast, setHeroPast] = useState(false); // true once hero scrolls out
+
+  // Show section strip only after hero scrolls out of view
+  useEffect(() => {
+    if (!isHome) { setHeroPast(false); return; }
+    const el = document.getElementById("sec-hero");
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeroPast(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [isHome]);
 
   // Track active section (home only)
   useEffect(() => {
@@ -97,9 +111,9 @@ function CustomerNav() {
           {/* Logo */}
           <LogoMark onClick={() => navigate("/")} />
 
-          {/* Desktop: section anchors (home) or page links (other) */}
+          {/* Desktop: section anchors (home, after hero) or page links (other) */}
           <nav className="hidden items-center gap-1 lg:flex">
-            {isHome ? (
+            {isHome && heroPast ? (
               HOME_SECTIONS.map(({ id, label }) => (
                 <button
                   key={id}
@@ -212,9 +226,10 @@ function CustomerNav() {
           </div>
         </div>
 
-        {/* Mobile: section anchor strip (home only) */}
+        {/* Mobile: section anchor strip — slides in after hero scrolls past */}
         {isHome && (
-          <div className="flex w-full items-center justify-around border-t border-white/5 px-2 py-1.5 lg:hidden">
+          <div className={`overflow-hidden border-t border-white/5 transition-[max-height,opacity] duration-300 lg:hidden ${heroPast ? "max-h-10 opacity-100" : "max-h-0 opacity-0"}`}>
+          <div className="flex w-full items-center justify-around px-2 py-1.5">
             {HOME_SECTIONS.map(({ id, label }) => (
               <button
                 key={id}
@@ -230,6 +245,7 @@ function CustomerNav() {
                 )}
               </button>
             ))}
+          </div>
           </div>
         )}
       </motion.header>

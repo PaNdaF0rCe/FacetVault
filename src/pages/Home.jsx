@@ -461,7 +461,7 @@ function Home() {
       <div className="flex flex-col pb-20 sm:pb-0">
 
         {/* ── HERO ── */}
-        <section className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
+        <section id="sec-hero" className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
           {/* ambient glow */}
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex justify-center">
             <div className="h-[320px] w-[700px] rounded-full bg-amber-400/7 blur-3xl" />
