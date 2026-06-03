@@ -415,8 +415,8 @@ function ReviewsSection() {
 /* ── Section nav ── */
 const NAV_SECTIONS = [
   { id: "sec-stones",     label: "Stones" },
-  { id: "sec-categories", label: "Categories" },
-  { id: "sec-how",        label: "How It Works" },
+  { id: "sec-categories", label: "Browse" },
+  { id: "sec-how",        label: "Steps" },
   { id: "sec-reviews",    label: "Reviews" },
   { id: "sec-faq",        label: "FAQ" },
 ];
@@ -462,19 +462,22 @@ function SectionNav({ heroRef }) {
         visible ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
       }`}
     >
-      <div className="flex gap-0.5 overflow-x-auto px-3 py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex w-full items-center justify-around px-2 py-1.5">
         {NAV_SECTIONS.map(({ id, label }) => (
           <button
             key={id}
             type="button"
             onClick={() => scrollTo(id)}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200 ${
+            className={`relative flex-1 rounded-full py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ${
               active === id
-                ? "bg-amber-300/12 text-amber-300"
-                : "text-white/38 hover:text-white/68"
+                ? "text-amber-300"
+                : "text-white/36 hover:text-white/65"
             }`}
           >
             {label}
+            {active === id && (
+              <span className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-amber-300/70" />
+            )}
           </button>
         ))}
       </div>
@@ -665,7 +668,7 @@ function Home() {
                 </Link>
               </motion.div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {featured.map((stone) => (
                   <motion.div key={stone.id} variants={fadeUp}>
                     <InventoryItemCard item={stone} />
@@ -692,19 +695,19 @@ function Home() {
               </h2>
             </motion.div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {CATEGORIES.map(({ label, sub, emoji, filter }) => (
                 <motion.div key={label} variants={fadeUp}>
                   <Link
                     to={`/collection?type=${encodeURIComponent(filter)}`}
-                    className="group flex flex-col gap-3 rounded-[22px] border border-white/8 bg-white/[0.025] p-5 transition-all hover:border-amber-300/25 hover:bg-white/[0.04]"
+                    className="group flex flex-col gap-2 rounded-[18px] border border-white/8 bg-white/[0.025] p-4 transition-all hover:border-amber-300/25 hover:bg-white/[0.04] sm:gap-3 sm:rounded-[22px] sm:p-5"
                   >
-                    <span className="text-2xl">{emoji}</span>
+                    <span className="text-xl sm:text-2xl">{emoji}</span>
                     <div>
-                      <p className="text-[15px] font-semibold text-white group-hover:text-amber-200">{label}</p>
-                      <p className="mt-1 text-[12.5px] text-slate-500">{sub}</p>
+                      <p className="text-[13px] font-semibold leading-snug text-white group-hover:text-amber-200 sm:text-[15px]">{label}</p>
+                      <p className="mt-0.5 hidden text-[12px] text-slate-500 sm:block">{sub}</p>
                     </div>
-                    <ArrowRight size={14} className="text-amber-300/40 transition-transform group-hover:translate-x-1 group-hover:text-amber-300/70" />
+                    <ArrowRight size={12} className="text-amber-300/40 transition-transform group-hover:translate-x-1 group-hover:text-amber-300/70 sm:size-[14px]" />
                   </Link>
                 </motion.div>
               ))}
