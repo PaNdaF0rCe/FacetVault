@@ -527,7 +527,7 @@ function Home() {
                   {/* glow behind */}
                   <div className="absolute inset-0 -z-10 rounded-3xl bg-amber-400/8 blur-2xl" />
                   <div className="grid grid-cols-2 gap-3">
-                    {featured.slice(0, 4).map((stone, i) =>
+                    {featured.slice(0, 3).map((stone, i) =>
                       stone?.thumbnailUrl || stone?.imageUrl ? (
                         <div
                           key={stone.id}
@@ -979,7 +979,7 @@ function Home() {
       </div>
 
       {/* ── STICKY MOBILE BOTTOM BAR ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex gap-2 border-t border-white/8 bg-[rgba(5,8,16,0.94)] p-3 backdrop-blur-lg sm:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex gap-2 border-t border-white/8 bg-[rgba(5,8,16,0.94)] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-lg sm:hidden">
         <Link
           to="/collection"
           className="lux-button-primary flex-1 py-3.5 text-[14px]"
@@ -990,9 +990,9 @@ function Home() {
           href={WA_GENERAL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 items-center justify-center gap-2 rounded-full border border-emerald-400/22 bg-emerald-400/10 py-3.5 text-[14px] font-medium text-emerald-300"
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] py-3.5 text-[14px] font-semibold text-white shadow-[0_2px_12px_rgba(37,211,102,0.28)] transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.97]"
         >
-          <MessageCircle size={15} />
+          <MessageCircle size={15} strokeWidth={2} />
           WhatsApp
         </a>
       </div>

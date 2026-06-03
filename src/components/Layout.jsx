@@ -8,7 +8,8 @@ import { WHATSAPP_NUMBER } from "../config/appConfig";
 
 const WA_FAB = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi FacetVault, I'm interested in a gemstone. Can you help?")}`;
 
-const HIDE_FAB_ROUTES = new Set(["/login", "/signup"]);
+// Hide FAB on routes that already have their own WhatsApp CTA
+const HIDE_FAB_ROUTES = new Set(["/login", "/signup", "/"]);
 
 // Opacity-only transition — no Y transform avoids scroll glitch on mobile
 // during the animation frame window.
