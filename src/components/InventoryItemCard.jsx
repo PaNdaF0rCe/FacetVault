@@ -85,8 +85,11 @@ function CardBody({ item }) {
   return (
     <>
       {/* image */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#04101f]">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#030d1a]">
         <CardImage item={item} />
+
+        {/* bottom fade — blends studio photo backgrounds into the dark card */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[rgba(4,11,22,0.72)] to-transparent" />
 
         {/* status badges — top left */}
         <div className="absolute left-2.5 top-2.5 flex max-w-[78%] flex-wrap gap-1">

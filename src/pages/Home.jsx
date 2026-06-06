@@ -29,7 +29,7 @@ const stagger = {
 
 function TrustCheck({ text }) {
   return (
-    <div className="flex items-center gap-2 text-[13.5px] text-slate-300">
+    <div className="flex items-center gap-2 text-[13.5px] text-slate-200">
       <ShieldCheck size={14} className="shrink-0 text-amber-300/80" />
       <span>{text}</span>
     </div>
@@ -170,7 +170,7 @@ function ReviewCard({ review }) {
       <div>
         <p className="text-[13.5px] font-semibold text-white">{review.name}</p>
         {review.location && (
-          <p className="text-[12px] text-slate-500">{review.location}</p>
+          <p className="text-[12px] text-white/36">{review.location}</p>
         )}
       </div>
     </motion.div>
@@ -464,7 +464,10 @@ function Home() {
         <section id="sec-hero" className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pt-24">
           {/* ambient glow */}
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex justify-center">
-            <div className="h-[320px] w-[700px] rounded-full bg-amber-400/7 blur-3xl" />
+            <div className="h-[400px] w-[800px] rounded-full bg-amber-400/[0.09] blur-3xl" />
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex justify-center">
+            <div className="h-[200px] w-[460px] rounded-full bg-amber-300/[0.06] blur-2xl" />
           </div>
 
           <motion.div initial="hidden" animate="show" variants={stagger} className="mx-auto max-w-6xl">
@@ -630,7 +633,7 @@ function Home() {
                     <span className="text-xl sm:text-2xl">{emoji}</span>
                     <div>
                       <p className="text-[13px] font-semibold leading-snug text-white group-hover:text-amber-200 sm:text-[15px]">{label}</p>
-                      <p className="mt-0.5 hidden text-[12px] text-slate-500 sm:block">{sub}</p>
+                      <p className="mt-0.5 hidden text-[12px] text-white/38 sm:block">{sub}</p>
                     </div>
                     <ArrowRight size={12} className="text-amber-300/40 transition-transform group-hover:translate-x-1 group-hover:text-amber-300/70 sm:size-[14px]" />
                   </Link>
@@ -660,7 +663,7 @@ function Home() {
                   {["Natural, not synthetic", "Ethically sourced", "Transparent treatment disclosure"].map((t) => (
                     <div key={t} className="flex items-center gap-2.5">
                       <div className="h-1.5 w-1.5 rounded-full bg-amber-300/70" />
-                      <span className="text-[13.5px] text-slate-400">{t}</span>
+                      <span className="text-[13.5px] text-slate-300/90">{t}</span>
                     </div>
                   ))}
                 </div>

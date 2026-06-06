@@ -102,9 +102,9 @@ function CustomerNav() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="sticky top-0 z-50 border-b border-white/6 bg-[rgba(2,6,23,0.88)] backdrop-blur-xl"
+        className="sticky top-0 z-50 border-b border-white/[0.07] bg-[rgba(2,5,18,0.92)] backdrop-blur-xl"
       >
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/18 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/22 to-transparent" />
 
         {/* Main bar */}
         <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-4 py-3 sm:px-5 lg:px-8">

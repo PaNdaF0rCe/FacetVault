@@ -84,9 +84,9 @@ function Footer() {
   const displayPhone = formatPhone(WHATSAPP_NUMBER);
 
   return (
-    <footer className="relative mt-24 border-t border-white/8 bg-[rgba(2,6,23,0.86)] backdrop-blur-xl">
+    <footer className="relative mt-24 border-t border-white/[0.07] bg-[rgba(2,4,16,0.94)] backdrop-blur-xl">
       {/* faint gold rule along the top */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/25 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/30 to-transparent" />
 
       {/* halo glow behind the brand */}
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-0 flex justify-center">
