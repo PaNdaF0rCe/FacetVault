@@ -13,7 +13,7 @@ import {
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "./config";
 import { createDocument, getDocument } from "./db-operations";
-import { uploadImageWithThumbnail } from "./storage-utils";
+import { uploadImageWithThumbnail, uploadVideo } from "./storage-utils";
 import { UnauthorizedError } from "./errors";
 
 /* ---------------- HELPERS ---------------- */
@@ -110,11 +110,16 @@ export async function getFilteredInventory(userId, filters = {}) {
 
 /* ---------------- CREATE ---------------- */
 
-export async function uploadInventoryItem(filePayload, metadata, userId) {
+export async function uploadInventoryItem(filePayload, metadata, userId, videoFile = null) {
   let uploadResult = null;
 
   if (filePayload?.original) {
     uploadResult = await uploadImageWithThumbnail(filePayload, userId);
+  }
+
+  let videoResult = null;
+  if (videoFile) {
+    videoResult = await uploadVideo(videoFile, userId);
   }
 
   const now = new Date();
@@ -132,6 +137,9 @@ export async function uploadInventoryItem(filePayload, metadata, userId) {
     thumbnailUrl: uploadResult?.thumbnailUrl || null,
     thumbnailPath: uploadResult?.thumbnailPath || null,
 
+    videoUrl: videoResult?.videoUrl || null,
+    videoPath: videoResult?.videoPath || null,
+
     createdAt: now,
     updatedAt: now,
   };
@@ -145,7 +153,8 @@ export async function updateInventoryItem(
   itemId,
   updatedData,
   userId,
-  newImageFile = null
+  newImageFile = null,
+  newVideoFile = null
 ) {
   const existing = await getDocument("inventory", itemId);
 
@@ -169,9 +178,19 @@ export async function updateInventoryItem(
     };
   }
 
+  let videoUpdate = {};
+  if (newVideoFile) {
+    const vUpload = await uploadVideo(newVideoFile, userId);
+    videoUpdate = {
+      videoUrl: vUpload.videoUrl,
+      videoPath: vUpload.videoPath,
+    };
+  }
+
   await updateDoc(refDoc, {
     ...updatedData,
     ...imageUpdate,
+    ...videoUpdate,
     stoneCode: existing.stoneCode || generateStoneCode(),
     isSold: !!updatedData.isSold,
     updatedAt: new Date(),

@@ -1,8 +1,8 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck, Video, CreditCard, Truck, Heart, Bell } from "lucide-react";
+import { ChevronLeft, MessageCircle, Share2, Check, ShieldCheck, Video, CreditCard, Truck, Heart, Bell, X, Play } from "lucide-react";
 import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
@@ -186,6 +186,7 @@ export default function StoneDetail() {
 
   const [copied, setCopied] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const [videoOpen, setVideoOpen] = useState(false);
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
 
   const handleShare = useCallback(async () => {
@@ -340,6 +341,35 @@ export default function StoneDetail() {
         )}
       </Helmet>
 
+      {/* Video modal */}
+      {videoOpen && stone.videoUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setVideoOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-[24px] overflow-hidden bg-[#020617] shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              src={stone.videoUrl}
+              className="w-full max-h-[80vh] object-contain"
+              controls
+              autoPlay
+              playsInline
+            />
+            <button
+              type="button"
+              onClick={() => setVideoOpen(false)}
+              aria-label="Close video"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Link
           to="/collection"
@@ -375,6 +405,18 @@ export default function StoneDetail() {
                     <div className="absolute right-4 top-4 rounded-full border border-rose-300/20 bg-rose-300/12 px-3 py-1 text-xs font-medium text-rose-200 backdrop-blur">
                       Sold
                     </div>
+                  )}
+
+                  {stone.videoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setVideoOpen(true)}
+                      aria-label="Play video"
+                      className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3.5 py-2 text-[12px] font-medium text-white backdrop-blur transition hover:bg-black/70 active:scale-[0.97]"
+                    >
+                      <Play size={13} fill="currentColor" className="text-amber-300" />
+                      Play Video
+                    </button>
                   )}
                 </div>
 

@@ -138,3 +138,20 @@ export async function uploadImageWithThumbnail(imagePayload, userId) {
     throw error;
   }
 }
+
+/* ------------------------------------------------------------------
+   Video upload — stores raw video file (mp4 / mov / webm) under
+   inventory/{uid}/videos/gem_{ts}.{ext}
+   Returns { videoUrl, videoPath }
+   ------------------------------------------------------------------ */
+export async function uploadVideo(file, userId) {
+  if (!file) throw new Error("No video file provided");
+
+  const timestamp = Date.now();
+  const ext = file.name?.split(".").pop()?.toLowerCase() || "mp4";
+  const name = `gem_${timestamp}.${ext}`;
+  const path = `inventory/${userId}/videos/${name}`;
+
+  const url = await uploadOne(file, path, file.type || "video/mp4");
+  return { videoUrl: url, videoPath: path };
+}

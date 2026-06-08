@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Search, X, MessageCircle, Heart } from "lucide-react";
@@ -107,20 +107,15 @@ function getPrimaryBadge(item) {
   return null;
 }
 
-function MarketplaceImage({ item }) {
-  const [loaded, setLoaded] = useState(false);
+function MarketplaceMedia({ item }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const containerRef = useRef(null);
+  const videoRef = useRef(null);
+
   const imageSrc = item.thumbnailUrl || item.mediumUrl || item.imageUrl;
+  const videoUrl = item.videoUrl || null;
 
-  if (!imageSrc) {
-    return (
-      <div className="flex h-full w-full items-center justify-center text-[11px] text-white/28">
-        No image
-      </div>
-    );
-  }
-
-  // Build a srcset from whichever variants exist. The browser will
-  // pick the smallest sufficient one for the rendered card width.
   const candidates = [
     item.thumbnailUrl ? `${item.thumbnailUrl} 600w` : null,
     item.mediumUrl ? `${item.mediumUrl} 1000w` : null,
@@ -128,29 +123,95 @@ function MarketplaceImage({ item }) {
   ].filter(Boolean);
   const srcSet = candidates.length > 1 ? candidates.join(", ") : undefined;
 
+  // IntersectionObserver: when the card reaches the top-left region of the
+  // viewport (rootMargin biased top/left), start fading to video.
+  useEffect(() => {
+    if (!videoUrl) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowVideo(true);
+        } else {
+          setShowVideo(false);
+          if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+          }
+        }
+      },
+      // slightly negative right/bottom margin so only cards near top-left trigger first
+      { threshold: 0.3, rootMargin: "0px 0px -5% -0px" }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [videoUrl]);
+
+  // Play/pause video based on showVideo state
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (showVideo) {
+      vid.play().catch(() => {});
+    } else {
+      vid.pause();
+      vid.currentTime = 0;
+    }
+  }, [showVideo]);
+
+  if (!imageSrc && !videoUrl) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-[11px] text-white/28">
+        No image
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div ref={containerRef} className="absolute inset-0">
+      {/* skeleton */}
       <div
         className={`absolute inset-0 transition-opacity duration-500 ${
-          loaded ? "opacity-0" : "opacity-100"
+          imgLoaded ? "opacity-0" : "opacity-100"
         }`}
       >
         <div className="h-full w-full animate-pulse bg-white/[0.05]" />
       </div>
 
-      <img
-        src={imageSrc}
-        srcSet={srcSet}
-        alt={item.name || "Gemstone"}
-        className={`h-full w-full object-cover transition-[transform,opacity] duration-500 [@media(hover:hover)]:group-hover:scale-[1.018] ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
-        loading="lazy"
-        decoding="async"
-        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1536px) 25vw, 20vw"
-        onLoad={() => setLoaded(true)}
-      />
-    </>
+      {/* image — always rendered as the base layer */}
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          srcSet={srcSet}
+          alt={item.name || "Gemstone"}
+          className={`absolute inset-0 h-full w-full object-cover transition-[transform,opacity] duration-500 [@media(hover:hover)]:group-hover:scale-[1.018] ${
+            imgLoaded ? "opacity-100" : "opacity-0"
+          } ${showVideo ? "opacity-0" : ""}`}
+          loading="lazy"
+          decoding="async"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, (max-width: 1536px) 25vw, 20vw"
+          onLoad={() => setImgLoaded(true)}
+        />
+      )}
+
+      {/* video — fades in over the image when card is visible */}
+      {videoUrl && (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+            showVideo ? "opacity-100" : "opacity-0"
+          }`}
+          muted
+          loop
+          playsInline
+          preload="none"
+        />
+      )}
+    </div>
   );
 }
 
@@ -221,7 +282,7 @@ function MarketplaceCard({ item, rates, currency, campaign, isWishlisted, onTogg
     <article className="lux-card-elevated group flex h-full flex-col overflow-hidden">
       <Link to={`/stone/${item.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-[#04101f]">
-          <MarketplaceImage item={item} />
+          <MarketplaceMedia item={item} />
 
           <div className="absolute right-2.5 top-2.5 flex flex-col items-end gap-1.5">
             {item?.isSold ? (

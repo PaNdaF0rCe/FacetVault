@@ -215,12 +215,14 @@ export function GemFormPage({
     getInitialFormData(initialData, mode)
   );
   const [imageFile, setImageFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
     setFormData(getInitialFormData(initialData, mode));
     setImageFile(null);
+    setVideoFile(null);
   }, [initialData, mode]);
 
   const selectedPreviewUrl = useMemo(() => {
@@ -355,7 +357,7 @@ export function GemFormPage({
         const { updateInventoryItem } = await import(
           "../../lib/firebase/inventory-operations"
         );
-        await updateInventoryItem(gemId, metadata, user.uid, imagePayload);
+        await updateInventoryItem(gemId, metadata, user.uid, imagePayload, videoFile || null);
       } else {
         await uploadInventoryItem(
           imagePayload,
@@ -363,7 +365,8 @@ export function GemFormPage({
             ...metadata,
             stoneCode: generateStoneCode(),
           },
-          user.uid
+          user.uid,
+          videoFile || null
         );
       }
 
@@ -624,6 +627,72 @@ export function GemFormPage({
                     className="w-full rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
                   >
                     Remove selected image
+                  </button>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.95),rgba(4,12,26,0.96))] p-4">
+              <div className="mb-3">
+                <h3 className="text-sm font-semibold text-white">Video</h3>
+                <p className="mt-1 text-xs text-white/42">
+                  Optional short clip — plays automatically on the marketplace card.
+                </p>
+              </div>
+
+              {/* existing video preview (edit mode) */}
+              {isEditMode && initialData?.videoUrl && !videoFile && (
+                <div className="mb-3 overflow-hidden rounded-2xl border border-white/8 bg-[#020617]">
+                  <video
+                    src={initialData.videoUrl}
+                    className="aspect-[4/3] w-full object-cover"
+                    muted
+                    playsInline
+                    controls
+                  />
+                  <p className="px-3 py-1.5 text-[11px] text-white/36">Current video</p>
+                </div>
+              )}
+
+              {/* new video preview */}
+              {videoFile && (
+                <div className="mb-3 overflow-hidden rounded-2xl border border-amber-300/20 bg-[#020617]">
+                  <video
+                    src={URL.createObjectURL(videoFile)}
+                    className="aspect-[4/3] w-full object-cover"
+                    muted
+                    playsInline
+                    controls
+                  />
+                  <p className="px-3 py-1.5 text-[11px] text-white/36">New video selected</p>
+                </div>
+              )}
+
+              <div className="space-y-2.5">
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.22em] text-white/42">
+                    {isEditMode ? "Replace video" : "Upload video"}{" "}
+                    <span className="normal-case tracking-normal text-white/28">(optional · mp4/mov/webm)</span>
+                  </span>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/quicktime,video/webm,video/*"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setVideoFile(e.target.files[0]);
+                    }}
+                    disabled={saving}
+                    className="block w-full text-sm text-white/42 file:mr-3 file:rounded-2xl file:border-0 file:bg-amber-300 file:px-3.5 file:py-2.5 file:text-sm file:font-semibold file:text-[#09101c] hover:file:brightness-105"
+                  />
+                </label>
+
+                {videoFile && (
+                  <button
+                    type="button"
+                    onClick={() => setVideoFile(null)}
+                    disabled={saving}
+                    className="w-full rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-2.5 text-sm font-medium text-white/72 transition hover:border-white/14 hover:text-white disabled:opacity-50"
+                  >
+                    Remove selected video
                   </button>
                 )}
               </div>
