@@ -437,14 +437,27 @@ function LoadingCard() {
 }
 
 const SCROLL_KEY = "fv_marketplace_scroll";
+const FILTERS_KEY = "fv_marketplace_filters_v1";
 const CURRENCIES = ["LKR", "USD", "GBP", "EUR", "AUD"];
+
+function loadFilters() {
+  try {
+    return JSON.parse(sessionStorage.getItem(FILTERS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
 
 function Marketplace() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [search, setSearch] = useState("");
-  const [activeCollection, setActiveCollection] = useState("all");
+
+  const savedFilters = useMemo(loadFilters, []);
+  const [search, setSearch] = useState(savedFilters.search || "");
+  const [activeCollection, setActiveCollection] = useState(savedFilters.activeCollection || "all");
+  const [noHeatOnly, setNoHeatOnly] = useState(savedFilters.noHeatOnly || false);
+
   const [rates, setRates] = useState(null);
   const [currency, setCurrency] = useState(() => detectCurrency());
   const campaign = useMemo(() => getActiveCampaign(), []);
@@ -503,12 +516,21 @@ function Marketplace() {
     }
   }, [loading]);
 
-  // Save scroll position on unmount
+  // Save scroll + filter state on unmount
   useEffect(() => {
     return () => {
       sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
     };
   }, []);
+
+  // Persist filter state whenever it changes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FILTERS_KEY, JSON.stringify({ search, activeCollection, noHeatOnly }));
+    } catch {
+      // storage unavailable
+    }
+  }, [search, activeCollection, noHeatOnly]);
 
   const handleCurrencyChange = (c) => {
     setPreferredCurrency(c);
@@ -566,8 +588,12 @@ function Marketplace() {
       });
     }
 
+    if (noHeatOnly) {
+      result = result.filter((item) => isNoHeat(item));
+    }
+
     return result;
-  }, [items, search, activeCollection]);
+  }, [items, search, activeCollection, noHeatOnly]);
 
   const emptyStateTitle = useMemo(() => {
     switch (activeCollection) {
@@ -592,6 +618,8 @@ function Marketplace() {
 
   const emptyStateText = search.trim()
     ? "Try a different search term or collection."
+    : noHeatOnly
+    ? "No unheated stones match this filter right now."
     : "There are no public sale items in this collection right now.";
 
   const filters = [
@@ -709,6 +737,22 @@ function Marketplace() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* No Heat quick toggle */}
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => setNoHeatOnly((v) => !v)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors duration-200 ${
+                  noHeatOnly
+                    ? "border-emerald-300/35 bg-emerald-300/14 text-emerald-200"
+                    : "border-white/10 bg-transparent text-white/36 hover:border-emerald-300/22 hover:text-emerald-200/70"
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full transition-colors ${noHeatOnly ? "bg-emerald-300" : "bg-white/20"}`} />
+                No Heat ✦ Only
+              </button>
             </div>
           </div>
         </section>

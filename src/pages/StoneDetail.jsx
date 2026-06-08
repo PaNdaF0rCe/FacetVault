@@ -7,6 +7,25 @@ import { getPublicSaleInventory } from "../lib/firebase/inventory-operations";
 import { WHATSAPP_NUMBER } from "../config/appConfig";
 import { getActiveCampaign, applyDiscount } from "../lib/services/holidayCampaign";
 import { useWishlist } from "../hooks/useWishlist";
+import { useRecentlyViewed } from "../hooks/useRecentlyViewed";
+
+// Stone-type keyword → Learn page article title mapping
+const LEARN_LINKS = {
+  sapphire: { label: "What Makes Ceylon Sapphires Special?", id: "ceylon-sapphires" },
+  ruby:     { label: "What Makes Ceylon Sapphires Special?", id: "ceylon-sapphires" },
+  spinel:   { label: "Why Sri Lanka Is Called the Gem Island", id: "gem-island" },
+  alexandrite: { label: "Precious vs. Semi-Precious: Does It Still Matter?", id: "precious-semi" },
+  tourmaline:  { label: "Precious vs. Semi-Precious: Does It Still Matter?", id: "precious-semi" },
+  emerald:  { label: "Precious vs. Semi-Precious: Does It Still Matter?", id: "precious-semi" },
+};
+
+function getLearnLink(stoneType = "") {
+  const lower = stoneType.toLowerCase();
+  for (const [key, val] of Object.entries(LEARN_LINKS)) {
+    if (lower.includes(key)) return val;
+  }
+  return null;
+}
 
 // Carat → approximate diameter for round-cut corundum (mm)
 const CARAT_SIZE_REF = [
@@ -187,7 +206,11 @@ export default function StoneDetail() {
   const [copied, setCopied] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
   const [videoOpen, setVideoOpen] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
+
+  // Track + retrieve recently viewed ids (records this visit automatically)
+  const recentIds = useRecentlyViewed(stone?.id);
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
@@ -341,6 +364,35 @@ export default function StoneDetail() {
         )}
       </Helmet>
 
+      {/* Image zoom lightbox */}
+      {zoomOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+          onClick={() => setZoomOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setZoomOpen(false)}
+            aria-label="Close zoom"
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20"
+          >
+            <X size={16} />
+          </button>
+          <img
+            src={(() => {
+              const allImages = [
+                stone.imageUrl || stone.mediumUrl || stone.thumbnailUrl,
+                ...(Array.isArray(stone.imageUrls) ? stone.imageUrls : []),
+              ].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i);
+              return allImages[activeImg] || allImages[0];
+            })()}
+            alt={stone.name || stone.stoneType || "Gemstone"}
+            className="max-h-[90vh] max-w-full rounded-2xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Video modal */}
       {videoOpen && stone.videoUrl && (
         <div
@@ -396,9 +448,11 @@ export default function StoneDetail() {
                     src={currentSrc}
                     sizes="(max-width: 1024px) 100vw, 56vw"
                     alt={stone.name || stone.stoneType || "Gemstone"}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full cursor-zoom-in object-cover"
                     decoding="async"
                     fetchpriority="high"
+                    onClick={() => setZoomOpen(true)}
+                    title="Click to zoom"
                   />
 
                   {isSold && (
@@ -544,6 +598,21 @@ export default function StoneDetail() {
               LGL Gem Lab certification available on request for eligible stones
             </div>
 
+            {/* Contextual learn link */}
+            {(() => {
+              const link = getLearnLink(stone.stoneType || stone.category || "");
+              if (!link) return null;
+              return (
+                <Link
+                  to="/learn"
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.025] px-4 py-2 text-[12px] text-white/50 transition-colors hover:border-amber-300/18 hover:text-amber-200"
+                >
+                  <Video size={12} strokeWidth={1.6} className="text-amber-300/60" />
+                  Learn: {link.label}
+                </Link>
+              );
+            })()}
+
             <div className="mt-6 flex flex-wrap items-center gap-3">
               {isSold ? (
                 <>
@@ -657,6 +726,60 @@ export default function StoneDetail() {
             </div>
           </div>
         )}
+
+        {/* Recently viewed strip */}
+        {recentIds.length > 0 && (() => {
+          const recentStones = recentIds
+            .map((id) => inventory.find((i) => i.id === id))
+            .filter(Boolean)
+            .slice(0, 6);
+
+          if (recentStones.length === 0) return null;
+
+          return (
+            <div className="mt-20 border-t border-white/[0.06] pt-14">
+              <p className="lux-eyebrow text-[10px] text-amber-300/60">Recently Viewed</p>
+              <div className="mt-5 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {recentStones.map((item) => {
+                  const imgSrc = item.thumbnailUrl || item.mediumUrl || item.imageUrl;
+                  const price = Number(item.salePrice ?? item.pricePaid);
+                  return (
+                    <Link
+                      key={item.id}
+                      to={`/stone/${item.id}`}
+                      className="group shrink-0 w-[130px] sm:w-[150px]"
+                    >
+                      <div className="overflow-hidden rounded-[16px] border border-white/8 bg-[#04101f] aspect-square">
+                        {imgSrc ? (
+                          <img
+                            src={imgSrc}
+                            alt={item.name || "Stone"}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] text-white/20">
+                            No img
+                          </div>
+                        )}
+                      </div>
+                      <p className="mt-2 line-clamp-1 text-[12px] font-medium text-white/75 group-hover:text-white transition-colors">
+                        {item.name || item.stoneType || "Stone"}
+                      </p>
+                      {!item.isSold && !Number.isNaN(price) && price > 0 ? (
+                        <p className="mt-0.5 text-[11px] text-amber-300/70">
+                          LKR {price.toLocaleString()}
+                        </p>
+                      ) : item.isSold ? (
+                        <p className="mt-0.5 text-[11px] text-rose-300/60">Sold</p>
+                      ) : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </section>
     </>
   );
