@@ -15,20 +15,12 @@
   ],
   "crons": [
     {
-      "path": "/api/update-rates",
-      "schedule": "0 18 * * *"
-    },
-    {
       "path": "/api/trigger-daily-draft",
       "schedule": "30 5 * * *"
     },
     {
       "path": "/api/wake-bot",
-      "schedule": "25 13 * * 1-5"
-    },
-    {
-      "path": "/api/wake-bot",
-      "schedule": "55 12 * * 0,6"
+      "schedule": "55 12 * * *"
     }
   ]
 }
