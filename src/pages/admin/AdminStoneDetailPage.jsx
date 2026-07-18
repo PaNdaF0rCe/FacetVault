@@ -300,12 +300,17 @@ function AdminStoneDetailPage() {
         // so it immediately appears in the FacetVault Invoice App.
         let invoiceRef = null;
         try {
-          invoiceRef = await createInvoiceFromSale(gem, {
-            sellingPrice: Number(sellingPrice),
-            expenses: Number(expenses || 0),
-            notes,
-            buyerName,
-          });
+          invoiceRef = await createInvoiceFromSale(
+            [
+              {
+                gem,
+                sellingPrice: Number(sellingPrice),
+                expenses: Number(expenses || 0),
+                notes,
+              },
+            ],
+            { buyerName }
+          );
         } catch (invoiceErr) {
           // Non-fatal — sale is already recorded, just warn
           console.warn("Invoice draft creation failed:", invoiceErr);
